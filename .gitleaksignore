@@ -1,0 +1,3 @@
+# Public RFC 6238 test vector (ASCII 12345678901234567890), isolated test account only.
+# Exact historical finding; all other files, commits and secrets remain scanned.
+1a3587f89be2a197d74ce56d01d28921fd7699f1:cortes-ia-api/Tests/AuthIntegration.cs:generic-api-key:115
