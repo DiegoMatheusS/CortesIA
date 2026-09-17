@@ -19,7 +19,7 @@ public record MfaDto(string Code);
 public static class AuthEndpoints {
  public static void Map(WebApplication app){
   app.MapPost("/api/v1/auth/register",async(RegisterDto r,Database db,UserManager<User> users,WalletService wallet,IConfiguration c)=>{
-   if(!r.TermsAccepted||r.Name.Length is <2 or >120||r.Phone.Length is <8 or >20)throw new DomainError("INVALID_REGISTRATION");
+   if(!r.TermsAccepted||string.IsNullOrWhiteSpace(r.Name)||r.Name.Length is <2 or >120||string.IsNullOrWhiteSpace(r.Phone)||r.Phone.Length is <8 or >20||string.IsNullOrWhiteSpace(r.Email)||string.IsNullOrWhiteSpace(r.Password)||string.IsNullOrWhiteSpace(r.Cpf))throw new DomainError("INVALID_REGISTRATION");
    var cpf=Cpf.Normalize(r.Cpf);var digest=Cpf.Digest(cpf,c["CPF_HMAC_KEY"]!);
    await using var tx=await db.Database.BeginTransactionAsync();
    // Transaction-level advisory lock serializes different registrations for the same CPF.
