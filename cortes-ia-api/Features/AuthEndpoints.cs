@@ -36,9 +36,11 @@ public static class AuthEndpoints {
   }).RequireRateLimiting("auth");
   app.MapPost("/api/v1/auth/verify",async(TokenDto r,UserManager<User> users)=>{var u=await users.FindByEmailAsync(r.Email);if(u==null||!(await users.ConfirmEmailAsync(u,r.Token)).Succeeded)throw new DomainError("INVALID_TOKEN");return Results.Ok();}).RequireRateLimiting("auth");
   app.MapPost("/api/v1/auth/login",async(LoginDto r,UserManager<User> users,SignInManager<User> sign,HttpContext h)=>{
+   if(string.IsNullOrWhiteSpace(r.Email)||string.IsNullOrEmpty(r.Password))throw new DomainError("INVALID_LOGIN",401);
    var u=await users.FindByEmailAsync(r.Email);if(u==null||u.Blocked)throw new DomainError("INVALID_LOGIN",401);
    var check=await sign.CheckPasswordSignInAsync(u,r.Password,true);if(!check.Succeeded)throw new DomainError("INVALID_LOGIN",401);
    if(u.TwoFactorEnabled){if(string.IsNullOrEmpty(r.MfaCode)||!await users.VerifyTwoFactorTokenAsync(u,TokenOptions.DefaultAuthenticatorProvider,r.MfaCode)){await users.AccessFailedAsync(u);throw new DomainError("MFA_REQUIRED",401);}
+    if(!(await users.ResetAccessFailedCountAsync(u)).Succeeded)throw new DomainError("INVALID_LOGIN",401);
     await sign.SignInWithClaimsAsync(u,false,[new Claim("amr","mfa"),new Claim("auth_time",DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString())]);
    }else await sign.SignInWithClaimsAsync(u,false,[new Claim("auth_time",DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString())]);
    u.LastActive=DateTimeOffset.UtcNow;u.ActivityEpoch++;await users.UpdateAsync(u);return Results.Ok(new{mfaEnrollmentRequired=await users.IsInRoleAsync(u,"Admin")&&!u.TwoFactorEnabled});

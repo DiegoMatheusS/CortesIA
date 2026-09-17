@@ -86,4 +86,56 @@ public class AuthIntegration {
   }
   Assert.Equal(HttpStatusCode.Forbidden,(await client.GetAsync("/api/v1/me")).StatusCode);
  }
+ [Fact] public async Task PasswordResetRevokesSessionsAndTokenCannotBeReused() {
+  await using var app=new AuthFactory();using var client=await app.Open();using var recovery=await app.Open();
+  var email=$"{Guid.NewGuid():N}@test.invalid";const string oldPassword="Test-Password-123!",newPassword="Changed-Password-456!";
+  using(var scope=app.Services.CreateScope()) {
+   var users=scope.ServiceProvider.GetRequiredService<UserManager<User>>();
+   Assert.True((await users.CreateAsync(new User{Id=Guid.NewGuid(),UserName=email,Email=email,EmailConfirmed=true},oldPassword)).Succeeded);
+  }
+  Assert.Equal(HttpStatusCode.OK,(await Post(client,"/api/v1/auth/login",new{Email=email,Password=oldPassword})).StatusCode);
+  Assert.Equal(HttpStatusCode.Accepted,(await Post(recovery,"/api/v1/auth/forgot",new{Email=email})).StatusCode);
+  string token;
+  using(var scope=app.Services.CreateScope()) {
+   var db=scope.ServiceProvider.GetRequiredService<Database>();var user=await db.Users.SingleAsync(u=>u.Email==email);
+   var message=await db.Notifications.SingleAsync(n=>n.UserId==user.Id&&n.Dedupe.StartsWith("reset:"));
+   token=Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(new Uri(message.Body).Query)["token"].ToString();
+  }
+  var reset=new{Email=email,Token=token,Password=newPassword};
+  Assert.Equal(HttpStatusCode.OK,(await Post(recovery,"/api/v1/auth/reset",reset)).StatusCode);
+  Assert.Equal(HttpStatusCode.Unauthorized,(await client.GetAsync("/api/v1/me")).StatusCode);
+  Assert.Equal(HttpStatusCode.BadRequest,(await Post(recovery,"/api/v1/auth/reset",reset)).StatusCode);
+  Assert.Equal(HttpStatusCode.Unauthorized,(await Post(recovery,"/api/v1/auth/login",new{Email=email,Password=oldPassword})).StatusCode);
+  Assert.Equal(HttpStatusCode.OK,(await Post(recovery,"/api/v1/auth/login",new{Email=email,Password=newPassword})).StatusCode);
+ }
+ [Fact] public async Task SuccessfulMfaClearsFailuresAndAdminClaimsSurviveRefresh() {
+  await using var app=new AuthFactory();using var client=await app.Open();
+  var email=$"{Guid.NewGuid():N}@test.invalid";const string password="Test-Password-123!";
+  // RFC 6238 test secret; never used outside this isolated test account.
+  const string secret="GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ";
+  using(var scope=app.Services.CreateScope()) {
+   var users=scope.ServiceProvider.GetRequiredService<UserManager<User>>();
+   var roles=scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
+   if(!await roles.RoleExistsAsync("Admin"))Assert.True((await roles.CreateAsync(new IdentityRole<Guid>("Admin"))).Succeeded);
+   var user=new User{Id=Guid.NewGuid(),UserName=email,Email=email,EmailConfirmed=true};
+   Assert.True((await users.CreateAsync(user,password)).Succeeded);
+   Assert.True((await users.AddToRoleAsync(user,"Admin")).Succeeded);
+   Assert.True((await users.SetAuthenticationTokenAsync(user,"[AspNetUserStore]","AuthenticatorKey",secret)).Succeeded);
+   Assert.True((await users.SetTwoFactorEnabledAsync(user,true)).Succeeded);
+  }
+  Assert.Equal(HttpStatusCode.Unauthorized,(await Post(client,"/api/v1/auth/login",new{Email=email,Password=password,MfaCode="invalid"})).StatusCode);
+  using(var scope=app.Services.CreateScope()) {
+   var users=scope.ServiceProvider.GetRequiredService<UserManager<User>>();Assert.Equal(1,await users.GetAccessFailedCountAsync((await users.FindByEmailAsync(email))!));
+  }
+  // Independent RFC 6238 computation using the ASCII secret encoded above.
+  var counter=new byte[8];System.Buffers.Binary.BinaryPrimitives.WriteInt64BigEndian(counter,DateTimeOffset.UtcNow.ToUnixTimeSeconds()/30);
+  var hash=System.Security.Cryptography.HMACSHA1.HashData(System.Text.Encoding.ASCII.GetBytes("12345678901234567890"),counter);
+  int offset=hash[^1]&15;var code=((System.Buffers.Binary.BinaryPrimitives.ReadInt32BigEndian(hash.AsSpan(offset,4))&0x7fffffff)%1_000_000).ToString("D6");
+  Assert.Equal(HttpStatusCode.OK,(await Post(client,"/api/v1/auth/login",new{Email=email,Password=password,MfaCode=code})).StatusCode);
+  Assert.Equal(HttpStatusCode.OK,(await client.GetAsync("/api/v1/admin/users")).StatusCode);
+  Assert.Equal(HttpStatusCode.OK,(await client.GetAsync("/api/v1/admin/users")).StatusCode);
+  using(var scope=app.Services.CreateScope()) {
+   var users=scope.ServiceProvider.GetRequiredService<UserManager<User>>();Assert.Equal(0,await users.GetAccessFailedCountAsync((await users.FindByEmailAsync(email))!));
+  }
+ }
 }
