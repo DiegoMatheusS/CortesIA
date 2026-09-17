@@ -1,0 +1,220 @@
+﻿ID,Fonte,Paginas_ou_secao,Etapa,Nivel,Tratamento,Criterio_ou_evidencia,Detalhamento,Fases_v02,Implementacao
+RF01,R,5,E02,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E02,PLANO_TECNICO.md,1/8,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RF02,R,5,E02,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E02,PLANO_TECNICO.md,1/8,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RF03,R,5,E02,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E02,PLANO_TECNICO.md,1/8,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RF04,R,5,E02,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E02,PLANO_TECNICO.md,1/8,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RF05,R,5,E10,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E10,PLANO_TECNICO.md,1/6/8,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RF06,R,5,E04,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E04,PLANO_TECNICO.md,7,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RF07,R,5,E03,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E03,PLANO_TECNICO.md,2,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RF08,R,5,E05,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E05,PLANO_TECNICO.md,3,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RF09,R,5,E06,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E06,PLANO_TECNICO.md,3,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RF10,R,5,E05,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E05,PLANO_TECNICO.md,3,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RF11,R,5,E05,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E05,PLANO_TECNICO.md,3,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RF12,R,5,E08,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E08,PLANO_TECNICO.md,5/6,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RF13,R,6,E08,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E08,PLANO_TECNICO.md,5/6,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RF14,R,6,E08,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E08,PLANO_TECNICO.md,5/6,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RF15,R,6,E07,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E07,PLANO_TECNICO.md,4,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RF16,R,6,E07,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E07,PLANO_TECNICO.md,4,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RF17,R,6,E08,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E08,PLANO_TECNICO.md,5/6,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RF18,R,6,E08,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E08,PLANO_TECNICO.md,5/6,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RF19,R,6,E08,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E08,PLANO_TECNICO.md,5/6,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RF20,R,6,E08,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E08,PLANO_TECNICO.md,5/6,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RF21,R,6,E08,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E08,PLANO_TECNICO.md,5/6,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RF22,R,6,E09,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E09,PLANO_TECNICO.md,5/6,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RF23,R,6,E09,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E09,PLANO_TECNICO.md,5/6,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RF24,R,6,E09,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E09,PLANO_TECNICO.md,5/6,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RF25,R,6,E10,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E10,PLANO_TECNICO.md,1/6/8,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RF26,R,6,E10/E12,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E10/E12,PLANO_TECNICO.md,1/6/8,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RF27,R,6,E12,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E12,PLANO_TECNICO.md,8,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RF28,R,6,E07/E10,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E07/E10,PLANO_TECNICO.md,1/4/6/8,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RF29,R,6,E12,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E12,PLANO_TECNICO.md,8,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RF30,R,6,E10,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E10,PLANO_TECNICO.md,1/6/8,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RF31,R,6,E10,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E10,PLANO_TECNICO.md,1/6/8,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RF32,R,6,E03/E10,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E03/E10,PLANO_TECNICO.md,1/2/6/8,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RF33,R,6,E07/E10,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E07/E10,PLANO_TECNICO.md,1/4/6/8,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RF34,R,6,E04/E10,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E04/E10,PLANO_TECNICO.md,1/6/7/8,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RF35,R,6,E01/E10,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E01/E10,PLANO_TECNICO.md,1/6/8/9,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RF36,R,6,E07,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E07,PLANO_TECNICO.md,4,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RF37,R,6,E08,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E08,PLANO_TECNICO.md,5/6,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RF38,R,6,E08,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E08,PLANO_TECNICO.md,5/6,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RF39,R,6,E08,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E08,PLANO_TECNICO.md,5/6,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RF40,R,6,E08,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E08,PLANO_TECNICO.md,5/6,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RF41,R,7,E08,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E08,PLANO_TECNICO.md,5/6,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RF42,R,7,E03,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E03,PLANO_TECNICO.md,2,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RF43,R,7,E08,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E08,PLANO_TECNICO.md,5/6,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RF44,R,7,E10,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E10,PLANO_TECNICO.md,1/6/8,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RF45,R,7,E07,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E07,PLANO_TECNICO.md,4,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RF46,R,7,E10,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E10,PLANO_TECNICO.md,1/6/8,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RF47,R,7,E11,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E11,PLANO_TECNICO.md,6,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RN01,R,4,E02/E03,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E02/E03,PLANO_TECNICO.md,1/2/8,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RN02,R,4,E03/E12,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E03/E12,PLANO_TECNICO.md,2/8,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RN03,R,4,E03,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E03,PLANO_TECNICO.md,2,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RN04,R,4,E03,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E03,PLANO_TECNICO.md,2,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RN05,R,4,E03/E05,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E03/E05,PLANO_TECNICO.md,2/3,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RN06,R,4,E03/E07,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E03/E07,PLANO_TECNICO.md,2/4,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RN07,R,4,E03/E09,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E03/E09,PLANO_TECNICO.md,2/5/6,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RN08,R,4,E06,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E06,PLANO_TECNICO.md,3,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RN09,R,4,E05,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E05,PLANO_TECNICO.md,3,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RN10,R,4,E05,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E05,PLANO_TECNICO.md,3,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RN11,R,4,E12,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E12,PLANO_TECNICO.md,8,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RN12,R,4,E12,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E12,PLANO_TECNICO.md,8,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RN13,R,4,E12,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E12,PLANO_TECNICO.md,8,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RN14,R,4,E12,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E12,PLANO_TECNICO.md,8,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RN15,R,4,E07,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E07,PLANO_TECNICO.md,4,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RN16,R,4,E07,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E07,PLANO_TECNICO.md,4,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RN17,R,4,E08,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E08,PLANO_TECNICO.md,5/6,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RN18,R,4,E02/E05,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E02/E05,PLANO_TECNICO.md,1/3/8,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RN19,R,5,E05/E07,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E05/E07,PLANO_TECNICO.md,3/4,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RN20,R,5,E02,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E02,PLANO_TECNICO.md,1/8,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RN21,R,5,E03/E08,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E03/E08,PLANO_TECNICO.md,2/5/6,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RN22,R,5,E03,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E03,PLANO_TECNICO.md,2,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RN23,R,5,E03/E10,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E03/E10,PLANO_TECNICO.md,1/2/6/8,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RN24,R,5,E03/E04,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E03/E04,PLANO_TECNICO.md,2/7,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RN25,R,5,E07,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E07,PLANO_TECNICO.md,4,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RNF01,R,7,E07,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E07,PLANO_TECNICO.md,4,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RNF02,R,7,E01/E07,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E01/E07,PLANO_TECNICO.md,1/4/9,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RNF03,R,7,E05/E11,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E05/E11,PLANO_TECNICO.md,3/6,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RNF04,R,7,E02,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E02,PLANO_TECNICO.md,1/8,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RNF05,R,7,E05/E09,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E05/E09,PLANO_TECNICO.md,3/5/6,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RNF06,R,7,E02/E12,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E02/E12,PLANO_TECNICO.md,1/8,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RNF07,R,7,E01/E13,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E01/E13,PLANO_TECNICO.md,1/8/9,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RNF08,R,7,E03/E07,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E03/E07,PLANO_TECNICO.md,2/4,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RNF09,R,7,E05,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E05,PLANO_TECNICO.md,3,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RNF10,R,7,E11,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E11,PLANO_TECNICO.md,6,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RNF11,R,7,E09,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E09,PLANO_TECNICO.md,5/6,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RNF12,R,7,E11,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E11,PLANO_TECNICO.md,6,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RNF13,R,8,E03/E10/E12,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E03/E10/E12,PLANO_TECNICO.md,1/2/6/8,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+RNF14,R,8,E10,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E10,PLANO_TECNICO.md,1/6/8,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+UC01,R,8;9,E02/E03,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E02/E03,PLANO_TECNICO.md,1/2/8,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+UC02,R,9;10,E02,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E02,PLANO_TECNICO.md,1/8,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+UC03,R,9;10,E04,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E04,PLANO_TECNICO.md,7,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+UC04,R,9;10,E05,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E05,PLANO_TECNICO.md,3,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+UC05,R,9;11,E06,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E06,PLANO_TECNICO.md,3,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+UC06,R,9;11,E03,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E03,PLANO_TECNICO.md,2,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+UC07,R,9;11,E08,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E08,PLANO_TECNICO.md,5/6,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+UC08,R,9;12,E07,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E07,PLANO_TECNICO.md,4,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+UC09,R,9;12,E08,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E08,PLANO_TECNICO.md,5/6,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+UC10,R,9;12,E08,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E08,PLANO_TECNICO.md,5/6,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+UC11,R,9;12,E08,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E08,PLANO_TECNICO.md,5/6,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+UC12,R,9;13,E08,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E08,PLANO_TECNICO.md,5/6,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+UC13,R,9,E08,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E08,PLANO_TECNICO.md,5/6,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+UC14,R,9,E08,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E08,PLANO_TECNICO.md,5/6,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+UC15,R,9,E09,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E09,PLANO_TECNICO.md,5/6,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+UC16,R,9,E09,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E09,PLANO_TECNICO.md,5/6,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+UC17,R,9,E09,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E09,PLANO_TECNICO.md,5/6,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+UC18,R,9,E10,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E10,PLANO_TECNICO.md,1/6/8,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+UC19,R,9,E12,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E12,PLANO_TECNICO.md,8,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+UC20,R,9,E10,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E10,PLANO_TECNICO.md,1/6/8,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+UC21,R,9,E10,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E10,PLANO_TECNICO.md,1/6/8,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+UC22,R,9,E03/E10,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E03/E10,PLANO_TECNICO.md,1/2/6/8,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+UC23,R,9,E10,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E10,PLANO_TECNICO.md,1/6/8,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+UC24,R,9,E10,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E10,PLANO_TECNICO.md,1/6/8,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+UC25,R,9,E12,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E12,PLANO_TECNICO.md,8,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+CA01,R,19,E02/E03,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E02/E03,PLANO_TECNICO.md,1/2/8,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+CA02,R,19,E04,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E04,PLANO_TECNICO.md,7,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+CA03,R,19,E05,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E05,PLANO_TECNICO.md,3,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+CA04,R,19,E06,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E06,PLANO_TECNICO.md,3,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+CA05,R,19,E03,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E03,PLANO_TECNICO.md,2,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+CA06,R,19,E05,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E05,PLANO_TECNICO.md,3,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+CA07,R,19,E07,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E07,PLANO_TECNICO.md,4,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+CA08,R,19,E08,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E08,PLANO_TECNICO.md,5/6,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+CA09,R,19,E08,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E08,PLANO_TECNICO.md,5/6,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+CA10,R,19,E08,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E08,PLANO_TECNICO.md,5/6,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+CA11,R,19,E09,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E09,PLANO_TECNICO.md,5/6,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+CA12,R,19,E09,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E09,PLANO_TECNICO.md,5/6,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+CA13,R,19,E03/E09,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E03/E09,PLANO_TECNICO.md,2/5/6,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+CA14,R,19,E10,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E10,PLANO_TECNICO.md,1/6/8,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+CA15,R,19,E10,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E10,PLANO_TECNICO.md,1/6/8,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+CA16,R,19,E03/E08,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E03/E08,PLANO_TECNICO.md,2/5/6,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+CA17,R,19,E03/E08,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E03/E08,PLANO_TECNICO.md,2/5/6,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+CA18,R,20,E07,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E07,PLANO_TECNICO.md,4,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+CA19,R,20,E04/E07,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E04/E07,PLANO_TECNICO.md,4/7,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+CA20,R,20,E11,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E11,PLANO_TECNICO.md,6,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+SEC-ADM-001,S,15,E10,MUST,Obrigatório para produção,BACKLOG_MVP.md: E10,PLANO_TECNICO.md §10,1/6/8,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+SEC-ADM-002,S,15,E10,MUST,Obrigatório para produção,BACKLOG_MVP.md: E10,PLANO_TECNICO.md §10,1/6/8,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+SEC-AI-001,S,14,E07,MUST,Obrigatório para produção,BACKLOG_MVP.md: E07,PLANO_TECNICO.md §10,4,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+SEC-AI-002,S,14,E07,MUST,Obrigatório para produção,BACKLOG_MVP.md: E07,PLANO_TECNICO.md §10,4,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+SEC-AI-003,S,14,E07,MUST,Obrigatório para produção,BACKLOG_MVP.md: E07,PLANO_TECNICO.md §10,4,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+SEC-AI-004,S,14,E07,MUST,Obrigatório para produção,BACKLOG_MVP.md: E07,PLANO_TECNICO.md §10,4,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+SEC-AI-005,S,14,E07,SHOULD,Recomendação rastreada,BACKLOG_MVP.md: E07,PLANO_TECNICO.md §10,4,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+SEC-API-001,S,14,E02/E05/E10,MUST,Obrigatório para produção,BACKLOG_MVP.md: E02/E05/E10,PLANO_TECNICO.md §10,1/3/6/8,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+SEC-API-002,S,14,E02/E05/E10,MUST,Obrigatório para produção,BACKLOG_MVP.md: E02/E05/E10,PLANO_TECNICO.md §10,1/3/6/8,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+SEC-API-003,S,14,E02/E05/E10,MUST,Obrigatório para produção,BACKLOG_MVP.md: E02/E05/E10,PLANO_TECNICO.md §10,1/3/6/8,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+SEC-API-004,S,14,E02/E05/E10,MUST,Obrigatório para produção,BACKLOG_MVP.md: E02/E05/E10,PLANO_TECNICO.md §10,1/3/6/8,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+SEC-API-005,S,14,E02/E05/E10,MUST,Obrigatório para produção,BACKLOG_MVP.md: E02/E05/E10,PLANO_TECNICO.md §10,1/3/6/8,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+SEC-BCP-001,S,16,E13,MUST,Obrigatório para produção,BACKLOG_MVP.md: E13,PLANO_TECNICO.md §10,8/9,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+SEC-CRD-001,S,14,E03,MUST,Obrigatório para produção,BACKLOG_MVP.md: E03,PLANO_TECNICO.md §10,2,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+SEC-CRD-002,S,15,E03,MUST,Obrigatório para produção,BACKLOG_MVP.md: E03,PLANO_TECNICO.md §10,2,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+SEC-CRD-003,S,15,E03,MUST,Obrigatório para produção,BACKLOG_MVP.md: E03,PLANO_TECNICO.md §10,2,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+SEC-CRD-004,S,15,E03,MUST,Obrigatório para produção,BACKLOG_MVP.md: E03,PLANO_TECNICO.md §10,2,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+SEC-DATA-001,S,12,E02/E07,MUST,Obrigatório para produção,BACKLOG_MVP.md: E02/E07,PLANO_TECNICO.md §10,1/4/8,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+SEC-DATA-002,S,12,E02/E07,MUST,Obrigatório para produção,BACKLOG_MVP.md: E02/E07,PLANO_TECNICO.md §10,1/4/8,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+SEC-DATA-003,S,13,E02/E07,MUST,Obrigatório para produção,BACKLOG_MVP.md: E02/E07,PLANO_TECNICO.md §10,1/4/8,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+SEC-DATA-004,S,13,E02/E07,MUST,Obrigatório para produção,BACKLOG_MVP.md: E02/E07,PLANO_TECNICO.md §10,1/4/8,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+SEC-DATA-005,S,13,E02/E07,MUST,Obrigatório para produção,BACKLOG_MVP.md: E02/E07,PLANO_TECNICO.md §10,1/4/8,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+SEC-DEV-001,S,16,E01/E13,MUST,Obrigatório para produção,BACKLOG_MVP.md: E01/E13,PLANO_TECNICO.md §10,1/8/9,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+SEC-DEV-002,S,16,E01/E13,MUST,Obrigatório para produção,BACKLOG_MVP.md: E01/E13,PLANO_TECNICO.md §10,1/8/9,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+SEC-DEV-003,S,16,E01/E13,SHOULD,Recomendação rastreada,BACKLOG_MVP.md: E01/E13,PLANO_TECNICO.md §10,1/8/9,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+SEC-DEV-004,S,16,E01/E13,MUST,Obrigatório para produção,BACKLOG_MVP.md: E01/E13,PLANO_TECNICO.md §10,1/8/9,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+SEC-IAM-001,S,12,E02,MUST,Obrigatório para produção,BACKLOG_MVP.md: E02,PLANO_TECNICO.md §10,1/8,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+SEC-IAM-002,S,12,E02,MUST,Obrigatório para produção,BACKLOG_MVP.md: E02,PLANO_TECNICO.md §10,1/8,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+SEC-IAM-003,S,12,E02,MUST,Obrigatório para produção,BACKLOG_MVP.md: E02,PLANO_TECNICO.md §10,1/8,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+SEC-IAM-004,S,12,E02,MUST,Obrigatório para produção,BACKLOG_MVP.md: E02,PLANO_TECNICO.md §10,1/8,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+SEC-IAM-005,S,12,E02,SHOULD,Recomendação rastreada,BACKLOG_MVP.md: E02,PLANO_TECNICO.md §10,1/8,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+SEC-INF-001,S,16,E01/E13,MUST,Obrigatório para produção,BACKLOG_MVP.md: E01/E13,PLANO_TECNICO.md §10,1/8/9,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+SEC-INF-002,S,16,E01/E13,MUST,Obrigatório para produção,BACKLOG_MVP.md: E01/E13,PLANO_TECNICO.md §10,1/8/9,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+SEC-INF-003,S,16,E01/E13,MUST,Obrigatório para produção,BACKLOG_MVP.md: E01/E13,PLANO_TECNICO.md §10,1/8/9,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+SEC-IR-001,S,16,E13,MUST,Obrigatório para produção,BACKLOG_MVP.md: E13,PLANO_TECNICO.md §10,8/9,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+SEC-IR-002,S,16,E13,MUST,Obrigatório para produção,BACKLOG_MVP.md: E13,PLANO_TECNICO.md §10,8/9,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+SEC-LOG-001,S,15,E01/E13,MUST,Obrigatório para produção,BACKLOG_MVP.md: E01/E13,PLANO_TECNICO.md §10,1/8/9,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+SEC-LOG-002,S,16,E01/E13,MUST,Obrigatório para produção,BACKLOG_MVP.md: E01/E13,PLANO_TECNICO.md §10,1/8/9,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+SEC-PAY-001,S,15,E04,MUST,Obrigatório para produção,BACKLOG_MVP.md: E04,PLANO_TECNICO.md §10,7,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+SEC-PAY-002,S,15,E04,MUST,Obrigatório para produção,BACKLOG_MVP.md: E04,PLANO_TECNICO.md §10,7,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+SEC-PAY-003,S,15,E04,MUST,Obrigatório para produção,BACKLOG_MVP.md: E04,PLANO_TECNICO.md §10,7,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+SEC-STO-001,S,15,E05/E09/E12,MUST,Obrigatório para produção,BACKLOG_MVP.md: E05/E09/E12,PLANO_TECNICO.md §10,3/5/6/8,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+SEC-STO-002,S,15,E05/E09/E12,MUST,Obrigatório para produção,BACKLOG_MVP.md: E05/E09/E12,PLANO_TECNICO.md §10,3/5/6/8,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+SEC-STO-003,S,15,E05/E09/E12,MUST,Obrigatório para produção,BACKLOG_MVP.md: E05/E09/E12,PLANO_TECNICO.md §10,3/5/6/8,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+SEC-STO-004,S,15,E05/E09/E12,MUST,Obrigatório para produção,BACKLOG_MVP.md: E05/E09/E12,PLANO_TECNICO.md §10,3/5/6/8,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+SEC-UPL-001,S,13,E05,MUST,Obrigatório para produção,BACKLOG_MVP.md: E05,PLANO_TECNICO.md §10,3,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+SEC-UPL-002,S,13,E05,MUST,Obrigatório para produção,BACKLOG_MVP.md: E05,PLANO_TECNICO.md §10,3,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+SEC-UPL-003,S,13,E05,MUST,Obrigatório para produção,BACKLOG_MVP.md: E05,PLANO_TECNICO.md §10,3,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+SEC-UPL-004,S,13,E05,MUST,Obrigatório para produção,BACKLOG_MVP.md: E05,PLANO_TECNICO.md §10,3,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+SEC-UPL-005,S,13,E05,MUST,Obrigatório para produção,BACKLOG_MVP.md: E05,PLANO_TECNICO.md §10,3,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+SEC-UPL-006,S,13,E05,MUST,Obrigatório para produção,BACKLOG_MVP.md: E05,PLANO_TECNICO.md §10,3,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+SEC-URL-001,S,13,E06,MUST,Obrigatório para produção,BACKLOG_MVP.md: E06,PLANO_TECNICO.md §10,3,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+SEC-URL-002,S,13,E06,MUST,Obrigatório para produção,BACKLOG_MVP.md: E06,PLANO_TECNICO.md §10,3,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+SEC-URL-003,S,13,E06,MUST,Obrigatório para produção,BACKLOG_MVP.md: E06,PLANO_TECNICO.md §10,3,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+SEC-URL-004,S,14,E06,MUST,Obrigatório para produção,BACKLOG_MVP.md: E06,PLANO_TECNICO.md §10,3,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+H01,H,seção 1,E11,Direção visual,Preservado,BACKLOG_MVP.md: E11,PLANO_TECNICO.md §12,6,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+H02,H,seção 2,E11,Direção visual,Preservado,BACKLOG_MVP.md: E11,PLANO_TECNICO.md §12,6,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+H03,H,seção 3,E11,Direção visual,Preservado,BACKLOG_MVP.md: E11,PLANO_TECNICO.md §12,6,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+H04,H,seção 4,E11,Direção visual,Preservado,BACKLOG_MVP.md: E11,PLANO_TECNICO.md §12,6,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+H05,H,seção 5,E11,Direção visual,Preservado,BACKLOG_MVP.md: E11,PLANO_TECNICO.md §12,6,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+H06,H,seção 6,E11,Direção visual,Preservado,BACKLOG_MVP.md: E11,PLANO_TECNICO.md §12,6,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+H07,H,seção 7,E11,Direção visual,Preservado,BACKLOG_MVP.md: E11,PLANO_TECNICO.md §12,6,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+H08,H,seção 8,E11,Direção visual,Preservado,BACKLOG_MVP.md: E11,PLANO_TECNICO.md §12,6,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+H09,H,seção 9,E11,Opcional,Preservado,BACKLOG_MVP.md: E11,PLANO_TECNICO.md §12,6,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+H10,H,seção 10,E11,Direção visual,Preservado,BACKLOG_MVP.md: E11,PLANO_TECNICO.md §12,6,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+H11,H,seção 11,E11,Direção visual,Preservado,BACKLOG_MVP.md: E11,PLANO_TECNICO.md §12,6,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+H12,H,seção 12,E11,Direção visual,Preservado,BACKLOG_MVP.md: E11,PLANO_TECNICO.md §12,6,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+H13,H,seção 13,E11,Direção visual,Preservado,BACKLOG_MVP.md: E11,PLANO_TECNICO.md §12,6,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+H14,H,seção 14,E11,Direção visual,Preservado,BACKLOG_MVP.md: E11,PLANO_TECNICO.md §12,6,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+H15,H,seção 15,E11,Direção visual,Preservado,BACKLOG_MVP.md: E11,PLANO_TECNICO.md §12,6,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+H16,H,seção 16,E11,Direção visual,Preservado,BACKLOG_MVP.md: E11,PLANO_TECNICO.md §12,6,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+H17,H,seção 17,E11,Direção visual,Preservado,BACKLOG_MVP.md: E11,PLANO_TECNICO.md §12,6,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+H18,H,seção 18,E11,Direção visual,Preservado,BACKLOG_MVP.md: E11,PLANO_TECNICO.md §12,6,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+H19,H,seção 19,E11,Direção visual,Preservado,BACKLOG_MVP.md: E11,PLANO_TECNICO.md §12,6,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+H20,H,seção 20,E11,Direção visual,Preservado,BACKLOG_MVP.md: E11,PLANO_TECNICO.md §12,6,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+DOC-BENCH,R,24.3/29.2,E13,Requisito em prosa,Preservado,"Corpus >=50, comparação Anthropic/Google, avaliação humana",BACKLOG_MVP.md,8/9,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+DOC-MARGIN,R,26.3,E13,Requisito em prosa,Preservado,Custo p95 15/30/60/90/180min,BACKLOG_MVP.md,8/9,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+DOC-LEGAL,R,27,E12/E13,Requisito em prosa,Preservado,Termos/privacidade e revisão humana,BACKLOG_MVP.md,8/9,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+DOC-SEO,R,28,E11,Requisito em prosa,Preservado,SEO e eventos consentidos,BACKLOG_MVP.md,6,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+DOC-GIT,R,22/30,E01,Requisito em prosa,Preservado,Git/CI/ambientes,BACKLOG_MVP.md,1/9,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+DOC-GOLIVE,S,19,E13/E14,Requisito em prosa,Preservado,Checklist integral de lançamento,BACKLOG_MVP.md,8/9,Ver STATUS_IMPLEMENTACAO.md; presença no backlog não significa concluído
+D01,Decisoes_Aprovadas_v0.2,D01,,APROVADO,RESOLVIDO,BACKLOG_MVP.md,PLANO_TECNICO.md,5/6/8,Regra obrigatória; verificar teste de integração
+D02,Decisoes_Aprovadas_v0.2,D02,,APROVADO,RESOLVIDO,BACKLOG_MVP.md,PLANO_TECNICO.md,2/6,Regra obrigatória; verificar teste de integração
+D07,Decisoes_Aprovadas_v0.2,D07,,APROVADO,RESOLVIDO,BACKLOG_MVP.md,PLANO_TECNICO.md,2,Regra obrigatória; verificar teste de integração
+D08,Decisoes_Aprovadas_v0.2,D08,,APROVADO,RESOLVIDO,BACKLOG_MVP.md,PLANO_TECNICO.md,2/5/7,Regra obrigatória; verificar teste de integração
+D15,Decisoes_Aprovadas_v0.2,D15,,APROVADO,RESOLVIDO,BACKLOG_MVP.md,PLANO_TECNICO.md,3/5,Regra obrigatória; verificar teste de integração
+D16,Decisoes_Aprovadas_v0.2,D16,,APROVADO,RESOLVIDO,BACKLOG_MVP.md,PLANO_TECNICO.md,3,Regra obrigatória; verificar teste de integração
+D19,Decisoes_Aprovadas_v0.2,D19,,APROVADO,RESOLVIDO,BACKLOG_MVP.md,PLANO_TECNICO.md,2/4,Regra obrigatória; verificar teste de integração

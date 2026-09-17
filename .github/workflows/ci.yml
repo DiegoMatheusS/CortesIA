@@ -1,0 +1,53 @@
+name: validate
+on: [push, pull_request]
+permissions: {contents: read}
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17.6
+        env: {POSTGRES_USER: test, POSTGRES_PASSWORD: test, POSTGRES_DB: cortes_test}
+        ports: ["5432:5432"]
+        options: --health-cmd "pg_isready -U test" --health-interval 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with: {dotnet-version: '10.0.x'}
+      - run: dotnet test cortes-ia-api/Tests/Cortes.Tests.csproj --configuration Release
+        env:
+          TEST_DATABASE_URL: Host=localhost;Database=cortes_test;Username=test;Password=test
+      - run: dotnet list cortes-ia-api/Cortes.Api.csproj package --vulnerable --include-transitive
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - run: npm install --package-lock-only && npm ci && npm run typecheck && npm run build
+        working-directory: cortes-ia-web
+  workers:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      - run: python -m unittest discover -s tests -v
+        working-directory: cortes-ia-workers
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - uses: gitleaks/gitleaks-action@v2
+        env: {GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'}
+      - uses: aquasecurity/trivy-action@0.33.1
+        with: {scan-type: fs, scan-ref: '.', severity: 'CRITICAL,HIGH', exit-code: '1'}
+  terraform:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+      - run: terraform init -backend=false && terraform validate
+        working-directory: cortes-ia-infra/terraform

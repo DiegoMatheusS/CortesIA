@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Ponteiro de resultado runtime v0.2",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "jobId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "fence": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "manifestKey": {
+      "type": "string",
+      "pattern": "^projects/[^/]+/jobs/[^/]+/[0-9]+/event\\.json$"
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "jobId",
+    "fence",
+    "manifestKey"
+  ]
+}

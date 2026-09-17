@@ -1,0 +1,158 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://contracts.example.invalid/cortes/event.v1.schema.json",
+  "title": "Processing event v1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "eventId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "jobId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "attemptId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "leaseToken": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "sequence": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "correlationId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "progress",
+        "heartbeat",
+        "succeeded",
+        "failed"
+      ]
+    },
+    "stage": {
+      "type": "string",
+      "enum": [
+        "INGEST_VALIDATE",
+        "LINK_IMPORT",
+        "AUDIO_EXTRACT",
+        "TRANSCRIBE",
+        "SELECT",
+        "REVIEW",
+        "PREVIEW",
+        "RENDER",
+        "COVER",
+        "BUNDLE"
+      ]
+    },
+    "occurredAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "outputManifestId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "errorCode": {
+      "type": "string"
+    },
+    "retryable": {
+      "type": "boolean"
+    },
+    "completedUnits": {
+      "type": "integer",
+      "format": "int64",
+      "minimum": 0
+    },
+    "totalUnits": {
+      "type": "integer",
+      "format": "int64",
+      "minimum": 0
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "elapsedMs": {
+          "type": "integer",
+          "format": "int64",
+          "minimum": 0
+        },
+        "inputTokens": {
+          "type": "integer",
+          "format": "int64",
+          "minimum": 0
+        },
+        "outputTokens": {
+          "type": "integer",
+          "format": "int64",
+          "minimum": 0
+        },
+        "cpuMs": {
+          "type": "integer",
+          "format": "int64",
+          "minimum": 0
+        },
+        "peakMemoryBytes": {
+          "type": "integer",
+          "format": "int64",
+          "minimum": 0
+        }
+      }
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "eventId",
+    "jobId",
+    "attemptId",
+    "leaseToken",
+    "sequence",
+    "correlationId",
+    "kind",
+    "stage",
+    "occurredAt"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "succeeded"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "outputManifestId"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "failed"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "errorCode",
+          "retryable"
+        ]
+      }
+    }
+  ]
+}

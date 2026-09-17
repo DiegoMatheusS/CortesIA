@@ -1,0 +1,7413 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Cortes IA — contrato proposto",
+    "version": "0.2.0",
+    "description": "Contrato-alvo atualizado pelas decisões v0.2. Não confundir com OpenAPI efetivamente gerado pela API inicial; ver API_IMPLEMENTADA.md."
+  },
+  "servers": [
+    {
+      "url": "https://api.example.invalid",
+      "description": "Placeholder deliberado; substituir pelo host do ambiente."
+    }
+  ],
+  "paths": {
+    "/api/v1/auth/register": {
+      "post": {
+        "operationId": "auth_register",
+        "summary": "Cadastrar conta",
+        "description": "Valida dados; resposta neutra evita enumeração. Grant trial após requisitos de elegibilidade/verificação.",
+        "tags": [
+          "auth"
+        ],
+        "security": [],
+        "responses": {
+          "202": {
+            "description": "Operação aceita",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ack"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Register"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/email/request": {
+      "post": {
+        "operationId": "auth_emailRequest",
+        "summary": "Verificação/recuperação segura",
+        "description": "Ownership e validação server-side; regras no plano técnico.",
+        "tags": [
+          "auth"
+        ],
+        "security": [],
+        "responses": {
+          "202": {
+            "description": "Operação aceita",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ack"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmailInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/email/verify": {
+      "post": {
+        "operationId": "auth_emailVerify",
+        "summary": "Verificação/recuperação segura",
+        "description": "Ownership e validação server-side; regras no plano técnico.",
+        "tags": [
+          "auth"
+        ],
+        "security": [],
+        "responses": {
+          "202": {
+            "description": "Operação aceita",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ack"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TokenInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/password/forgot": {
+      "post": {
+        "operationId": "auth_forgot",
+        "summary": "Verificação/recuperação segura",
+        "description": "Ownership e validação server-side; regras no plano técnico.",
+        "tags": [
+          "auth"
+        ],
+        "security": [],
+        "responses": {
+          "202": {
+            "description": "Operação aceita",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ack"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmailInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/password/reset": {
+      "post": {
+        "operationId": "auth_reset",
+        "summary": "Verificação/recuperação segura",
+        "description": "Ownership e validação server-side; regras no plano técnico.",
+        "tags": [
+          "auth"
+        ],
+        "security": [],
+        "responses": {
+          "202": {
+            "description": "Operação aceita",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ack"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetPassword"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "operationId": "auth_login",
+        "summary": "Autenticar ou iniciar MFA",
+        "description": "Rate limit, origem/antiforgery, cookie somente após fatores exigidos. Nunca retornar sessão persistente ao localStorage.",
+        "tags": [
+          "auth"
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResult"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Login"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/mfa/verify": {
+      "post": {
+        "operationId": "auth_mfaVerify",
+        "summary": "Concluir desafio MFA",
+        "description": "Ownership e validação server-side; regras no plano técnico.",
+        "tags": [
+          "auth"
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResult"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MfaCode"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "operationId": "auth_logout",
+        "summary": "Revogar sessão",
+        "description": "Ownership e validação server-side; regras no plano técnico.",
+        "tags": [
+          "auth"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Sucesso"
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/v1/auth/reauthenticate": {
+      "post": {
+        "operationId": "auth_reauthenticate",
+        "summary": "Registrar autenticação recente",
+        "description": "Ownership e validação server-side; regras no plano técnico.",
+        "tags": [
+          "auth"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ack"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Reauthenticate"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/phone/challenges": {
+      "post": {
+        "operationId": "auth_phoneChallenge",
+        "summary": "Verificar posse quando política exigir",
+        "description": "Ownership e validação server-side; regras no plano técnico.",
+        "tags": [
+          "auth"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Operação aceita",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskAccepted"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PhoneChallenge"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/phone/verify": {
+      "post": {
+        "operationId": "auth_phoneVerify",
+        "summary": "Confirmar telefone",
+        "description": "Ownership e validação server-side; regras no plano técnico.",
+        "tags": [
+          "auth"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ack"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PhoneVerify"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/me": {
+      "get": {
+        "operationId": "account_get",
+        "summary": "Consultar perfil mascarado",
+        "description": "Ownership e validação server-side; regras no plano técnico.",
+        "tags": [
+          "account"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Account"
+                }
+              }
+            },
+            "headers": {
+              "ETag": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Versão para If-Match."
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "operationId": "account_patch",
+        "summary": "Alterar perfil com step-up em dados sensíveis",
+        "description": "Ownership e validação server-side; regras no plano técnico.",
+        "tags": [
+          "account"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Account"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountPatch"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/me/consents": {
+      "post": {
+        "operationId": "account_consent",
+        "summary": "Registrar ou revogar consentimento",
+        "description": "Ownership e validação server-side; regras no plano técnico.",
+        "tags": [
+          "account"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ack"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConsentInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/me/deletion-requests": {
+      "post": {
+        "operationId": "account_delete",
+        "summary": "Solicitar exclusão com step-up",
+        "description": "Ownership e validação server-side; regras no plano técnico.",
+        "tags": [
+          "account"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Operação aceita",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskAccepted"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Reason"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/dashboard": {
+      "get": {
+        "operationId": "account_dashboard",
+        "summary": "Consultar métricas pessoais",
+        "description": "Ownership e validação server-side; regras no plano técnico.",
+        "tags": [
+          "account"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Dashboard"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/catalog": {
+      "get": {
+        "operationId": "catalog_get",
+        "summary": "Consultar catálogo publicado e limites",
+        "description": "Ownership e validação server-side; regras no plano técnico.",
+        "tags": [
+          "catalog"
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Catalog"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/wallet": {
+      "get": {
+        "operationId": "wallet_get",
+        "summary": "Consultar saldo discriminado",
+        "description": "Ownership e validação server-side; regras no plano técnico.",
+        "tags": [
+          "wallet"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Wallet"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/wallet/transactions": {
+      "get": {
+        "operationId": "wallet_transactions",
+        "summary": "Consultar extrato",
+        "description": "Ownership e validação server-side; regras no plano técnico.",
+        "tags": [
+          "wallet"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransactionPage"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          }
+        ]
+      }
+    },
+    "/api/v1/purchases": {
+      "post": {
+        "operationId": "payments_create",
+        "summary": "Criar compra Pix/cartão",
+        "description": "Ownership e validação server-side; regras no plano técnico.",
+        "tags": [
+          "payments"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Purchase"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PurchaseInput"
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "payments_list",
+        "summary": "Histórico de compras",
+        "description": "Ownership e validação server-side; regras no plano técnico.",
+        "tags": [
+          "payments"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchasePage"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          }
+        ]
+      }
+    },
+    "/api/v1/purchases/{purchaseId}": {
+      "get": {
+        "operationId": "payments_get",
+        "summary": "Consultar compra",
+        "description": "Ownership e validação server-side; regras no plano técnico.",
+        "tags": [
+          "payments"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Purchase"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "purchaseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ]
+      }
+    },
+    "/api/v1/webhooks/payments/mercadopago": {
+      "post": {
+        "operationId": "payments_webhook",
+        "summary": "Receber evento autenticado do gateway",
+        "description": "Sem sessão/CSRF de browser; obrigatório validar assinatura/replay do gateway e reconciliar server-to-server antes de creditar. Corpo raw conforme versão da API Mercado Pago selecionada; registrar só campos necessários.",
+        "tags": [
+          "payments"
+        ],
+        "security": [],
+        "responses": {
+          "202": {
+            "description": "Operação aceita",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ack"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "description": "Envelope externo do gateway; não é DTO controlado pelo cliente. Assinatura obrigatória."
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects/uploads": {
+      "post": {
+        "operationId": "projects_upload",
+        "summary": "Aceitar upload privado e criar histórico",
+        "description": "Ownership e validação server-side; regras no plano técnico.",
+        "tags": [
+          "projects"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadCreated"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/uploads/{uploadId}/complete": {
+      "post": {
+        "operationId": "projects_completeUpload",
+        "summary": "Concluir bytes e agendar validação",
+        "description": "Ownership e validação server-side; regras no plano técnico.",
+        "tags": [
+          "projects"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Operação aceita",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskAccepted"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "uploadId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteUpload"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/uploads/{uploadId}/abort": {
+      "post": {
+        "operationId": "projects_abortUpload",
+        "summary": "Abortar sessão e multipart",
+        "description": "Ownership e validação server-side; regras no plano técnico.",
+        "tags": [
+          "projects"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Operação aceita",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ack"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "uploadId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/v1/projects/imports": {
+      "post": {
+        "operationId": "projects_import",
+        "summary": "Aceitar link para preflight seguro",
+        "description": "Ownership e validação server-side; regras no plano técnico.",
+        "tags": [
+          "projects"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Operação aceita",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskAccepted"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImportInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects": {
+      "get": {
+        "operationId": "projects_list",
+        "summary": "Consultar histórico",
+        "description": "Ownership e validação server-side; regras no plano técnico.",
+        "tags": [
+          "projects"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectPage"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          }
+        ]
+      }
+    },
+    "/api/v1/projects/{projectId}": {
+      "get": {
+        "operationId": "projects_get",
+        "summary": "Consultar projeto",
+        "description": "Ownership e validação server-side; regras no plano técnico.",
+        "tags": [
+          "projects"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                }
+              }
+            },
+            "headers": {
+              "ETag": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Versão para If-Match."
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "projects_delete",
+        "summary": "Marcar exclusão e remover mídia",
+        "description": "Ownership e validação server-side; regras no plano técnico.",
+        "tags": [
+          "projects"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Operação aceita",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskAccepted"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/v1/projects/{projectId}/configuration": {
+      "put": {
+        "operationId": "projects_configure",
+        "summary": "Atualizar configuração",
+        "description": "Ownership e validação server-side; regras no plano técnico.",
+        "tags": [
+          "projects"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Configuration"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{projectId}/quotes": {
+      "post": {
+        "operationId": "projects_quote",
+        "summary": "Calcular custo autoritativo",
+        "description": "Ownership e validação server-side; regras no plano técnico.",
+        "tags": [
+          "projects"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Quote"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuoteInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{projectId}/runs": {
+      "post": {
+        "operationId": "projects_run",
+        "summary": "Confirmar custo e reservar execução",
+        "description": "Ownership e validação server-side; regras no plano técnico.",
+        "tags": [
+          "projects"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Operação aceita",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskAccepted"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RunInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{projectId}/status": {
+      "get": {
+        "operationId": "projects_status",
+        "summary": "Etapa e ações disponíveis",
+        "description": "Ownership e validação server-side; regras no plano técnico.",
+        "tags": [
+          "projects"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectStatus"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ]
+      }
+    },
+    "/api/v1/projects/{projectId}/clips": {
+      "get": {
+        "operationId": "clips_list",
+        "summary": "Consultar candidatos",
+        "description": "Ownership e validação server-side; regras no plano técnico.",
+        "tags": [
+          "clips"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClipPage"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          }
+        ]
+      }
+    },
+    "/api/v1/projects/{projectId}/alternatives": {
+      "post": {
+        "operationId": "clips_alternatives",
+        "summary": "Buscar outros sem repetir rejeitados",
+        "description": "Reusa análise quando permitido. Se operação for pesada/paga segundo política aprovada, exige quoteId e nova confirmação. Não cobrar implicitamente.",
+        "tags": [
+          "clips"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Operação aceita",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskAccepted"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AlternativesInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/clips/{clipId}/selection": {
+      "patch": {
+        "operationId": "clips_select",
+        "summary": "Selecionar ou rejeitar candidato",
+        "description": "Ownership e validação server-side; regras no plano técnico.",
+        "tags": [
+          "clips"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Clip"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "clipId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Selection"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/clips/{clipId}/revisions": {
+      "post": {
+        "operationId": "clips_revision",
+        "summary": "Criar revisão de edição leve",
+        "description": "Ownership e validação server-side; regras no plano técnico.",
+        "tags": [
+          "clips"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClipRevision"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "clipId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RevisionInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/revisions/{revisionId}/subtitles": {
+      "get": {
+        "operationId": "clips_subtitles",
+        "summary": "Ler legendas editáveis",
+        "description": "Ownership e validação server-side; regras no plano técnico.",
+        "tags": [
+          "clips"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubtitleInput"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "revisionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ]
+      },
+      "put": {
+        "operationId": "clips_editSubtitles",
+        "summary": "Salvar legendas em nova revisão",
+        "description": "Ownership e validação server-side; regras no plano técnico.",
+        "tags": [
+          "clips"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClipRevision"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "revisionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubtitleInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/covers": {
+      "post": {
+        "operationId": "clips_cover",
+        "summary": "Gerar ou ajustar capa autorizada",
+        "description": "Ownership e validação server-side; regras no plano técnico.",
+        "tags": [
+          "clips"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Operação aceita",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskAccepted"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CoverInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{projectId}/exports": {
+      "post": {
+        "operationId": "exports_create",
+        "summary": "Renderizar selecionados por destino",
+        "description": "Ownership e validação server-side; regras no plano técnico.",
+        "tags": [
+          "exports"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Operação aceita",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskAccepted"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExportInput"
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "exports_list",
+        "summary": "Listar exportações do projeto",
+        "description": "Ownership e validação server-side; regras no plano técnico.",
+        "tags": [
+          "exports"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExportPage"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          }
+        ]
+      }
+    },
+    "/api/v1/exports/{exportId}": {
+      "get": {
+        "operationId": "exports_get",
+        "summary": "Consultar render final",
+        "description": "Ownership e validação server-side; regras no plano técnico.",
+        "tags": [
+          "exports"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Export"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "exportId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ]
+      }
+    },
+    "/api/v1/bundles": {
+      "post": {
+        "operationId": "exports_bundle",
+        "summary": "Criar ZIP privado",
+        "description": "Ownership e validação server-side; regras no plano técnico.",
+        "tags": [
+          "exports"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Operação aceita",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskAccepted"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BundleInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/bundles/{bundleId}": {
+      "get": {
+        "operationId": "exports_bundleStatus",
+        "summary": "Consultar ZIP",
+        "description": "Ownership e validação server-side; regras no plano técnico.",
+        "tags": [
+          "exports"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bundle"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "bundleId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ]
+      }
+    },
+    "/api/v1/media/{assetId}/download": {
+      "get": {
+        "operationId": "media_download",
+        "summary": "Emitir URL privada curta",
+        "description": "Ownership e validação server-side; regras no plano técnico.",
+        "tags": [
+          "media"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Download"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ]
+      }
+    },
+    "/api/v1/tickets": {
+      "post": {
+        "operationId": "support_create",
+        "summary": "Abrir chamado",
+        "description": "Ownership e validação server-side; regras no plano técnico.",
+        "tags": [
+          "support"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ticket"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TicketInput"
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "support_list",
+        "summary": "Listar chamados",
+        "description": "Ownership e validação server-side; regras no plano técnico.",
+        "tags": [
+          "support"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TicketPage"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          }
+        ]
+      }
+    },
+    "/api/v1/tickets/{ticketId}": {
+      "get": {
+        "operationId": "support_get",
+        "summary": "Consultar chamado",
+        "description": "Ownership e validação server-side; regras no plano técnico.",
+        "tags": [
+          "support"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ticket"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "ticketId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ]
+      }
+    },
+    "/api/v1/tickets/{ticketId}/messages": {
+      "get": {
+        "operationId": "support_messages",
+        "summary": "Consultar conversa",
+        "description": "Ownership e validação server-side; regras no plano técnico.",
+        "tags": [
+          "support"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TicketMessagePage"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "ticketId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          }
+        ]
+      },
+      "post": {
+        "operationId": "support_reply",
+        "summary": "Enviar mensagem",
+        "description": "Ownership e validação server-side; regras no plano técnico.",
+        "tags": [
+          "support"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TicketMessage"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "ticketId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MessageInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/tickets/{ticketId}/attachment-uploads": {
+      "post": {
+        "operationId": "support_attachment",
+        "summary": "Criar upload de imagem em quarentena",
+        "description": "Resposta projectId pode ser omitida para ticket geral. Só MIME de imagem permitido; upload não concede leitura antes da validação.",
+        "tags": [
+          "support"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadCreated"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "ticketId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/users": {
+      "get": {
+        "operationId": "admin_users",
+        "summary": "Pesquisar usuários",
+        "description": "MFA e RBAC granular; ações sensíveis exigem step-up e motivo.",
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountPage"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "maxLength": 200
+            }
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/users/{accountId}": {
+      "get": {
+        "operationId": "admin_user",
+        "summary": "Consultar usuário",
+        "description": "MFA e RBAC granular; ações sensíveis exigem step-up e motivo.",
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Account"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "accountId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/users/{accountId}/block": {
+      "post": {
+        "operationId": "admin_block",
+        "summary": "Bloquear/desbloquear conta",
+        "description": "MFA e RBAC granular; ações sensíveis exigem step-up e motivo.",
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ack"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "accountId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BlockInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/users/{accountId}/wallet": {
+      "get": {
+        "operationId": "admin_wallet",
+        "summary": "Consultar carteira",
+        "description": "MFA e RBAC granular; ações sensíveis exigem step-up e motivo.",
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Wallet"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "accountId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/users/{accountId}/transactions": {
+      "get": {
+        "operationId": "admin_transactions",
+        "summary": "Consultar ledger",
+        "description": "MFA e RBAC granular; ações sensíveis exigem step-up e motivo.",
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransactionPage"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "accountId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/credit-adjustments": {
+      "post": {
+        "operationId": "admin_adjust",
+        "summary": "Ajustar créditos auditado",
+        "description": "MFA e RBAC granular; ações sensíveis exigem step-up e motivo.",
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Transaction"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Adjustment"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/credit-refunds": {
+      "post": {
+        "operationId": "admin_creditRefund",
+        "summary": "Estornar consumo",
+        "description": "MFA e RBAC granular; ações sensíveis exigem step-up e motivo.",
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Transaction"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreditRefund"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/payment-refunds": {
+      "post": {
+        "operationId": "admin_moneyRefund",
+        "summary": "Solicitar reembolso monetário",
+        "description": "MFA e RBAC granular; ações sensíveis exigem step-up e motivo.",
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Operação aceita",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskAccepted"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MoneyRefund"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/purchases": {
+      "get": {
+        "operationId": "admin_purchases",
+        "summary": "Consultar compras",
+        "description": "MFA e RBAC granular; ações sensíveis exigem step-up e motivo.",
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchasePage"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/jobs": {
+      "get": {
+        "operationId": "admin_jobs",
+        "summary": "Monitorar fila e erros",
+        "description": "MFA e RBAC granular; ações sensíveis exigem step-up e motivo.",
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminJobPage"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "maxLength": 200
+            }
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/jobs/{jobId}/retry": {
+      "post": {
+        "operationId": "admin_retry",
+        "summary": "Reprocessar sem nova cobrança",
+        "description": "MFA e RBAC granular; ações sensíveis exigem step-up e motivo.",
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Operação aceita",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskAccepted"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Reason"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/tickets": {
+      "get": {
+        "operationId": "admin_tickets",
+        "summary": "Consultar fila de suporte",
+        "description": "MFA e RBAC granular; ações sensíveis exigem step-up e motivo.",
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TicketPage"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "maxLength": 200
+            }
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/tickets/{ticketId}/messages": {
+      "post": {
+        "operationId": "admin_reply",
+        "summary": "Responder chamado",
+        "description": "MFA e RBAC granular; ações sensíveis exigem step-up e motivo.",
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TicketMessage"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "ticketId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MessageInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/tickets/{ticketId}/status": {
+      "patch": {
+        "operationId": "admin_ticketStatus",
+        "summary": "Atualizar status do chamado",
+        "description": "MFA e RBAC granular; ações sensíveis exigem step-up e motivo.",
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ticket"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "ticketId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TicketStatus"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/catalogs": {
+      "post": {
+        "operationId": "admin_catalogDraft",
+        "summary": "Criar catálogo rascunho",
+        "description": "MFA e RBAC granular; ações sensíveis exigem step-up e motivo.",
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskAccepted"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CatalogDraft"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/catalogs/{catalogId}/publish": {
+      "post": {
+        "operationId": "admin_publishCatalog",
+        "summary": "Validar e publicar versão imutável",
+        "description": "MFA e RBAC granular; ações sensíveis exigem step-up e motivo.",
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ack"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "catalogId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Reason"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/ai-policies": {
+      "post": {
+        "operationId": "admin_aiPolicy",
+        "summary": "Criar política de modelos",
+        "description": "MFA e RBAC granular; ações sensíveis exigem step-up e motivo.",
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskAccepted"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AiPolicyDraft"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/ai-policies/{policyId}/publish": {
+      "post": {
+        "operationId": "admin_publishAi",
+        "summary": "Ativar política após benchmark",
+        "description": "MFA e RBAC granular; ações sensíveis exigem step-up e motivo.",
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ack"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "policyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Reason"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/metrics": {
+      "get": {
+        "operationId": "admin_metrics",
+        "summary": "Consultar custos e volume",
+        "description": "MFA e RBAC granular; ações sensíveis exigem step-up e motivo.",
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Metrics"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/access-grants": {
+      "post": {
+        "operationId": "admin_grant",
+        "summary": "Autorizar acesso excepcional à mídia",
+        "description": "MFA e RBAC granular; ações sensíveis exigem step-up e motivo.",
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskAccepted"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccessGrantInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/internal/v1/jobs/{jobId}/lease": {
+      "post": {
+        "operationId": "internal_lease",
+        "summary": "Adquirir tentativa exclusiva",
+        "description": "Ownership e validação server-side; regras no plano técnico.",
+        "tags": [
+          "internal"
+        ],
+        "security": [
+          {
+            "serviceAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Lease"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LeaseInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/internal/v1/jobs/{jobId}/heartbeat": {
+      "post": {
+        "operationId": "internal_heartbeat",
+        "summary": "Renovar lease validando fencing",
+        "description": "Ownership e validação server-side; regras no plano técnico.",
+        "tags": [
+          "internal"
+        ],
+        "security": [
+          {
+            "serviceAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Lease"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Heartbeat"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/internal/v1/jobs/{jobId}/manifests/{manifestId}": {
+      "get": {
+        "operationId": "internal_manifest",
+        "summary": "Autorizar manifesto do job",
+        "description": "Ownership e validação server-side; regras no plano técnico.",
+        "tags": [
+          "internal"
+        ],
+        "security": [
+          {
+            "serviceAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManifestAccess"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado; códigos e condições descritos em CONVENCOES.md.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "manifestId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ]
+      }
+    },
+    "/api/v1/auth/csrf": {
+      "get": {
+        "operationId": "auth_csrf",
+        "summary": "auth_csrf",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CsrfToken"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/mfa/enrollments": {
+      "post": {
+        "operationId": "auth_mfaEnrollment",
+        "summary": "auth_mfaEnrollment",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MfaEnrollment"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "description": "Sessão limitada de bootstrap para administrador recém-provisionado; exige reautenticação e canal autorizado. Sem acesso administrativo até confirmar MFA. Segredo TOTP não vai a logs e deve ser protegido server-side."
+      }
+    },
+    "/api/v1/auth/mfa/enrollments/confirm": {
+      "post": {
+        "operationId": "auth_mfaEnrollmentConfirm",
+        "summary": "auth_mfaEnrollmentConfirm",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ack"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro sanitizado",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MfaEnrollmentConfirm"
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "sessionCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "__Host-cortes_session"
+      },
+      "serviceAuth": {
+        "type": "mutualTLS",
+        "description": "Workload autenticado no ingresso privado; sem acesso público."
+      }
+    },
+    "schemas": {
+      "Problem": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "code": {
+            "type": "string"
+          },
+          "traceId": {
+            "type": "string"
+          },
+          "errors": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "required": [
+          "type",
+          "title",
+          "status",
+          "code",
+          "traceId"
+        ]
+      },
+      "TaskAccepted": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string"
+          },
+          "statusUrl": {
+            "type": "string",
+            "format": "uri-reference"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "statusUrl"
+        ]
+      },
+      "Ack": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "accepted": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "accepted"
+        ]
+      },
+      "Register": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 10000
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "phone": {
+            "type": "string",
+            "pattern": "^\\+[1-9][0-9]{7,14}$"
+          },
+          "cpf": {
+            "type": "string",
+            "pattern": "^[0-9]{11}$"
+          },
+          "password": {
+            "type": "string",
+            "format": "password",
+            "writeOnly": true
+          },
+          "termsVersion": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 10000
+          },
+          "termsAccepted": {
+            "const": true
+          }
+        },
+        "required": [
+          "name",
+          "email",
+          "phone",
+          "cpf",
+          "password",
+          "termsVersion",
+          "termsAccepted"
+        ]
+      },
+      "EmailInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email"
+          }
+        },
+        "required": [
+          "email"
+        ]
+      },
+      "TokenInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "token": {
+            "type": "string",
+            "writeOnly": true
+          }
+        },
+        "required": [
+          "token"
+        ]
+      },
+      "ResetPassword": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "token": {
+            "type": "string",
+            "writeOnly": true
+          },
+          "newPassword": {
+            "type": "string",
+            "format": "password",
+            "writeOnly": true
+          }
+        },
+        "required": [
+          "token",
+          "newPassword"
+        ]
+      },
+      "Login": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "password": {
+            "type": "string",
+            "format": "password",
+            "writeOnly": true
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "LoginResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "authenticated": {
+            "type": "boolean"
+          },
+          "mfaRequired": {
+            "type": "boolean"
+          },
+          "challengeId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "authenticated",
+          "mfaRequired"
+        ]
+      },
+      "MfaCode": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "challengeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string",
+            "writeOnly": true
+          }
+        },
+        "required": [
+          "challengeId",
+          "code"
+        ]
+      },
+      "Reauthenticate": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "password": {
+            "type": "string",
+            "format": "password",
+            "writeOnly": true
+          },
+          "mfaCode": {
+            "type": "string",
+            "writeOnly": true
+          }
+        },
+        "required": [
+          "password"
+        ]
+      },
+      "PhoneChallenge": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "phone": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "phone"
+        ]
+      },
+      "PhoneVerify": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "challengeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string",
+            "writeOnly": true
+          }
+        },
+        "required": [
+          "challengeId",
+          "code"
+        ]
+      },
+      "Account": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "phoneMasked": {
+            "type": "string"
+          },
+          "cpfMasked": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "BLOCKED",
+              "DELETION_PENDING",
+              "DELETED"
+            ]
+          },
+          "emailVerified": {
+            "type": "boolean"
+          },
+          "phoneVerified": {
+            "type": "boolean"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "email",
+          "phoneMasked",
+          "cpfMasked",
+          "status",
+          "emailVerified",
+          "phoneVerified",
+          "version"
+        ]
+      },
+      "AccountPatch": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 10000
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "phone": {
+            "type": "string"
+          }
+        },
+        "required": []
+      },
+      "ConsentInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "purpose": {
+            "type": "string",
+            "enum": [
+              "ANALYTICS",
+              "MARKETING"
+            ]
+          },
+          "granted": {
+            "type": "boolean"
+          },
+          "policyVersion": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 10000
+          }
+        },
+        "required": [
+          "purpose",
+          "granted",
+          "policyVersion"
+        ]
+      },
+      "Reason": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 10000
+          }
+        },
+        "required": [
+          "reason"
+        ]
+      },
+      "Dashboard": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "wallet": {
+            "$ref": "#/components/schemas/Wallet"
+          },
+          "processedVideos": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "generatedClips": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "generatedCovers": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "creations": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "recentProjects": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Project"
+            }
+          }
+        },
+        "required": [
+          "wallet",
+          "processedVideos",
+          "generatedClips",
+          "generatedCovers",
+          "creations",
+          "recentProjects"
+        ]
+      },
+      "Wallet": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "availableCredits": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "reservedCredits": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "purchasedCredits": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "purchaseBonusCredits": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "trialCredits": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "promotionCredits": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "lots": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Lot"
+            }
+          }
+        },
+        "required": [
+          "availableCredits",
+          "reservedCredits",
+          "purchasedCredits",
+          "purchaseBonusCredits",
+          "trialCredits",
+          "promotionCredits",
+          "lots"
+        ]
+      },
+      "Lot": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "PURCHASED",
+              "PURCHASE_BONUS",
+              "TRIAL",
+              "PROMOTION",
+              "ADMIN_COMPENSATION"
+            ]
+          },
+          "available": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "reserved": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "expiresAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "available",
+          "reserved",
+          "expiresAt"
+        ],
+        "description": "PURCHASED e PURCHASE_BONUS não expiram. TRIAL não tem vencimento silencioso no MVP. PROMOTION segue política explícita."
+      },
+      "Transaction": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "availableDelta": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "reservedDelta": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "reversesTransactionId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "availableDelta",
+          "reservedDelta",
+          "reason",
+          "createdAt",
+          "reversesTransactionId"
+        ]
+      },
+      "Package": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string"
+          },
+          "purchasedCredits": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "bonusCredits": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "totalCredits": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "priceMinor": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "BRL"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "code",
+          "purchasedCredits",
+          "bonusCredits",
+          "totalCredits",
+          "priceMinor",
+          "currency"
+        ]
+      },
+      "Feature": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "credits": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "billingUnit": {
+            "const": "PER_RUN"
+          }
+        },
+        "required": [
+          "code",
+          "credits",
+          "billingUnit"
+        ]
+      },
+      "Tier": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "minExclusiveMs": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "maxInclusiveMs": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "credits": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "minExclusiveMs",
+          "maxInclusiveMs",
+          "credits"
+        ]
+      },
+      "Combo": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "features": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "credits": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "code",
+          "features",
+          "credits"
+        ]
+      },
+      "Preset": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "aspectRatio": {
+            "type": "string",
+            "enum": [
+              "9:16",
+              "4:5",
+              "1:1",
+              "16:9",
+              "original"
+            ]
+          },
+          "width": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "height": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "id",
+          "code",
+          "version",
+          "aspectRatio"
+        ]
+      },
+      "Catalog": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "version": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "tiers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Tier"
+            }
+          },
+          "features": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Feature"
+            }
+          },
+          "combos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Combo"
+            }
+          },
+          "packages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Package"
+            }
+          },
+          "presets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Preset"
+            }
+          },
+          "maxUploadBytes": {
+            "type": "integer",
+            "default": 5000000000,
+            "description": "Limite inicial aprovado, ajustável por política administrativa."
+          },
+          "maxDurationMs": {
+            "type": "integer",
+            "default": 10800000
+          },
+          "maxClips": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "supportedSources": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "acceptedMediaTypes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "version",
+          "tiers",
+          "features",
+          "combos",
+          "packages",
+          "presets",
+          "maxUploadBytes",
+          "maxDurationMs",
+          "maxClips",
+          "supportedSources",
+          "acceptedMediaTypes"
+        ]
+      },
+      "PurchaseInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "packageId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "PIX",
+              "CARD"
+            ]
+          },
+          "paymentToken": {
+            "type": "string",
+            "writeOnly": true
+          }
+        },
+        "required": [
+          "packageId",
+          "method"
+        ]
+      },
+      "Purchase": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "APPROVED",
+              "REJECTED",
+              "CANCELLED",
+              "EXPIRED",
+              "PARTIALLY_REFUNDED",
+              "REFUNDED",
+              "CHARGEBACK"
+            ]
+          },
+          "amountMinor": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "BRL"
+            ]
+          },
+          "package": {
+            "$ref": "#/components/schemas/Package"
+          },
+          "checkoutUrl": {
+            "type": "string",
+            "format": "uri"
+          },
+          "pixCopyPaste": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "amountMinor",
+          "currency",
+          "package"
+        ]
+      },
+      "UploadInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "filename": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "sizeBytes": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "contentType": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 10000
+          }
+        },
+        "required": [
+          "filename",
+          "sizeBytes",
+          "contentType",
+          "title"
+        ]
+      },
+      "UploadCreated": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "uploadId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "uploadUrl": {
+            "type": "string",
+            "format": "uri"
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "PUT",
+              "POST"
+            ]
+          },
+          "requiredHeaders": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "maxBytes": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "uploadId",
+          "uploadUrl",
+          "method",
+          "requiredHeaders",
+          "expiresAt",
+          "maxBytes"
+        ]
+      },
+      "UploadPart": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "partNumber": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "etag": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "partNumber",
+          "etag"
+        ]
+      },
+      "CompleteUpload": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "parts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UploadPart"
+            }
+          },
+          "checksumSha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        },
+        "required": []
+      },
+      "ImportInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "maxLength": 2048
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 10000
+          }
+        },
+        "required": [
+          "url",
+          "title"
+        ]
+      },
+      "Configuration": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "quantity": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "durationMode": {
+            "type": "string",
+            "enum": [
+              "UP_TO_1_MIN",
+              "ONE_TO_TWO_MIN",
+              "TWO_TO_THREE_MIN",
+              "AUTO"
+            ]
+          },
+          "styleCode": {
+            "type": "string"
+          },
+          "featureCodes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "uniqueItems": true
+          },
+          "presetIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "uniqueItems": true
+          },
+          "captionsEnabled": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "quantity",
+          "durationMode",
+          "styleCode",
+          "featureCodes",
+          "presetIds",
+          "captionsEnabled"
+        ]
+      },
+      "Project": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ENVIANDO",
+              "RECEBIDO",
+              "TRANSCRIBINDO",
+              "ANALISANDO",
+              "GERANDO_PREVIAS",
+              "AGUARDANDO_REVISAO",
+              "RENDERIZANDO",
+              "PRONTO",
+              "ERRO",
+              "BLOQUEADO_RESTRICAO",
+              "ARQUIVOS_EXPIRADOS",
+              "EXCLUIDO"
+            ]
+          },
+          "durationMs": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "configuration": {
+            "$ref": "#/components/schemas/Configuration"
+          },
+          "configurationVersion": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "filesAvailable": {
+            "type": "boolean"
+          },
+          "sourceAvailable": {
+            "type": "boolean"
+          },
+          "sourceExpiresAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "outcome": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "SUCCESS",
+              "NO_SUITABLE_CLIPS",
+              "SYSTEM_FAILURE",
+              "SOURCE_RESTRICTED",
+              "USER_CANCELLED",
+              null
+            ]
+          },
+          "workingMasterAvailable": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "status",
+          "configurationVersion",
+          "createdAt",
+          "filesAvailable",
+          "sourceAvailable"
+        ]
+      },
+      "ProjectStatus": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ENVIANDO",
+              "RECEBIDO",
+              "TRANSCRIBINDO",
+              "ANALISANDO",
+              "GERANDO_PREVIAS",
+              "AGUARDANDO_REVISAO",
+              "RENDERIZANDO",
+              "PRONTO",
+              "ERRO",
+              "BLOQUEADO_RESTRICAO",
+              "ARQUIVOS_EXPIRADOS",
+              "EXCLUIDO"
+            ]
+          },
+          "stage": {
+            "type": "string"
+          },
+          "completedUnits": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "totalUnits": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "lastUpdatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "retryAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "publicErrorCode": {
+            "type": "string"
+          },
+          "allowedActions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "outcome": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "SUCCESS",
+              "NO_SUITABLE_CLIPS",
+              "SYSTEM_FAILURE",
+              "SOURCE_RESTRICTED",
+              "USER_CANCELLED",
+              null
+            ]
+          }
+        },
+        "required": [
+          "projectId",
+          "status",
+          "stage",
+          "lastUpdatedAt",
+          "allowedActions"
+        ]
+      },
+      "QuoteInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "configurationVersion": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "modality": {
+            "type": "string",
+            "enum": [
+              "trial",
+              "paid",
+              "promotion"
+            ]
+          },
+          "operation": {
+            "type": "string",
+            "enum": [
+              "INITIAL",
+              "ALTERNATIVES",
+              "HEAVY_REPROCESS"
+            ],
+            "description": "INITIAL por padrão. Operações adicionais dependem de política aprovada; edições leves seguem incluídas."
+          },
+          "baseRunId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "configurationVersion",
+          "modality"
+        ]
+      },
+      "QuoteItem": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "credits": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "coveredFeatures": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "description": {
+            "type": "string"
+          },
+          "unit": {
+            "const": "PER_RUN"
+          },
+          "feature": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "catalogVersion": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "code",
+          "credits",
+          "coveredFeatures",
+          "description",
+          "unit",
+          "catalogVersion"
+        ]
+      },
+      "Quote": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "catalogVersion": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "projectVersion": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "durationMs": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QuoteItem"
+            }
+          },
+          "totalCredits": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "balanceAfter": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "termsVersion": {
+            "type": "string"
+          },
+          "sourceFingerprint": {
+            "type": "string"
+          },
+          "balanceBefore": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "id",
+          "catalogVersion",
+          "projectVersion",
+          "durationMs",
+          "items",
+          "totalCredits",
+          "balanceAfter",
+          "expiresAt",
+          "termsVersion",
+          "sourceFingerprint",
+          "balanceBefore"
+        ]
+      },
+      "RunInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "quoteId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "configurationVersion": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "rightsAccepted": {
+            "const": true
+          },
+          "termsVersion": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 10000
+          }
+        },
+        "required": [
+          "quoteId",
+          "configurationVersion",
+          "rightsAccepted",
+          "termsVersion"
+        ]
+      },
+      "Clip": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "projectId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "selection": {
+            "type": "string",
+            "enum": [
+              "SUGGESTED",
+              "SELECTED",
+              "REJECTED"
+            ]
+          },
+          "rationale": {
+            "type": "string"
+          },
+          "currentRevision": {
+            "$ref": "#/components/schemas/ClipRevision"
+          }
+        },
+        "required": [
+          "id",
+          "projectId",
+          "selection",
+          "rationale",
+          "currentRevision"
+        ]
+      },
+      "Selection": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "selection": {
+            "type": "string",
+            "enum": [
+              "SELECTED",
+              "REJECTED",
+              "SUGGESTED"
+            ]
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "selection"
+        ]
+      },
+      "AlternativesInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "quantity": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "excludeClipIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "quoteId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "quantity",
+          "excludeClipIds"
+        ]
+      },
+      "Crop": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "x": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "y": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "width": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 1
+          },
+          "height": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 1
+          }
+        },
+        "required": [
+          "x",
+          "y",
+          "width",
+          "height"
+        ]
+      },
+      "RevisionInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "startMs": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "endMs": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 10000
+          },
+          "styleCode": {
+            "type": "string"
+          },
+          "crop": {
+            "$ref": "#/components/schemas/Crop"
+          },
+          "captionsEnabled": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "startMs",
+          "endMs",
+          "title",
+          "styleCode",
+          "captionsEnabled"
+        ]
+      },
+      "ClipRevision": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "clipId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "number": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "startMs": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "endMs": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "title": {
+            "type": "string"
+          },
+          "previewAssetId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "captionsEnabled": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "clipId",
+          "number",
+          "startMs",
+          "endMs",
+          "title",
+          "previewAssetId",
+          "captionsEnabled"
+        ]
+      },
+      "SubtitleSegment": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "startMs": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "endMs": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 10000
+          }
+        },
+        "required": [
+          "startMs",
+          "endMs",
+          "text"
+        ]
+      },
+      "SubtitleInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "language": {
+            "type": "string"
+          },
+          "segments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SubtitleSegment"
+            }
+          },
+          "styleCode": {
+            "type": "string"
+          },
+          "enabled": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "language",
+          "segments",
+          "styleCode",
+          "enabled"
+        ]
+      },
+      "CoverInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "revisionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "FRAME",
+              "CONFIGURED_COMPOSITION"
+            ]
+          },
+          "frameMs": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 10000
+          },
+          "templateCode": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "revisionId",
+          "mode"
+        ]
+      },
+      "ExportInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "revisionIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "minItems": 1,
+            "uniqueItems": true
+          },
+          "presetIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "minItems": 1,
+            "uniqueItems": true
+          }
+        },
+        "required": [
+          "revisionIds",
+          "presetIds"
+        ]
+      },
+      "Export": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "revisionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "presetId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "QUEUED",
+              "RUNNING",
+              "SUCCEEDED",
+              "FAILED",
+              "CANCELLED"
+            ]
+          },
+          "assetId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "publicErrorCode": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "revisionId",
+          "presetId",
+          "status",
+          "assetId"
+        ]
+      },
+      "BundleInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "exportIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "minItems": 1,
+            "uniqueItems": true
+          }
+        },
+        "required": [
+          "exportIds"
+        ]
+      },
+      "Download": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "filename": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "url",
+          "expiresAt",
+          "filename"
+        ]
+      },
+      "TicketInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "subject": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 10000
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "PAYMENT",
+              "CREDITS",
+              "ACCOUNT",
+              "VIDEO",
+              "CLIP",
+              "SUBTITLE",
+              "TECHNICAL_ERROR",
+              "SUGGESTION"
+            ]
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 10000
+          },
+          "projectId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "clipId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "attachmentIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        },
+        "required": [
+          "subject",
+          "category",
+          "message"
+        ]
+      },
+      "Ticket": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "OPEN",
+              "IN_REVIEW",
+              "ANSWERED",
+              "RESOLVED"
+            ]
+          },
+          "projectId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "clipId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "subject",
+          "category",
+          "status",
+          "projectId",
+          "clipId",
+          "createdAt"
+        ]
+      },
+      "MessageInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "message": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 10000
+          },
+          "attachmentIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
+      "TicketMessage": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "message": {
+            "type": "string"
+          },
+          "actorRole": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "attachmentIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "message",
+          "actorRole",
+          "createdAt",
+          "attachmentIds"
+        ]
+      },
+      "TicketStatus": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "OPEN",
+              "IN_REVIEW",
+              "ANSWERED",
+              "RESOLVED"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 10000
+          }
+        },
+        "required": [
+          "status",
+          "reason"
+        ]
+      },
+      "Adjustment": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "accountId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "creditsDelta": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 10000
+          }
+        },
+        "required": [
+          "accountId",
+          "creditsDelta",
+          "reason"
+        ]
+      },
+      "CreditRefund": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "originalTransactionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "credits": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 10000
+          }
+        },
+        "required": [
+          "originalTransactionId",
+          "credits",
+          "reason"
+        ]
+      },
+      "MoneyRefund": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "purchaseId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "amountMinor": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 10000
+          }
+        },
+        "required": [
+          "purchaseId",
+          "amountMinor",
+          "reason"
+        ]
+      },
+      "BlockInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "blocked": {
+            "type": "boolean"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 10000
+          }
+        },
+        "required": [
+          "blocked",
+          "reason"
+        ]
+      },
+      "AdminJob": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "runId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "stage": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "attempts": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "deadlineAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lastErrorCode": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "runId",
+          "stage",
+          "status",
+          "attempts",
+          "deadlineAt"
+        ]
+      },
+      "AiPolicyDraft": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schemaVersion": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "modality": {
+            "type": "string",
+            "enum": [
+              "trial",
+              "paid",
+              "promotion"
+            ]
+          },
+          "provider": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 10000
+          },
+          "transcriptionModel": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 10000
+          },
+          "selectionModel": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 10000
+          },
+          "reviewModel": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 10000
+          },
+          "auxiliaryModel": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 10000
+          },
+          "promptVersion": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 10000
+          },
+          "maxTokens": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "maxCalls": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "timeoutSeconds": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 10000
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "modality",
+          "provider",
+          "transcriptionModel",
+          "selectionModel",
+          "reviewModel",
+          "auxiliaryModel",
+          "promptVersion",
+          "maxTokens",
+          "maxCalls",
+          "timeoutSeconds",
+          "reason"
+        ]
+      },
+      "CatalogDraft": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schemaVersion": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "tiers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Tier"
+            }
+          },
+          "features": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Feature"
+            }
+          },
+          "combos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Combo"
+            }
+          },
+          "packages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Package"
+            }
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 10000
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "tiers",
+          "features",
+          "combos",
+          "packages",
+          "reason"
+        ]
+      },
+      "AccessGrantInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "ticketId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "scope": {
+            "type": "string",
+            "enum": [
+              "READ_MEDIA",
+              "READ_TRANSCRIPT"
+            ]
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 10000
+          }
+        },
+        "required": [
+          "projectId",
+          "scope",
+          "expiresAt",
+          "reason"
+        ]
+      },
+      "Metrics": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "from": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "to": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "jobsCompleted": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "jobsFailed": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "reservedCredits": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "capturedCredits": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "refundedCredits": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "technicalCost": {
+            "type": "string",
+            "pattern": "^\\d+(\\.\\d+)?$"
+          },
+          "currency": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "from",
+          "to",
+          "jobsCompleted",
+          "jobsFailed",
+          "reservedCredits",
+          "capturedCredits",
+          "refundedCredits",
+          "technicalCost",
+          "currency"
+        ]
+      },
+      "LeaseInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "messageId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expectedGeneration": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "messageId",
+          "expectedGeneration"
+        ]
+      },
+      "Lease": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "jobId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "attemptId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "leaseToken": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "inputManifestId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "disposition": {
+            "type": "string",
+            "enum": [
+              "GRANTED",
+              "ALREADY_DONE",
+              "BUSY",
+              "CANCELLED"
+            ]
+          }
+        },
+        "required": [
+          "jobId",
+          "disposition"
+        ]
+      },
+      "Heartbeat": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "attemptId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "leaseToken": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "sequence": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "attemptId",
+          "leaseToken",
+          "sequence"
+        ]
+      },
+      "ManifestAccess": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "manifestId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "manifestId",
+          "url",
+          "expiresAt"
+        ]
+      },
+      "ProjectPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Project"
+            }
+          },
+          "nextCursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "items",
+          "nextCursor"
+        ]
+      },
+      "ClipPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Clip"
+            }
+          },
+          "nextCursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "items",
+          "nextCursor"
+        ]
+      },
+      "TransactionPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Transaction"
+            }
+          },
+          "nextCursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "items",
+          "nextCursor"
+        ]
+      },
+      "PurchasePage": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Purchase"
+            }
+          },
+          "nextCursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "items",
+          "nextCursor"
+        ]
+      },
+      "TicketPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Ticket"
+            }
+          },
+          "nextCursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "items",
+          "nextCursor"
+        ]
+      },
+      "TicketMessagePage": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TicketMessage"
+            }
+          },
+          "nextCursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "items",
+          "nextCursor"
+        ]
+      },
+      "AdminJobPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminJob"
+            }
+          },
+          "nextCursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "items",
+          "nextCursor"
+        ]
+      },
+      "AccountPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Account"
+            }
+          },
+          "nextCursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "items",
+          "nextCursor"
+        ]
+      },
+      "ExportPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Export"
+            }
+          },
+          "nextCursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "items",
+          "nextCursor"
+        ]
+      },
+      "CsrfToken": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "token": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "token"
+        ]
+      },
+      "MfaEnrollment": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "enrollmentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "provisioningUri": {
+            "type": "string",
+            "format": "uri"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "enrollmentId",
+          "provisioningUri",
+          "expiresAt"
+        ]
+      },
+      "MfaEnrollmentConfirm": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "enrollmentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string",
+            "writeOnly": true
+          }
+        },
+        "required": [
+          "enrollmentId",
+          "code"
+        ]
+      },
+      "Bundle": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "QUEUED",
+              "RUNNING",
+              "SUCCEEDED",
+              "FAILED",
+              "CANCELLED"
+            ]
+          },
+          "assetId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "assetId"
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,213 @@
+﻿ID,Fonte,Paginas_ou_secao,Etapa,Nivel,Tratamento,Criterio_ou_evidencia,Detalhamento
+RF01,R,5,E02,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E02,PLANO_TECNICO.md
+RF02,R,5,E02,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E02,PLANO_TECNICO.md
+RF03,R,5,E02,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E02,PLANO_TECNICO.md
+RF04,R,5,E02,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E02,PLANO_TECNICO.md
+RF05,R,5,E10,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E10,PLANO_TECNICO.md
+RF06,R,5,E04,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E04,PLANO_TECNICO.md
+RF07,R,5,E03,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E03,PLANO_TECNICO.md
+RF08,R,5,E05,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E05,PLANO_TECNICO.md
+RF09,R,5,E06,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E06,PLANO_TECNICO.md
+RF10,R,5,E05,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E05,PLANO_TECNICO.md
+RF11,R,5,E05,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E05,PLANO_TECNICO.md
+RF12,R,5,E08,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E08,PLANO_TECNICO.md
+RF13,R,6,E08,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E08,PLANO_TECNICO.md
+RF14,R,6,E08,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E08,PLANO_TECNICO.md
+RF15,R,6,E07,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E07,PLANO_TECNICO.md
+RF16,R,6,E07,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E07,PLANO_TECNICO.md
+RF17,R,6,E08,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E08,PLANO_TECNICO.md
+RF18,R,6,E08,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E08,PLANO_TECNICO.md
+RF19,R,6,E08,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E08,PLANO_TECNICO.md
+RF20,R,6,E08,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E08,PLANO_TECNICO.md
+RF21,R,6,E08,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E08,PLANO_TECNICO.md
+RF22,R,6,E09,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E09,PLANO_TECNICO.md
+RF23,R,6,E09,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E09,PLANO_TECNICO.md
+RF24,R,6,E09,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E09,PLANO_TECNICO.md
+RF25,R,6,E10,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E10,PLANO_TECNICO.md
+RF26,R,6,E10/E12,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E10/E12,PLANO_TECNICO.md
+RF27,R,6,E12,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E12,PLANO_TECNICO.md
+RF28,R,6,E07/E10,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E07/E10,PLANO_TECNICO.md
+RF29,R,6,E12,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E12,PLANO_TECNICO.md
+RF30,R,6,E10,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E10,PLANO_TECNICO.md
+RF31,R,6,E10,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E10,PLANO_TECNICO.md
+RF32,R,6,E03/E10,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E03/E10,PLANO_TECNICO.md
+RF33,R,6,E07/E10,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E07/E10,PLANO_TECNICO.md
+RF34,R,6,E04/E10,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E04/E10,PLANO_TECNICO.md
+RF35,R,6,E01/E10,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E01/E10,PLANO_TECNICO.md
+RF36,R,6,E07,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E07,PLANO_TECNICO.md
+RF37,R,6,E08,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E08,PLANO_TECNICO.md
+RF38,R,6,E08,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E08,PLANO_TECNICO.md
+RF39,R,6,E08,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E08,PLANO_TECNICO.md
+RF40,R,6,E08,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E08,PLANO_TECNICO.md
+RF41,R,7,E08,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E08,PLANO_TECNICO.md
+RF42,R,7,E03,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E03,PLANO_TECNICO.md
+RF43,R,7,E08,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E08,PLANO_TECNICO.md
+RF44,R,7,E10,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E10,PLANO_TECNICO.md
+RF45,R,7,E07,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E07,PLANO_TECNICO.md
+RF46,R,7,E10,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E10,PLANO_TECNICO.md
+RF47,R,7,E11,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E11,PLANO_TECNICO.md
+RN01,R,4,E02/E03,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E02/E03,PLANO_TECNICO.md
+RN02,R,4,E03/E12,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E03/E12,PLANO_TECNICO.md
+RN03,R,4,E03,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E03,PLANO_TECNICO.md
+RN04,R,4,E03,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E03,PLANO_TECNICO.md
+RN05,R,4,E03/E05,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E03/E05,PLANO_TECNICO.md
+RN06,R,4,E03/E07,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E03/E07,PLANO_TECNICO.md
+RN07,R,4,E03/E09,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E03/E09,PLANO_TECNICO.md
+RN08,R,4,E06,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E06,PLANO_TECNICO.md
+RN09,R,4,E05,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E05,PLANO_TECNICO.md
+RN10,R,4,E05,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E05,PLANO_TECNICO.md
+RN11,R,4,E12,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E12,PLANO_TECNICO.md
+RN12,R,4,E12,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E12,PLANO_TECNICO.md
+RN13,R,4,E12,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E12,PLANO_TECNICO.md
+RN14,R,4,E12,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E12,PLANO_TECNICO.md
+RN15,R,4,E07,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E07,PLANO_TECNICO.md
+RN16,R,4,E07,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E07,PLANO_TECNICO.md
+RN17,R,4,E08,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E08,PLANO_TECNICO.md
+RN18,R,4,E02/E05,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E02/E05,PLANO_TECNICO.md
+RN19,R,5,E05/E07,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E05/E07,PLANO_TECNICO.md
+RN20,R,5,E02,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E02,PLANO_TECNICO.md
+RN21,R,5,E03/E08,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E03/E08,PLANO_TECNICO.md
+RN22,R,5,E03,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E03,PLANO_TECNICO.md
+RN23,R,5,E03/E10,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E03/E10,PLANO_TECNICO.md
+RN24,R,5,E03/E04,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E03/E04,PLANO_TECNICO.md
+RN25,R,5,E07,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E07,PLANO_TECNICO.md
+RNF01,R,7,E07,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E07,PLANO_TECNICO.md
+RNF02,R,7,E01/E07,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E01/E07,PLANO_TECNICO.md
+RNF03,R,7,E05/E11,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E05/E11,PLANO_TECNICO.md
+RNF04,R,7,E02,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E02,PLANO_TECNICO.md
+RNF05,R,7,E05/E09,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E05/E09,PLANO_TECNICO.md
+RNF06,R,7,E02/E12,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E02/E12,PLANO_TECNICO.md
+RNF07,R,7,E01/E13,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E01/E13,PLANO_TECNICO.md
+RNF08,R,7,E03/E07,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E03/E07,PLANO_TECNICO.md
+RNF09,R,7,E05,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E05,PLANO_TECNICO.md
+RNF10,R,7,E11,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E11,PLANO_TECNICO.md
+RNF11,R,7,E09,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E09,PLANO_TECNICO.md
+RNF12,R,7,E11,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E11,PLANO_TECNICO.md
+RNF13,R,8,E03/E10/E12,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E03/E10/E12,PLANO_TECNICO.md
+RNF14,R,8,E10,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E10,PLANO_TECNICO.md
+UC01,R,8;9,E02/E03,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E02/E03,PLANO_TECNICO.md
+UC02,R,9;10,E02,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E02,PLANO_TECNICO.md
+UC03,R,9;10,E04,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E04,PLANO_TECNICO.md
+UC04,R,9;10,E05,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E05,PLANO_TECNICO.md
+UC05,R,9;11,E06,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E06,PLANO_TECNICO.md
+UC06,R,9;11,E03,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E03,PLANO_TECNICO.md
+UC07,R,9;11,E08,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E08,PLANO_TECNICO.md
+UC08,R,9;12,E07,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E07,PLANO_TECNICO.md
+UC09,R,9;12,E08,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E08,PLANO_TECNICO.md
+UC10,R,9;12,E08,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E08,PLANO_TECNICO.md
+UC11,R,9;12,E08,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E08,PLANO_TECNICO.md
+UC12,R,9;13,E08,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E08,PLANO_TECNICO.md
+UC13,R,9,E08,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E08,PLANO_TECNICO.md
+UC14,R,9,E08,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E08,PLANO_TECNICO.md
+UC15,R,9,E09,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E09,PLANO_TECNICO.md
+UC16,R,9,E09,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E09,PLANO_TECNICO.md
+UC17,R,9,E09,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E09,PLANO_TECNICO.md
+UC18,R,9,E10,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E10,PLANO_TECNICO.md
+UC19,R,9,E12,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E12,PLANO_TECNICO.md
+UC20,R,9,E10,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E10,PLANO_TECNICO.md
+UC21,R,9,E10,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E10,PLANO_TECNICO.md
+UC22,R,9,E03/E10,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E03/E10,PLANO_TECNICO.md
+UC23,R,9,E10,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E10,PLANO_TECNICO.md
+UC24,R,9,E10,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E10,PLANO_TECNICO.md
+UC25,R,9,E12,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E12,PLANO_TECNICO.md
+CA01,R,19,E02/E03,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E02/E03,PLANO_TECNICO.md
+CA02,R,19,E04,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E04,PLANO_TECNICO.md
+CA03,R,19,E05,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E05,PLANO_TECNICO.md
+CA04,R,19,E06,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E06,PLANO_TECNICO.md
+CA05,R,19,E03,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E03,PLANO_TECNICO.md
+CA06,R,19,E05,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E05,PLANO_TECNICO.md
+CA07,R,19,E07,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E07,PLANO_TECNICO.md
+CA08,R,19,E08,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E08,PLANO_TECNICO.md
+CA09,R,19,E08,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E08,PLANO_TECNICO.md
+CA10,R,19,E08,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E08,PLANO_TECNICO.md
+CA11,R,19,E09,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E09,PLANO_TECNICO.md
+CA12,R,19,E09,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E09,PLANO_TECNICO.md
+CA13,R,19,E03/E09,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E03/E09,PLANO_TECNICO.md
+CA14,R,19,E10,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E10,PLANO_TECNICO.md
+CA15,R,19,E10,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E10,PLANO_TECNICO.md
+CA16,R,19,E03/E08,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E03/E08,PLANO_TECNICO.md
+CA17,R,19,E03/E08,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E03/E08,PLANO_TECNICO.md
+CA18,R,20,E07,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E07,PLANO_TECNICO.md
+CA19,R,20,E04/E07,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E04/E07,PLANO_TECNICO.md
+CA20,R,20,E11,Requisito/critério documental,Preservado,BACKLOG_MVP.md: E11,PLANO_TECNICO.md
+SEC-ADM-001,S,15,E10,MUST,Obrigatório para produção,BACKLOG_MVP.md: E10,PLANO_TECNICO.md §10
+SEC-ADM-002,S,15,E10,MUST,Obrigatório para produção,BACKLOG_MVP.md: E10,PLANO_TECNICO.md §10
+SEC-AI-001,S,14,E07,MUST,Obrigatório para produção,BACKLOG_MVP.md: E07,PLANO_TECNICO.md §10
+SEC-AI-002,S,14,E07,MUST,Obrigatório para produção,BACKLOG_MVP.md: E07,PLANO_TECNICO.md §10
+SEC-AI-003,S,14,E07,MUST,Obrigatório para produção,BACKLOG_MVP.md: E07,PLANO_TECNICO.md §10
+SEC-AI-004,S,14,E07,MUST,Obrigatório para produção,BACKLOG_MVP.md: E07,PLANO_TECNICO.md §10
+SEC-AI-005,S,14,E07,SHOULD,Recomendação rastreada,BACKLOG_MVP.md: E07,PLANO_TECNICO.md §10
+SEC-API-001,S,14,E02/E05/E10,MUST,Obrigatório para produção,BACKLOG_MVP.md: E02/E05/E10,PLANO_TECNICO.md §10
+SEC-API-002,S,14,E02/E05/E10,MUST,Obrigatório para produção,BACKLOG_MVP.md: E02/E05/E10,PLANO_TECNICO.md §10
+SEC-API-003,S,14,E02/E05/E10,MUST,Obrigatório para produção,BACKLOG_MVP.md: E02/E05/E10,PLANO_TECNICO.md §10
+SEC-API-004,S,14,E02/E05/E10,MUST,Obrigatório para produção,BACKLOG_MVP.md: E02/E05/E10,PLANO_TECNICO.md §10
+SEC-API-005,S,14,E02/E05/E10,MUST,Obrigatório para produção,BACKLOG_MVP.md: E02/E05/E10,PLANO_TECNICO.md §10
+SEC-BCP-001,S,16,E13,MUST,Obrigatório para produção,BACKLOG_MVP.md: E13,PLANO_TECNICO.md §10
+SEC-CRD-001,S,14,E03,MUST,Obrigatório para produção,BACKLOG_MVP.md: E03,PLANO_TECNICO.md §10
+SEC-CRD-002,S,15,E03,MUST,Obrigatório para produção,BACKLOG_MVP.md: E03,PLANO_TECNICO.md §10
+SEC-CRD-003,S,15,E03,MUST,Obrigatório para produção,BACKLOG_MVP.md: E03,PLANO_TECNICO.md §10
+SEC-CRD-004,S,15,E03,MUST,Obrigatório para produção,BACKLOG_MVP.md: E03,PLANO_TECNICO.md §10
+SEC-DATA-001,S,12,E02/E07,MUST,Obrigatório para produção,BACKLOG_MVP.md: E02/E07,PLANO_TECNICO.md §10
+SEC-DATA-002,S,12,E02/E07,MUST,Obrigatório para produção,BACKLOG_MVP.md: E02/E07,PLANO_TECNICO.md §10
+SEC-DATA-003,S,13,E02/E07,MUST,Obrigatório para produção,BACKLOG_MVP.md: E02/E07,PLANO_TECNICO.md §10
+SEC-DATA-004,S,13,E02/E07,MUST,Obrigatório para produção,BACKLOG_MVP.md: E02/E07,PLANO_TECNICO.md §10
+SEC-DATA-005,S,13,E02/E07,MUST,Obrigatório para produção,BACKLOG_MVP.md: E02/E07,PLANO_TECNICO.md §10
+SEC-DEV-001,S,16,E01/E13,MUST,Obrigatório para produção,BACKLOG_MVP.md: E01/E13,PLANO_TECNICO.md §10
+SEC-DEV-002,S,16,E01/E13,MUST,Obrigatório para produção,BACKLOG_MVP.md: E01/E13,PLANO_TECNICO.md §10
+SEC-DEV-003,S,16,E01/E13,SHOULD,Recomendação rastreada,BACKLOG_MVP.md: E01/E13,PLANO_TECNICO.md §10
+SEC-DEV-004,S,16,E01/E13,MUST,Obrigatório para produção,BACKLOG_MVP.md: E01/E13,PLANO_TECNICO.md §10
+SEC-IAM-001,S,12,E02,MUST,Obrigatório para produção,BACKLOG_MVP.md: E02,PLANO_TECNICO.md §10
+SEC-IAM-002,S,12,E02,MUST,Obrigatório para produção,BACKLOG_MVP.md: E02,PLANO_TECNICO.md §10
+SEC-IAM-003,S,12,E02,MUST,Obrigatório para produção,BACKLOG_MVP.md: E02,PLANO_TECNICO.md §10
+SEC-IAM-004,S,12,E02,MUST,Obrigatório para produção,BACKLOG_MVP.md: E02,PLANO_TECNICO.md §10
+SEC-IAM-005,S,12,E02,SHOULD,Recomendação rastreada,BACKLOG_MVP.md: E02,PLANO_TECNICO.md §10
+SEC-INF-001,S,16,E01/E13,MUST,Obrigatório para produção,BACKLOG_MVP.md: E01/E13,PLANO_TECNICO.md §10
+SEC-INF-002,S,16,E01/E13,MUST,Obrigatório para produção,BACKLOG_MVP.md: E01/E13,PLANO_TECNICO.md §10
+SEC-INF-003,S,16,E01/E13,MUST,Obrigatório para produção,BACKLOG_MVP.md: E01/E13,PLANO_TECNICO.md §10
+SEC-IR-001,S,16,E13,MUST,Obrigatório para produção,BACKLOG_MVP.md: E13,PLANO_TECNICO.md §10
+SEC-IR-002,S,16,E13,MUST,Obrigatório para produção,BACKLOG_MVP.md: E13,PLANO_TECNICO.md §10
+SEC-LOG-001,S,15,E01/E13,MUST,Obrigatório para produção,BACKLOG_MVP.md: E01/E13,PLANO_TECNICO.md §10
+SEC-LOG-002,S,16,E01/E13,MUST,Obrigatório para produção,BACKLOG_MVP.md: E01/E13,PLANO_TECNICO.md §10
+SEC-PAY-001,S,15,E04,MUST,Obrigatório para produção,BACKLOG_MVP.md: E04,PLANO_TECNICO.md §10
+SEC-PAY-002,S,15,E04,MUST,Obrigatório para produção,BACKLOG_MVP.md: E04,PLANO_TECNICO.md §10
+SEC-PAY-003,S,15,E04,MUST,Obrigatório para produção,BACKLOG_MVP.md: E04,PLANO_TECNICO.md §10
+SEC-STO-001,S,15,E05/E09/E12,MUST,Obrigatório para produção,BACKLOG_MVP.md: E05/E09/E12,PLANO_TECNICO.md §10
+SEC-STO-002,S,15,E05/E09/E12,MUST,Obrigatório para produção,BACKLOG_MVP.md: E05/E09/E12,PLANO_TECNICO.md §10
+SEC-STO-003,S,15,E05/E09/E12,MUST,Obrigatório para produção,BACKLOG_MVP.md: E05/E09/E12,PLANO_TECNICO.md §10
+SEC-STO-004,S,15,E05/E09/E12,MUST,Obrigatório para produção,BACKLOG_MVP.md: E05/E09/E12,PLANO_TECNICO.md §10
+SEC-UPL-001,S,13,E05,MUST,Obrigatório para produção,BACKLOG_MVP.md: E05,PLANO_TECNICO.md §10
+SEC-UPL-002,S,13,E05,MUST,Obrigatório para produção,BACKLOG_MVP.md: E05,PLANO_TECNICO.md §10
+SEC-UPL-003,S,13,E05,MUST,Obrigatório para produção,BACKLOG_MVP.md: E05,PLANO_TECNICO.md §10
+SEC-UPL-004,S,13,E05,MUST,Obrigatório para produção,BACKLOG_MVP.md: E05,PLANO_TECNICO.md §10
+SEC-UPL-005,S,13,E05,MUST,Obrigatório para produção,BACKLOG_MVP.md: E05,PLANO_TECNICO.md §10
+SEC-UPL-006,S,13,E05,MUST,Obrigatório para produção,BACKLOG_MVP.md: E05,PLANO_TECNICO.md §10
+SEC-URL-001,S,13,E06,MUST,Obrigatório para produção,BACKLOG_MVP.md: E06,PLANO_TECNICO.md §10
+SEC-URL-002,S,13,E06,MUST,Obrigatório para produção,BACKLOG_MVP.md: E06,PLANO_TECNICO.md §10
+SEC-URL-003,S,13,E06,MUST,Obrigatório para produção,BACKLOG_MVP.md: E06,PLANO_TECNICO.md §10
+SEC-URL-004,S,14,E06,MUST,Obrigatório para produção,BACKLOG_MVP.md: E06,PLANO_TECNICO.md §10
+H01,H,seção 1,E11,Direção visual,Preservado,BACKLOG_MVP.md: E11,PLANO_TECNICO.md §12
+H02,H,seção 2,E11,Direção visual,Preservado,BACKLOG_MVP.md: E11,PLANO_TECNICO.md §12
+H03,H,seção 3,E11,Direção visual,Preservado,BACKLOG_MVP.md: E11,PLANO_TECNICO.md §12
+H04,H,seção 4,E11,Direção visual,Preservado,BACKLOG_MVP.md: E11,PLANO_TECNICO.md §12
+H05,H,seção 5,E11,Direção visual,Preservado,BACKLOG_MVP.md: E11,PLANO_TECNICO.md §12
+H06,H,seção 6,E11,Direção visual,Preservado,BACKLOG_MVP.md: E11,PLANO_TECNICO.md §12
+H07,H,seção 7,E11,Direção visual,Preservado,BACKLOG_MVP.md: E11,PLANO_TECNICO.md §12
+H08,H,seção 8,E11,Direção visual,Preservado,BACKLOG_MVP.md: E11,PLANO_TECNICO.md §12
+H09,H,seção 9,E11,Opcional,Preservado,BACKLOG_MVP.md: E11,PLANO_TECNICO.md §12
+H10,H,seção 10,E11,Direção visual,Preservado,BACKLOG_MVP.md: E11,PLANO_TECNICO.md §12
+H11,H,seção 11,E11,Direção visual,Preservado,BACKLOG_MVP.md: E11,PLANO_TECNICO.md §12
+H12,H,seção 12,E11,Direção visual,Preservado,BACKLOG_MVP.md: E11,PLANO_TECNICO.md §12
+H13,H,seção 13,E11,Direção visual,Preservado,BACKLOG_MVP.md: E11,PLANO_TECNICO.md §12
+H14,H,seção 14,E11,Direção visual,Preservado,BACKLOG_MVP.md: E11,PLANO_TECNICO.md §12
+H15,H,seção 15,E11,Direção visual,Preservado,BACKLOG_MVP.md: E11,PLANO_TECNICO.md §12
+H16,H,seção 16,E11,Direção visual,Preservado,BACKLOG_MVP.md: E11,PLANO_TECNICO.md §12
+H17,H,seção 17,E11,Direção visual,Preservado,BACKLOG_MVP.md: E11,PLANO_TECNICO.md §12
+H18,H,seção 18,E11,Direção visual,Preservado,BACKLOG_MVP.md: E11,PLANO_TECNICO.md §12
+H19,H,seção 19,E11,Direção visual,Preservado,BACKLOG_MVP.md: E11,PLANO_TECNICO.md §12
+H20,H,seção 20,E11,Direção visual,Preservado,BACKLOG_MVP.md: E11,PLANO_TECNICO.md §12
+DOC-BENCH,R,24.3/29.2,E13,Requisito em prosa,Preservado,"Corpus >=50, comparação Anthropic/Google, avaliação humana",BACKLOG_MVP.md
+DOC-MARGIN,R,26.3,E13,Requisito em prosa,Preservado,Custo p95 15/30/60/90/180min,BACKLOG_MVP.md
+DOC-LEGAL,R,27,E12/E13,Requisito em prosa,Preservado,Termos/privacidade e revisão humana,BACKLOG_MVP.md
+DOC-SEO,R,28,E11,Requisito em prosa,Preservado,SEO e eventos consentidos,BACKLOG_MVP.md
+DOC-GIT,R,22/30,E01,Requisito em prosa,Preservado,Git/CI/ambientes,BACKLOG_MVP.md
+DOC-GOLIVE,S,19,E13/E14,Requisito em prosa,Preservado,Checklist integral de lançamento,BACKLOG_MVP.md

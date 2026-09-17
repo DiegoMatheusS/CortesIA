@@ -1,0 +1,15 @@
+.env
+.env.*
+!.env.example
+**/bin/
+**/obj/
+**/node_modules/
+**/.next/
+**/__pycache__/
+**/*.pyc
+**/.venv/
+**/.terraform/
+**/*.tfstate*
+**/*.tfvars
+!**/*.tfvars.example
+artifacts/

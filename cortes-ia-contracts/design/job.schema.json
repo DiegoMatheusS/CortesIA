@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://contracts.example.invalid/cortes/job.v1.schema.json",
+  "title": "Processing command v1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "messageId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "jobId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "runId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "projectId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "correlationId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "stage": {
+      "type": "string",
+      "enum": [
+        "INGEST_VALIDATE",
+        "LINK_IMPORT",
+        "AUDIO_EXTRACT",
+        "TRANSCRIBE",
+        "SELECT",
+        "REVIEW",
+        "PREVIEW",
+        "RENDER",
+        "COVER",
+        "BUNDLE"
+      ]
+    },
+    "inputManifestId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "policyVersion": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "deadlineAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "expectedProjectGeneration": {
+      "type": "integer",
+      "minimum": 1
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "messageId",
+    "jobId",
+    "runId",
+    "projectId",
+    "correlationId",
+    "createdAt",
+    "stage",
+    "inputManifestId",
+    "expectedProjectGeneration",
+    "policyVersion",
+    "deadlineAt"
+  ]
+}

@@ -1,0 +1,6 @@
+region = "us-east-1"
+name = "cortes-ia-staging"
+media_bucket = "SUBSTITUA-POR-NOME-GLOBAL-UNICO"
+frontend_origin = "https://SEU-DOMINIO"
+alert_email = "OPERACAO@SEU-DOMINIO"
+# No passwords or tokens here.

@@ -1,0 +1,144 @@
+name: cortes-ia
+x-cloud: &cloud
+  AWS_ACCESS_KEY_ID: test
+  AWS_SECRET_ACCESS_KEY: test
+  AWS_REGION: us-east-1
+  AWS_DEFAULT_REGION: us-east-1
+  AWS_ENDPOINT_URL: http://localstack:4566
+  MEDIA_BUCKET: cortes-local
+  JOBS_QUEUE_URL: http://localstack:4566/queue/us-east-1/000000000000/cortes-jobs
+  EVENTS_QUEUE_URL: http://localstack:4566/queue/us-east-1/000000000000/cortes-events
+x-api-env: &api-env
+  <<: *cloud
+  ASPNETCORE_ENVIRONMENT: Development
+  ConnectionStrings__Database: Host=postgres;Database=cortes;Username=cortes;Password=${POSTGRES_PASSWORD:?run bootstrap first}
+  CPF_HMAC_KEY: ${CPF_HMAC_KEY:?run bootstrap first}
+  WORKER_TOKEN: ${WORKER_TOKEN:?run bootstrap first}
+  S3_PUBLIC_ENDPOINT: http://localhost:4566
+  PUBLIC_URL: http://localhost:3000
+  PAYMENTS_MODE: sandbox-local
+  SMTP_HOST: mailpit
+  SMTP_PORT: "1025"
+services:
+  postgres:
+    image: postgres:17.6-bookworm
+    environment:
+      POSTGRES_DB: cortes
+      POSTGRES_USER: cortes
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?run bootstrap first}
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL","pg_isready -U cortes -d cortes"]
+      interval: 5s
+      retries: 20
+    networks: [private]
+  redis:
+    image: redis:7.4.5-alpine
+    command: ["redis-server","--save","","--appendonly","no"]
+    networks: [private]
+  localstack:
+    image: localstack/localstack:4.9.2
+    environment:
+      SERVICES: s3,sqs
+      SQS_ENDPOINT_STRATEGY: path
+      PERSISTENCE: "1"
+    ports: ["127.0.0.1:4566:4566"]
+    volumes: ["./cortes-ia-infra/local/init-aws.sh:/etc/localstack/init/ready.d/init-aws.sh:ro","awsdata:/var/lib/localstack"]
+    networks: [private]
+    healthcheck:
+      test: ["CMD-SHELL","awslocal sqs get-queue-url --queue-name cortes-events >/dev/null"]
+      interval: 10s
+      retries: 30
+  mailpit:
+    image: axllent/mailpit:v1.27
+    ports: ["127.0.0.1:8025:8025"]
+    networks: [private]
+  volume-init:
+    image: busybox:1.37
+    user: root
+    command: ["sh","-c","mkdir -p /work/tasks && chown -R 10001:10001 /work"]
+    volumes: ["mediawork:/work"]
+    network_mode: none
+  db-init:
+    build: ./cortes-ia-api
+    environment: *api-env
+    command: ["--init-db"]
+    depends_on:
+      postgres: {condition: service_healthy}
+    networks: [private]
+  api:
+    build: ./cortes-ia-api
+    environment: *api-env
+    depends_on:
+      db-init: {condition: service_completed_successfully}
+      localstack: {condition: service_healthy}
+    volumes: ["dataprotection:/home/app/.aspnet/DataProtection-Keys"]
+    networks: [private]
+    restart: unless-stopped
+  web:
+    build: ./cortes-ia-web
+    environment: {API_INTERNAL_URL: "http://api:8080"}
+    ports: ["127.0.0.1:3000:3000"]
+    depends_on: [api]
+    networks: [private]
+  worker:
+    build:
+      context: ./cortes-ia-workers
+      target: base
+    environment:
+      <<: *cloud
+      APP_ENV: development
+      AI_PROVIDER: fixture
+      TRANSCRIPT_FIXTURE: /app/fixtures/transcript.json
+      TRANSCRIPTION_MODEL: gpt-transcribe
+      TRIAL_SELECTION_MODEL: gpt-5.6-terra
+      PAID_SELECTION_MODEL: gpt-5.6-sol
+      WORKER_TOKEN: ${WORKER_TOKEN:?run bootstrap first}
+      INTERNAL_API: http://api:8080
+      SCAN_MODE: disabled-development
+      CLAMAV_HOST: clamav
+      YOUTUBE_ENABLED: "false"
+      MEDIA_TASK_ROOT: /work/tasks
+    volumes: ["mediawork:/work"]
+    depends_on:
+      volume-init: {condition: service_completed_successfully}
+      api: {condition: service_started}
+      localstack: {condition: service_healthy}
+    networks: [private]
+    read_only: true
+    tmpfs: ["/tmp:size=12g,uid=10001,gid=10001,mode=0700"]
+    mem_limit: 3g
+    cpus: 2
+    pids_limit: 128
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+  media:
+    build:
+      context: ./cortes-ia-workers
+      target: media
+    environment: {MEDIA_TASK_ROOT: /work/tasks}
+    volumes: ["mediawork:/work"]
+    depends_on:
+      volume-init: {condition: service_completed_successfully}
+    network_mode: none
+    read_only: true
+    tmpfs: ["/tmp:size=512m,uid=10001,gid=10001,mode=0700"]
+    mem_limit: 4g
+    cpus: 2
+    pids_limit: 128
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+  clamav:
+    image: clamav/clamav:1.4
+    profiles: [antivirus]
+    volumes: ["clamdata:/var/lib/clamav","./cortes-ia-infra/local/clamd.conf:/etc/clamav/clamd.conf:ro"]
+    networks: [private]
+    mem_limit: 3g
+volumes:
+  pgdata:
+  awsdata:
+  mediawork:
+  dataprotection:
+  clamdata:
+networks:
+  private:

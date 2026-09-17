@@ -1,0 +1,454 @@
+CORTES IA — DECISÕES APROVADAS PARA ATUALIZAÇÃO DO PACOTE TÉCNICO
+Versão de decisão: 0.2
+Data: 16/09/2026
+
+OBJETIVO
+Atualizar o pacote técnico e o plano de implementação considerando as decisões abaixo como REGRAS APROVADAS, e não mais como propostas pendentes.
+
+Atualizar especialmente:
+- docs/PLANO_TECNICO.md
+- docs/BACKLOG_MVP.md
+- docs/RASTREABILIDADE.csv
+- contracts/openapi.json, quando afetado
+- database/modelo.sql, quando afetado
+- contratos/eventos, quando afetados
+
+Não remover funcionalidades já aprovadas.
+
+==================================================
+D01 — RETENÇÃO DO ORIGINAL E EDIÇÃO
+STATUS: APROVADO
+==================================================
+
+Regra:
+
+1. O arquivo ORIGINAL enviado pelo usuário poderá ser removido 48 horas após o primeiro processamento concluído.
+
+2. Antes da remoção do original, o sistema deve gerar/manter um MASTER DE TRABALHO do vídeo completo, normalizado e otimizado para:
+- edição;
+- buscar outros cortes;
+- alterar início/fim dos cortes;
+- gerar novos cortes;
+- reenquadramento;
+- novas renderizações.
+
+3. O master de trabalho não deve ficar no banco de dados.
+Deve ficar em object storage privado.
+
+4. O master permanece disponível enquanto o projeto estiver dentro da política de retenção.
+
+5. Usuário inativo por 120 dias:
+- master;
+- cortes;
+- capas;
+- previews;
+- uploads;
+- artefatos relacionados
+podem/devem ser excluídos conforme a política de retenção já definida.
+
+6. O histórico leve do projeto pode permanecer conforme a política de conta.
+
+7. Créditos do usuário não são excluídos com a limpeza de arquivos.
+
+8. Se o master já tiver sido excluído pela política de retenção, novos cortes que dependam do vídeo completo exigirão novo envio/importação da fonte.
+
+Objetivo:
+economizar storage sem impedir edição e “Buscar outros cortes” logo após o processamento.
+
+==================================================
+D02 — COBRANÇA DOS EXTRAS
+STATUS: APROVADO
+==================================================
+
+Os extras são cobrados POR PROCESSAMENTO/EXECUÇÃO DO PROJETO.
+
+NÃO cobrar extras individualmente por cada corte.
+
+Exemplo:
+
+Vídeo base com legenda simples: 10 créditos
+Legenda dinâmica: +3
+Zoom automático: +2
+Fundo borrado: +3
+
+Total da execução: 18 créditos.
+
+Se a execução gerar 5, 8 ou 10 cortes:
+o usuário NÃO paga 18 créditos por corte.
+O valor cobre os cortes gerados naquela execução, dentro dos limites configurados.
+
+Extras devem ser itens separados na cotação.
+
+Antes de confirmar, mostrar:
+
+- processamento base;
+- cada extra selecionado;
+- total;
+- saldo atual;
+- saldo após a operação.
+
+Nunca ativar um extra silenciosamente.
+
+ALTERAÇÃO POSTERIOR
+
+Se depois da geração o usuário solicitar uma operação que gere NOVO custo pesado e não estava incluída na execução original:
+- gerar nova cotação;
+- mostrar os créditos adicionais;
+- pedir confirmação antes de processar.
+
+EDIÇÕES LEVES
+
+Não cobrar novamente por:
+- corrigir texto da legenda;
+- mudar título;
+- reposicionar legenda;
+- selecionar outra capa já existente;
+- pequenos ajustes que não exijam nova análise pesada.
+
+FORMATOS DE REDE
+
+Instagram Reels, TikTok, YouTube Shorts, Facebook Reels e Kwai usam normalmente o mesmo formato vertical 9:16.
+
+Quando o mesmo arquivo puder atender várias dessas redes:
+NÃO cobrar uma nova execução para cada rede.
+
+Se o usuário solicitar um formato adicional que realmente exija nova renderização, como:
+- 1:1;
+- 4:5;
+- 16:9;
+pode haver nova cotação de renderização, desde que exibida e confirmada previamente.
+
+==================================================
+D07 — VALIDADE DE CRÉDITOS E BÔNUS
+STATUS: APROVADO
+==================================================
+
+1. Créditos COMPRADOS:
+- não expiram.
+
+2. Créditos BÔNUS incluídos em uma compra de pacote:
+- não expiram.
+
+Exemplo:
+Creator:
+150 comprados + 20 bônus
+Os 170 permanecem na conta até o uso.
+
+3. Créditos PROMOCIONAIS independentes de uma compra:
+- podem possuir validade;
+- a validade deve ser informada claramente antes da concessão;
+- nunca criar validade escondida.
+
+4. Créditos grátis de cadastro/teste:
+- benefício concedido uma única vez por CPF;
+- não renovam mensalmente;
+- a política de validade deve ser explícita no catálogo.
+Para o MVP, não aplicar expiração automática silenciosa.
+
+5. Inatividade de 120 dias e exclusão de vídeos:
+- NÃO exclui créditos pagos;
+- NÃO altera a carteira do usuário.
+
+==================================================
+D08 — ESTORNO E FALHAS PARCIAIS
+STATUS: APROVADO
+==================================================
+
+REGRA 1 — FALHA INTERNA ANTES DE PREVIEWS ÚTEIS
+
+Se o sistema falhar por erro interno antes de entregar previews/cortes utilizáveis:
+- devolver 100% dos créditos reservados/capturados daquela execução.
+
+REGRA 2 — ZERO BONS TRECHOS
+
+Se a IA concluir a análise e não encontrar nenhum trecho adequado para gerar cortes:
+- devolver 100% dos créditos daquela execução.
+
+O sistema NÃO deve inventar cortes ruins apenas para cumprir quantidade.
+
+Mostrar mensagem clara:
+“Não encontramos trechos com qualidade suficiente neste vídeo. Seus créditos foram devolvidos.”
+
+REGRA 3 — RETRY TÉCNICO
+
+Retries causados por:
+- timeout;
+- erro de worker;
+- indisponibilidade transitória;
+- falha interna de render;
+- erro temporário de IA/provider
+
+NÃO geram nova cobrança.
+
+REGRA 4 — FALHA DE UM RENDER/EXPORTAÇÃO
+
+Se apenas um output falhar:
+- tentar novamente automaticamente sem cobrar;
+- preservar os outputs que já deram certo.
+
+Se após os retries a falha continuar:
+- não cobrar novamente para tentar o mesmo resultado;
+- permitir nova tentativa/suporte.
+
+REGRA 5 — FALHA COMPLETA DE UM EXTRA PAGO
+
+Se um extra cobrado não puder ser entregue em nenhum dos outputs do projeto:
+exemplo:
+- legenda dinâmica;
+- zoom automático;
+- fundo borrado;
+- enquadramento inteligente;
+- capa automática;
+
+devolver os créditos correspondentes àquele item da cotação.
+
+Não é necessário devolver a base se os cortes base foram entregues corretamente.
+
+REGRA 6 — REJEIÇÃO SUBJETIVA
+
+Se o sistema entregar candidatos tecnicamente válidos, mas o usuário simplesmente não gostar deles:
+- não há estorno automático.
+
+O usuário poderá usar:
+“Buscar outros cortes”
+conforme as regras e limites do projeto.
+
+REGRA 7 — IDEMPOTÊNCIA
+
+O mesmo erro/evento não pode gerar dois estornos.
+
+O total estornado nunca pode superar o total cobrado naquela execução.
+
+==================================================
+D15 — LIMITES TÉCNICOS INICIAIS
+STATUS: APROVADO PARA MVP
+==================================================
+
+Duração máxima de entrada:
+180 minutos (3 horas).
+
+Tamanho máximo de arquivo:
+5 GB por vídeo.
+
+Formatos iniciais:
+- MP4
+- MOV
+- MKV
+- WebM
+
+AVI não deve ser prometido no lançamento sem teste específico.
+
+Resolução de entrada:
+até 4K, sujeita aos codecs suportados.
+
+Exportação padrão:
+até 1080p quando a fonte permitir.
+
+Não anunciar upscale como se fosse qualidade nativa.
+
+Duração e tamanho devem ser validados no servidor.
+
+A duração informada pelo navegador não é autoridade para cobrança.
+
+O administrador deve conseguir alterar limites operacionais sem recompilar o sistema, quando possível.
+
+UPLOAD
+
+Durante o upload inicial:
+- bloquear novo envio na mesma tela;
+- impedir duplo clique;
+- impedir requisição duplicada;
+- não cobrar antes da fonte ser validada e a cotação confirmada.
+
+==================================================
+D16 — LINKS SUPORTADOS
+STATUS: APROVADO
+==================================================
+
+Não existe opção genérica “qualquer URL”.
+
+Links devem usar adaptadores específicos por plataforma/domínio.
+
+MVP:
+- YouTube como primeira fonte de link suportada, desde que tecnicamente acessível e permitido pelo fluxo implementado.
+
+Ao colar link:
+
+1. validar domínio;
+2. validar URL;
+3. verificar metadados;
+4. verificar restrições;
+5. mostrar duração;
+6. calcular custo;
+7. pedir confirmação;
+8. somente então iniciar processamento.
+
+VÍDEO RESTRITO
+
+Se a fonte tiver restrição que impeça processamento:
+- bloquear;
+- informar o usuário;
+- não consumir créditos.
+
+Mensagem sugerida:
+
+“Não foi possível processar este vídeo.
+A fonte possui uma restrição que impede a importação pelo sistema.
+Tente outro vídeo ou envie um arquivo que você tenha autorização para processar.”
+
+SEGURANÇA
+
+O importador deve:
+- usar allowlist;
+- impedir SSRF;
+- bloquear IPs privados/internos;
+- bloquear metadata endpoints da nuvem;
+- revalidar redirects;
+- não contornar mecanismos de bloqueio da plataforma.
+
+Outras fontes poderão ser adicionadas futuramente apenas após:
+- viabilidade técnica;
+- análise de regras da plataforma;
+- testes;
+- segurança.
+
+==================================================
+D19 — PROCESSAMENTO SEM TRECHOS ADEQUADOS
+STATUS: APROVADO
+==================================================
+
+O sistema pode retornar:
+“Nenhum trecho adequado encontrado.”
+
+Isso não é o mesmo que erro técnico.
+
+Se ZERO candidatos úteis forem encontrados:
+- finalizar a execução com outcome específico;
+- devolver 100% dos créditos da execução;
+- manter registro no histórico;
+- permitir que o usuário tente outro vídeo.
+
+Não gerar cortes de baixa qualidade apenas para preencher uma quantidade solicitada.
+
+==================================================
+ALTERAÇÕES DE BACKLOG
+==================================================
+
+Marcar como RESOLVIDOS:
+- D01
+- D02
+- D07
+- D08
+- D15
+- D16
+- D19
+
+Atualizar E00 para não listar esses itens como decisão pendente.
+
+Atualizar dependências dos épicos:
+- E03: usar regras aprovadas de extras, bônus e estorno.
+- E05: usar limites de 5 GB / 180 min e formatos aprovados.
+- E06: YouTube como adaptador inicial e bloqueio sem créditos.
+- E07: zero bons candidatos = estorno total.
+- E08: master de trabalho permite novos cortes até política de retenção.
+- E09: retries e falhas parciais conforme D08.
+- E12: original 48h; master/projetos sujeitos a 120 dias de inatividade.
+
+==================================================
+ALTERAÇÕES NO BANCO / DOMÍNIO
+==================================================
+
+Garantir entidades/campos para distinguir:
+
+MEDIA ASSET TYPE
+- ORIGINAL
+- WORKING_MASTER
+- AUDIO_INTERMEDIATE
+- PREVIEW
+- FINAL_EXPORT
+- COVER
+- SUBTITLE
+- BUNDLE
+
+RETENTION
+- created_at
+- expires_at
+- deletion_state
+- deleted_at
+- retention_reason
+
+QUOTE ITEMS
+Cada item de cotação deve registrar:
+- code
+- description
+- credits
+- unit
+- feature
+- catalog_version
+
+Unidade padrão dos extras:
+PER_RUN
+
+CREDIT LOT TYPE
+- PURCHASED
+- PURCHASE_BONUS
+- TRIAL
+- PROMOTION
+
+Validade:
+PURCHASED = sem expiração
+PURCHASE_BONUS = sem expiração
+PROMOTION = opcional/configurável
+TRIAL = política explícita/configurável, sem expiração silenciosa no MVP
+
+PROCESSING OUTCOME
+Adicionar outcome além do status técnico:
+- SUCCESS
+- NO_SUITABLE_CLIPS
+- SYSTEM_FAILURE
+- SOURCE_RESTRICTED
+- USER_CANCELLED
+
+Isso evita tratar “nenhum bom corte” como pane técnica.
+
+==================================================
+ALTERAÇÕES NA API/UI
+==================================================
+
+Cotação deve mostrar breakdown dos créditos.
+
+Exemplo:
+
+Processamento base       10
+Legenda dinâmica          3
+Zoom automático           2
+--------------------------------
+Total                    15
+
+Saldo atual              50
+Saldo após               35
+
+[ Gerar cortes por 15 créditos ]
+
+Histórico deve diferenciar:
+
+PRONTO
+ERRO
+FONTE RESTRITA
+NENHUM TRECHO ADEQUADO
+ARQUIVOS EXPIRADOS
+
+==================================================
+ORIENTAÇÃO AO WORK
+==================================================
+
+Use estas decisões como fonte mais recente para os itens D01, D02, D07, D08, D15, D16 e D19.
+
+Quando houver conflito com uma proposta anterior do pacote v0.1:
+ESTE DOCUMENTO PREVALECE nesses itens.
+
+Não trate mais essas decisões como “propostas a validar”.
+
+Atualize documentação, backlog, contratos, banco e critérios de aceite de forma consistente.
+
+Não alterar outras decisões D03–D25 que não tenham sido explicitamente aprovadas aqui.

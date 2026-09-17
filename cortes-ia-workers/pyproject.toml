@@ -1,0 +1,7 @@
+[project]
+name = "cortes-ia-workers"
+version = "0.2.0"
+requires-python = ">=3.12"
+description = "Cortes IA processing and isolated media runner"
+[tool.ruff]
+line-length = 120
