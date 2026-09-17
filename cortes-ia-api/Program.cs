@@ -20,13 +20,13 @@ b.Services.Configure<SecurityStampValidatorOptions>(o=>{
 b.Services.AddAntiforgery(o=>o.HeaderName="X-CSRF-Token");
 b.Services.AddAuthorization(o=>o.AddPolicy("Admin",p=>p.RequireRole("Admin").RequireClaim("amr","mfa")));
 b.Services.ConfigureHttpJsonOptions(o=>o.SerializerOptions.UnmappedMemberHandling=JsonUnmappedMemberHandling.Disallow);
-b.Services.AddRateLimiter(o=>{o.RejectionStatusCode=429;o.GlobalLimiter=PartitionedRateLimiter.Create<HttpContext,string>(h=>RateLimitPartition.GetFixedWindowLimiter(h.User.FindFirstValue(ClaimTypes.NameIdentifier)??h.Connection.RemoteIpAddress?.ToString()??"unknown",_=>new FixedWindowRateLimiterOptions{PermitLimit=120,Window=TimeSpan.FromMinutes(1),QueueLimit=0}));o.AddFixedWindowLimiter("auth",o=>{o.PermitLimit=10;o.Window=TimeSpan.FromMinutes(1);o.QueueLimit=0;});});
+b.Services.AddRateLimiter(o=>{o.RejectionStatusCode=429;o.GlobalLimiter=PartitionedRateLimiter.Create<HttpContext,string>(h=>RateLimitPartition.GetFixedWindowLimiter(h.User.FindFirstValue(ClaimTypes.NameIdentifier)??h.Connection.RemoteIpAddress?.ToString()??"unknown",_=>new FixedWindowRateLimiterOptions{PermitLimit=120,Window=TimeSpan.FromMinutes(1),QueueLimit=0}));o.AddPolicy("auth",h=>RateLimitPartition.GetFixedWindowLimiter(h.Connection.RemoteIpAddress?.ToString()??"unknown",_=>new FixedWindowRateLimiterOptions{PermitLimit=10,Window=TimeSpan.FromMinutes(1),QueueLimit=0}));});
 b.Logging.AddJsonConsole();
 b.Services.AddOpenApi();b.Services.AddHttpClient();b.Services.AddScoped<WalletService>();b.Services.AddScoped<Policy>();b.Services.AddScoped<Payments>();b.Services.AddSingleton<Cloud>();b.Services.AddSingleton<Mailer>();b.Services.AddHostedService<Background>();
 var app=b.Build();
 foreach(var key in new[]{"CPF_HMAC_KEY","WORKER_TOKEN"})if((app.Configuration[key]?.Length??0)<32)throw new InvalidOperationException(key+" must contain at least 32 random characters");
-app.Use(async(ctx,next)=>{try{await next();}catch(DomainError e){ctx.Response.StatusCode=e.Status;await ctx.Response.WriteAsJsonAsync(new{code=e.Message,traceId=ctx.TraceIdentifier});}catch(AntiforgeryValidationException){ctx.Response.StatusCode=403;await ctx.Response.WriteAsJsonAsync(new{code="CSRF_INVALID"});}});
 if(!app.Environment.IsDevelopment()){app.UseExceptionHandler(a=>a.Run(async c=>{c.Response.StatusCode=500;await c.Response.WriteAsJsonAsync(new{code="INTERNAL_ERROR",traceId=c.TraceIdentifier});}));app.UseHsts();}
+app.Use(async(ctx,next)=>{try{await next();}catch(DomainError e){ctx.Response.StatusCode=e.Status;await ctx.Response.WriteAsJsonAsync(new{code=e.Message,traceId=ctx.TraceIdentifier});}catch(AntiforgeryValidationException){ctx.Response.StatusCode=403;await ctx.Response.WriteAsJsonAsync(new{code="CSRF_INVALID"});}});
 app.UseAuthentication();app.UseAuthorization();app.UseRateLimiter();
 app.Use(async(ctx,next)=>{
  ctx.Response.Headers["X-Content-Type-Options"]="nosniff";ctx.Response.Headers["Referrer-Policy"]="no-referrer";
