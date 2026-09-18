@@ -678,3 +678,91 @@ html{scroll-behavior:smooth}
  .segment-editor-row{padding:9px}
  .editor-preset-grid,.editor-mood-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
+
+
+/* Neon button system */
+:root{
+ --neon:#00f5d4;
+ --neon-2:#00c8ff;
+ --neon-soft:#8fffee;
+ --neon-ink:#041018;
+}
+button,.button{
+ background:linear-gradient(135deg,var(--neon),var(--neon-2));
+ color:var(--neon-ink);
+ border:1px solid #8efff0;
+ box-shadow:
+  0 0 0 1px #ffffff26 inset,
+  0 0 16px #00f5d43d,
+  0 0 30px #00c8ff1f;
+ text-shadow:none;
+ transition:transform .16s ease,filter .16s ease,box-shadow .16s ease,border-color .16s ease;
+}
+button:hover:not(:disabled),.button:hover{
+ text-decoration:none;
+ filter:brightness(1.08) saturate(1.08);
+ transform:translateY(-1px);
+ box-shadow:
+  0 0 0 1px #ffffff38 inset,
+  0 0 20px #00f5d46b,
+  0 0 42px #00c8ff33;
+}
+button:active:not(:disabled),.button:active{
+ transform:translateY(0) scale(.985);
+}
+.secondary{
+ background:linear-gradient(180deg,#0c1b23,#09141c);
+ color:#cffff8;
+ border:1px solid #00e7c77d;
+ box-shadow:
+  0 0 0 1px #00f5d414 inset,
+  0 0 12px #00f5d426;
+}
+.secondary:hover:not(:disabled){
+ border-color:#53ffe9;
+ color:#effffd;
+ box-shadow:
+  0 0 0 1px #00f5d426 inset,
+  0 0 18px #00f5d454,
+  0 0 30px #00c8ff24;
+}
+.reframe-actions button.active,
+.editor-preset-grid button.active,
+.editor-mood-grid button.active{
+ background:linear-gradient(135deg,#00f5d4,#00bfff);
+ color:#041018;
+ border-color:#8efff0;
+ box-shadow:0 0 18px #00f5d465,0 0 32px #00c8ff2e;
+}
+.notification-bell-button{
+ background:linear-gradient(180deg,#0d1c24,#09141b);
+ color:#bafff5;
+ border:1px solid #00e8c96b;
+}
+.notification-bell-button>b{
+ background:#00f5d4;
+ color:#041018;
+ box-shadow:0 0 14px #00f5d47a;
+}
+.auth-gate-close{
+ background:#0b1820;
+ color:#cffff8;
+ border:1px solid #00e7c76b;
+}
+.danger{
+ background:linear-gradient(135deg,#8b2038,#c73b57);
+ color:#fff;
+ border:1px solid #ef6f86;
+ box-shadow:0 0 14px #d6345552;
+}
+.danger:hover:not(:disabled){
+ box-shadow:0 0 18px #e9456366,0 0 30px #b51f4133;
+}
+button:focus-visible,.button:focus-visible{
+ outline:2px solid #9ffff1;
+ outline-offset:3px;
+ box-shadow:0 0 0 3px #00f5d426,0 0 24px #00f5d45c;
+}
+@media(prefers-reduced-motion:reduce){
+ button,.button{transition:none}
+}
