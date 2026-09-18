@@ -62,7 +62,7 @@ public static class WorkerEndpoints {
     else{
      foreach(var candidate in clips){
       var aspect=(config.Formats??new[]{"9:16"}).FirstOrDefault()??"9:16";
-      var clip=new Clip{ProjectId=p.Id,RunId=run.Id,Title=candidate.Title,Reason=candidate.Reason,StartMs=candidate.StartMs,EndMs=candidate.EndMs,Segments=Json.Write(new[]{new RevisionSegment(candidate.StartMs,candidate.EndMs)}),PreviewKey=candidate.PreviewKey,CoverKey=candidate.CoverKey,Subtitles=Json.Write(candidate.Subtitles),CaptionPreset="Clean",VisualStyle="Cinema",Aspect=aspect};
+      var clip=new Clip{ProjectId=p.Id,RunId=run.Id,Title=candidate.Title,Reason=candidate.Reason,StartMs=candidate.StartMs,EndMs=candidate.EndMs,Segments=Json.Write(new[]{new RevisionSegment(candidate.StartMs,candidate.EndMs)}),PreviewKey=candidate.PreviewKey,PreviewRevision=1,CoverKey=candidate.CoverKey,Subtitles=Json.Write(candidate.Subtitles),CaptionPreset="Clean",VisualStyle="Cinema",Aspect=aspect};
       d.Clips.Add(clip);d.ClipRevisions.Add(new ClipRevision{ClipId=clip.Id,ProjectId=p.Id,Number=1,Title=clip.Title,Selection=clip.Selection,StartMs=clip.StartMs,EndMs=clip.EndMs,Segments=clip.Segments,Subtitles=clip.Subtitles,Style=clip.Style,CaptionPreset=clip.CaptionPreset,VisualStyle=clip.VisualStyle,Aspect=clip.Aspect,Crop=clip.Crop,CoverKey=clip.CoverKey});
      }
      await wallet.Capture(run);p.Status="AGUARDANDO_REVISAO";p.Outcome="SUCCESS";run.Outcome="SUCCESS";p.FirstProcessedAt??=DateTimeOffset.UtcNow;
@@ -72,7 +72,7 @@ public static class WorkerEndpoints {
    }else if(j.Stage=="PREVIEW"){
     var payload=Json.Read<PreviewPayload>(j.Payload);var output=(e.Outputs??[]).Single(x=>x.Kind=="PREVIEW");
     var clip=await d.Clips.SingleOrDefaultAsync(x=>x.Id==payload.Clip.Id&&x.ProjectId==p.Id)??throw new DomainError("INVALID_PREVIEW_TARGET");
-    if(clip.Revision==payload.Clip.Revision)clip.PreviewKey=output.Key;
+    if(clip.Revision==payload.Clip.Revision){clip.PreviewKey=output.Key;clip.PreviewRevision=payload.Clip.Revision;}
    }else if(j.Stage=="RENDER"){
     var ex=await d.Exports.SingleAsync(x=>x.JobId==j.Id);var output=(e.Outputs??[]).Single(x=>x.Kind=="FINAL_EXPORT");ex.Key=output.Key;ex.State="SUCCEEDED";
     p.Status=await d.Exports.AnyAsync(x=>x.ProjectId==p.Id&&x.Id!=ex.Id&&x.State!="SUCCEEDED")?"RENDERIZANDO":"PRONTO";
