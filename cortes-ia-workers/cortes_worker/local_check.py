@@ -9,10 +9,16 @@ def main():
     errors = []
 
     try:
-        provider = OllamaProvider()
-        provider.health()
-        print(f"[ok] Ollama acessível: {provider.base}")
-        print(f"[ok] Modelo local disponível: {provider.model}")
+        default_model = os.getenv("OLLAMA_MODEL", "qwen3:8b")
+        models = {
+            os.getenv("OLLAMA_SELECTION_MODEL", default_model),
+            os.getenv("OLLAMA_REVIEW_MODEL", default_model),
+        }
+        providers = [OllamaProvider(model) for model in sorted(models)]
+        for provider in providers:
+            provider.health()
+            print(f"[ok] Ollama acessível: {provider.base}")
+            print(f"[ok] Modelo local disponível: {provider.model}")
     except ProcessingError as exc:
         errors.append(exc.code)
         print(f"[erro] Ollama: {exc.code}")
