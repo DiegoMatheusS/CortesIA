@@ -82,9 +82,9 @@ O CI aplica o baseline em PostgreSQL limpo, faz rollback até zero e falha se o 
 - O Compose abre somente portas localhost. Não é configuração de produção.
 - Banco e carteira são reais no ambiente local; os créditos/compras são de teste.
 - Antivírus vem desativado somente no modo de desenvolvimento e identificado em Compose. Ative o perfil e `SCAN_MODE=required` para homologação; arquivos acima do limite suportado pelo ClamAV devem falhar fechados, nunca passar sem scan.
-- YouTube fica desligado até habilitação e teste. Restrições retornam bloqueio sem consumo; não se promete acesso a qualquer vídeo.
+- YouTube está habilitado por padrão no ambiente local/homologação via feature flag. Restrições retornam bloqueio sem consumo; produção só deve habilitar após smoke test real.
 - Legenda dinâmica está implementada com timestamps por palavra quando o transcritor fornece esse dado e alinhamento proporcional como fallback explícito. O tracking inteligente está disponível somente em ambientes com provider de visão habilitado; recursos indisponíveis não são cobrados.
-- O limite técnico de duração é 7 horas (25.200.000 ms), ainda sujeito ao limite de 5 GB por arquivo. Em desenvolvimento essa faixa pode ser testada; em produção, acima de 90 minutos exige aprovação explícita da política comercial para não inventar preço.
+- O limite técnico de duração é 7 horas (25.200.000 ms), ainda sujeito a 5 GB. Podcasts compatíveis podem usar remux do vídeo em vez de transcode integral; a seleção de IA ranqueia candidatos entre várias janelas long-form antes da revisão final. Em produção, acima de 90 minutos continua exigindo aprovação comercial explícita.
 
 Comece por `docs/STATUS_IMPLEMENTACAO.md` e `docs/BACKLOG_MVP.md` para decidir o próximo incremento sem confundir código presente com fase homologada.
 
@@ -92,3 +92,8 @@ Comece por `docs/STATUS_IMPLEMENTACAO.md` e `docs/BACKLOG_MVP.md` para decidir o
 ## Notificações
 
 O SliceFlow possui central interna de notificações e preferências de e-mail. Segurança, pagamentos/créditos críticos e armazenamento são obrigatórios; processamento e suporte ficam ligados por padrão; saldo baixo e marketing são opcionais. Ver `docs/NOTIFICACOES_TRANSACIONAIS.md`.
+
+
+## YouTube e podcasts longos
+
+O fluxo de importação real, segurança, diagnóstico e tuning para fontes de até 7 horas está em `docs/YOUTUBE_LONGFORM.md`.
