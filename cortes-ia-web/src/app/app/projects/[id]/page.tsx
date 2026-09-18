@@ -1278,6 +1278,24 @@ export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
                           />
                         </label>
 
+                        <div className="cover-fine-controls" aria-label="Ajuste fino do frame da capa">
+                          <button type="button" className="secondary" onClick={() => nudgeCover(-1)}>-1s</button>
+                          <button type="button" className="secondary" onClick={() => nudgeCover(-.1)}>-0,1s</button>
+                          <button type="button" className="secondary" onClick={() => nudgeCover(.1)}>+0,1s</button>
+                          <button type="button" className="secondary" onClick={() => nudgeCover(1)}>+1s</button>
+                          <button
+                            type="button"
+                            className="secondary"
+                            onClick={() => {
+                              const next = Math.max(0, editorClip.startMs / 1000);
+                              setCoverAt(next);
+                              if (coverVideoRef.current) coverVideoRef.current.currentTime = next;
+                            }}
+                          >
+                            Início do corte
+                          </button>
+                        </div>
+
                         <div className="cover-actions">
                           <label>
                             Segundo exato
@@ -1302,7 +1320,7 @@ export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
                             {covering === editorClip.id ? 'Gerando capa…' : 'Usar este frame como capa'}
                           </button>
                         </div>
-                        <small>A capa é extraída do vídeo master e salva como uma nova revisão. Não há nova análise de IA.</small>
+                        <small>A capa usa o mesmo enquadramento, formato e estilo visual da revisão atual. O ajuste fino funciona em décimos de segundo e não dispara nova análise de IA.</small>
                       </>
                     ) : (
                       <p>O master não está mais disponível para escolher outra capa.</p>
