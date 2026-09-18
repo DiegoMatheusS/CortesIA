@@ -19,6 +19,7 @@ x-api-env: &api-env
   PAYMENTS_MODE: sandbox-local
   SMTP_HOST: mailpit
   SMTP_PORT: "1025"
+  YOUTUBE_ENABLED: ${YOUTUBE_ENABLED:-true}
 services:
   postgres:
     image: postgres:17.6-bookworm
@@ -109,7 +110,18 @@ services:
       INTERNAL_API: http://api:8080
       SCAN_MODE: disabled-development
       CLAMAV_HOST: clamav
-      YOUTUBE_ENABLED: "false"
+      YOUTUBE_ENABLED: ${YOUTUBE_ENABLED:-true}
+      YOUTUBE_MAX_DURATION_MS: "25200000"
+      YOUTUBE_SOCKET_TIMEOUT_SECONDS: "60"
+      YOUTUBE_METADATA_RETRIES: "2"
+      YOUTUBE_DOWNLOAD_ATTEMPTS: "2"
+      DOWNLOAD_SOCKET_TIMEOUT_SECONDS: "60"
+      AI_LONGFORM_WINDOW_MS: "900000"
+      AI_LONGFORM_OVERLAP_MS: "90000"
+      MEDIA_NORMALIZE_TIMEOUT_SECONDS: "28800"
+      MEDIA_AUDIO_TIMEOUT_SECONDS: "14400"
+      MEDIA_NORMALIZE_DEADLINE_SECONDS: "30000"
+      MEDIA_AUDIO_DEADLINE_SECONDS: "15000"
       MEDIA_TASK_ROOT: /work/tasks
     volumes: ["mediawork:/work"]
     depends_on:
