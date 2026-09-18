@@ -88,7 +88,7 @@ public class Clip {
  public string CaptionPreset {get;set;}="Clean"; public string CaptionOverrides {get;set;}="{}";
  public string VisualStyle {get;set;}="Cinema"; public string VisualOverrides {get;set;}="{}";
  public string Aspect {get;set;}="9:16"; public string Crop {get;set;}=Json.Write(new CropSpec());
- public string? PreviewKey {get;set;} public string? CoverKey {get;set;}
+ public string? PreviewKey {get;set;} public int PreviewRevision {get;set;} public string? CoverKey {get;set;}
 }
 public class ClipRevision {
  public Guid Id {get;set;}=Guid.NewGuid(); public Guid ClipId {get;set;} public Guid ProjectId {get;set;}
