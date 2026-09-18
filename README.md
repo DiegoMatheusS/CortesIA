@@ -83,7 +83,7 @@ Antes da primeira evolução de banco de homologação, gerar/revisar migration 
 - Banco e carteira são reais no ambiente local; os créditos/compras são de teste.
 - Antivírus vem desativado somente no modo de desenvolvimento e identificado em Compose. Ative o perfil e `SCAN_MODE=required` para homologação; arquivos acima do limite suportado pelo ClamAV devem falhar fechados, nunca passar sem scan.
 - YouTube fica desligado até habilitação e teste. Restrições retornam bloqueio sem consumo; não se promete acesso a qualquer vídeo.
-- Legenda dinâmica e tracking seguem no escopo, mas esta versão recusa sua cobrança enquanto a implementação não estiver concluída.
+- Legenda dinâmica está implementada com timestamps por palavra quando o transcritor fornece esse dado e alinhamento proporcional como fallback explícito. O tracking inteligente está disponível somente em ambientes com provider de visão habilitado; recursos indisponíveis não são cobrados.
 - A faixa acima de 90 minutos e os preços comerciais permanecem sob as decisões pendentes do plano, sem transformar sugestões em valores aprovados.
 
 Comece por `docs/STATUS_IMPLEMENTACAO.md` e `docs/BACKLOG_MVP.md` para decidir o próximo incremento sem confundir código presente com fase homologada.
