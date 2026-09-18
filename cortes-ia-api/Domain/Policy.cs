@@ -26,7 +26,10 @@ public class Policy(Database db,IConfiguration cfg) {
   var prices=new Dictionary<string,long>{{"dynamic_captions",3},{"zoom",2},{"blur",3},{"tracking",2},{"cover",2}};
   foreach(var code in (c.Features??[]).Distinct()) {
    if(code=="dynamic_captions")throw new DomainError("FEATURE_IMPLEMENTATION_PENDING",409);
-   if(code=="tracking"&&!bool.TryParse(cfg["TRACKING_ENABLED"],out var trackingEnabled) || code=="tracking"&&!trackingEnabled)throw new DomainError("FEATURE_IMPLEMENTATION_PENDING",409);
+   if(code=="tracking"){
+    var trackingEnabled=bool.TryParse(cfg["TRACKING_ENABLED"],out var enabled)&&enabled;
+    if(!trackingEnabled)throw new DomainError("FEATURE_IMPLEMENTATION_PENDING",409);
+   }
    if(!prices.TryGetValue(code,out var price))throw new DomainError("UNKNOWN_FEATURE");
    items.Add(new(code,code,await Number("price."+code,price),"PER_RUN",code));
   }
