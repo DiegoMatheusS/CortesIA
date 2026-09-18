@@ -23,6 +23,7 @@ public class WalletService(Database db) {
    db.Reservations.Add(new ReservationLine{RunId=run.Id,LotId=lot.Id,Credits=n});
    db.Ledger.Add(new Ledger{UserId=run.UserId,LotId=lot.Id,RunId=run.Id,Kind="RESERVE",Operation=$"reserve:{run.Id}",AvailableDelta=-n,ReservedDelta=n,Reason="Cotação confirmada"});
   }w.Available-=run.Total;w.Reserved+=run.Total;
+  if(w.Available<10)await NotificationEndpoints.Queue(db,run.UserId,$"low-balance:{run.UserId}:{DateTimeOffset.UtcNow:yyyyMMdd}","LOW_CREDIT_BALANCE","LOW_BALANCE","Seu saldo de créditos está baixo",$"Seu saldo disponível está em {w.Available} créditos.","OPTIONAL_OFF");
  }
  public async Task Capture(Run run) {
   if(run.FinancialState!="RESERVED")return;
@@ -49,5 +50,6 @@ public class WalletService(Database db) {
   if(remaining!=0)throw new InvalidOperationException("Reservation reconciliation failed");
   w.Available+=requested;if(release)w.Reserved-=requested;
   run.Refunded+=requested;if(release)run.FinancialState="RELEASED";
+  await NotificationEndpoints.Queue(db,run.UserId,$"credits-refund:{run.Id}:{code}","CREDITS_REFUNDED","PAYMENTS","Créditos devolvidos",$"{requested} créditos foram devolvidos. Motivo: {reason}.","REQUIRED");
  }
 }
