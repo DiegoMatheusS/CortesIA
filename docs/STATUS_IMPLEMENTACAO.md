@@ -4,7 +4,7 @@ Este documento descreve o que existe **no código atual**. Itens ainda não homo
 
 | Fase | Implementado atualmente | Principais pendências |
 |---|---|---|
-| 1 Fundação | API .NET 10/Identity/EF, cadastro, confirmação de e-mail, login/logout/reset, CPF/HMAC, trial único, MFA administrativo, ownership, UI responsiva e CI com build .NET/Next | Migrations EF versionadas para homologação/produção, RBAC granular, sessões/step-up E2E e política final de telefone |
+| 1 Fundação | API .NET 10/Identity/EF, cadastro, confirmação de e-mail, login/logout/reset, CPF/HMAC, trial único, MFA administrativo, ownership, UI responsiva, **baseline EF versionado** e CI com build .NET/Next | RBAC granular, sessões/step-up E2E, política final de telefone e separação da role DDL/runtime em produção |
 | 2 Créditos | Carteira por lotes, comprado/bônus separados, quote discriminada, reserve/capture/refund, ledger, idempotência, ajuste admin e estorno de extra não entregue | Testes ampliados de concorrência/replay, catálogo comercial versionado, combos/promoções e regras comerciais finais |
 | 3 Upload | Multipart S3, formatos/tamanho/duração validados, **limite técnico de até 7 horas**, upload/link, jobs/outbox/SQS, master privado, status e progresso granular até a UI | Retomar/cancelar upload pela interface, limite atual de 5 GB, limites de concorrência por conta, homologação real de YouTube/S3/SQS e políticas comerciais de importação |
 | 4 Agente / IA | Pipeline com **slots independentes por etapa**: transcrição, seleção, segunda revisão e visão. Perfil local usa Faster-Whisper + Ollama, com `qwen3:8b` como padrão separado para seleção/revisão, MediaPipe para visão, JSON estruturado, chunking, validação temporal e redaction básica. | Benchmark ≥50 vídeos, avaliação de qualidade/custo/p95, homologação de outros providers/modelos por etapa, tratamento ampliado de dados incidentais e observabilidade de IA |
@@ -12,7 +12,7 @@ Este documento descreve o que existe **no código atual**. Itens ainda não homo
 | 6 Editor | Editor short-form, corte manual, timeline por segmentos, dividir/remover trecho, revisão não destrutiva, desfazer/refazer local, edição de texto/sincronismo, presets de legenda, estilos visuais, crop, histórico, **restauração de revisão como nova revisão**, **seleção de capa a partir de frame real do master**, preview regenerável/versionado e export por revisão | Reposicionamento visual direto sobre o canvas, edição avançada da capa, quote para operações pesadas adicionais e testes E2E completos |
 | 7 Pagamentos | Estrutura de checkout Mercado Pago, webhook assinado, grants/bônus e modo local fictício | Homologação real Pix/cartão, conciliação sem webhook, estorno monetário/chargeback e aprovação de preços/contrato |
 | 8 Segurança | Ownership, CSRF/MFA, HMAC de CPF, SSRF/DNS, storage privado, audit, adapter antivírus, scans CI, worker token, fencing/leases e validações server-side | Pentest/ASVS, rate limit distribuído, IAM/mTLS, rotação de secrets, ClamAV para arquivos grandes, exclusão completa de conta e testes de retenção/restore |
-| 9 Produção | Dockerfiles/Compose, modo local leve, modo local IA real, Terraform base, CI com backend/web/workers/security/Terraform, runbooks iniciais e **módulo transacional de notificações com central interna + e-mail** | ECS/services finais, domínio/TLS/WAF, SES, IAM mínimo, observabilidade completa, migrations/rollback, restore/RPO/RTO e smoke de produção |
+| 9 Produção | Dockerfiles/Compose, modo local leve, modo local IA real, Terraform base, CI com backend/web/workers/security/Terraform, **CI de migrations com apply/rollback/drift**, runbooks iniciais e módulo transacional de notificações | ECS/services finais, domínio/TLS/WAF, SES, IAM mínimo, observabilidade completa, homologação de rollback/restore em produção, RPO/RTO e smoke de produção |
 
 ## Produto e frontend
 
@@ -70,20 +70,20 @@ Os últimos PRs desses recursos passaram o workflow completo antes do merge.
 
 ## Próximos gates recomendados
 
-1. Migrations EF versionadas e baseline de banco.
-2. Testes E2E navegador → API → worker → storage.
-3. Benchmark real de qualidade da IA e tracking.
-4. Reposicionamento visual direto no canvas e edição avançada de capa.
-5. Homologação de pagamento e infraestrutura de produção.
+1. Testes E2E navegador → API → worker → storage.
+2. Benchmark real de qualidade da IA e tracking.
+3. Reposicionamento visual direto no canvas e edição avançada de capa.
+4. Homologação de pagamento e infraestrutura de produção.
+5. Separar role de migration/DDL da role runtime e homologar backup/restore.
 
-Não abrir o serviço ao público apenas porque os containers e o CI passam; pagamentos, migrations, políticas jurídicas e operação de produção ainda exigem homologação.
+Não abrir o serviço ao público apenas porque os containers e o CI passam; pagamentos, políticas jurídicas, rollback/restore e operação de produção ainda exigem homologação.
 
 
 ## Pontos ainda frágeis / incompletos
 
 | Tema | Estado atual |
 |---|---|
-| Migrations EF | **Pendente importante.** Desenvolvimento ainda usa `EnsureCreated` + upgrade SQL idempotente; produção deve migrar para migrations EF revisadas/versionadas. |
+| Migrations EF | **Baseline implementado e versionado.** `--init-db` usa `MigrateAsync()`; CI aplica, reverte e checa drift. Falta homologar adoção de banco legado que precise ser preservado e separar permissões DDL/runtime em produção. |
 | YouTube | Host/URL e segurança estão preparados, mas o feature flag local continua desligado e falta homologação ponta a ponta. |
 | Legenda dinâmica | **Implementada.** Timestamps por palavra quando disponíveis e fallback proporcional explícito. |
 | Tracking / reenquadramento | **Implementado**, condicionado a provider de visão habilitado. Ainda falta homologação de qualidade/multi-pessoa. |
