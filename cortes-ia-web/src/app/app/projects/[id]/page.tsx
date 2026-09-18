@@ -463,7 +463,7 @@ export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
   return (
     <>
       <nav>
-        <Link className="brand" href="/app">cortes<span>ia</span></Link>
+        <Link className="brand" href="/app">slice<span>flow</span></Link>
         <Link href="/app">← Seus projetos</Link>
       </nav>
 
