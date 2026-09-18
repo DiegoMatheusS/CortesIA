@@ -6,6 +6,7 @@ public class DomainTests {
  public void InvalidCpfRejected(string value)=>Assert.Throws<DomainError>(()=>Cpf.Normalize(value));
  [Fact] public void HmacDependsOnSecret(){Assert.NotEqual(Cpf.Digest("52998224725","secret1"),Cpf.Digest("52998224725","secret2"));}
  [Fact] public void QuoteItemIsPerRun(){var item=new QuoteItem("zoom","Zoom",2,"PER_RUN","zoom");Assert.Equal("PER_RUN",item.Unit);}
+ [Fact] public void UploadLimitIsThirtyGigabytes(){Assert.Equal(30_000_000_000,Policy.MaxUploadBytes);Assert.Equal(40_000_000_000,Policy.MaxInternalMediaBytes);}
  [Fact] public void RequiredNotificationAlwaysEmails(){
   var n=new Notification{EmailPolicy="REQUIRED",Category="SECURITY"};
   var p=new NotificationPreference{ProcessingEmail=false,SupportEmail=false,LowBalanceEmail=false,MarketingEmail=false};
