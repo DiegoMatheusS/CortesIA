@@ -16,11 +16,11 @@ public class Policy(Database db,IConfiguration cfg) {
  public async Task<long> Number(string key,long fallback)=>long.TryParse(await db.Settings.Where(x=>x.Key==key).Select(x=>x.Value).SingleOrDefaultAsync(),out var n)?n:fallback;
  public async Task<bool> Enabled(string key,bool fallback=false)=>bool.TryParse(await db.Settings.Where(x=>x.Key==key).Select(x=>x.Value).SingleOrDefaultAsync(),out var b)?b:fallback;
  public async Task<QuoteItem[]> Price(long ms,VideoConfig c) {
-  if(ms<=0||ms>await Number("maxDurationMs",10_800_000))throw new DomainError("INVALID_DURATION",422);
+  if(ms<=0||ms>await Number("maxDurationMs",25_200_000))throw new DomainError("INVALID_DURATION",422);
   if(c.Quantity<1||c.Quantity>await Number("maxClips",20))throw new DomainError("INVALID_QUANTITY");
   if(!new[]{"UP_TO_1_MIN","ONE_TO_TWO_MIN","TWO_TO_THREE_MIN","AUTO"}.Contains(c.DurationMode))throw new DomainError("INVALID_DURATION_MODE");
   if((c.Formats??["9:16"]).Except(new[]{"9:16","4:5","1:1","16:9","original"}).Any())throw new DomainError("INVALID_FORMAT");
-  if(ms>5_400_000&&!await Enabled("tier180Approved"))throw new DomainError("TIER_PRICE_PENDING_APPROVAL",409);
+  if(ms>5_400_000&&!Development&&!await Enabled("longVideoPricingApproved",await Enabled("tier180Approved")))throw new DomainError("TIER_PRICE_PENDING_APPROVAL",409);
   long basis=ms<=1_800_000?10:ms<=5_400_000?30:60;
   var items=new List<QuoteItem>{new("base","Processamento com legenda simples",basis)};
   var prices=new Dictionary<string,long>{{"dynamic_captions",3},{"zoom",2},{"blur",3},{"tracking",2},{"cover",2}};
