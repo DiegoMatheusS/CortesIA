@@ -9,6 +9,7 @@ type SubtitleWord = {startMs: number; endMs: number; word: string};
 type Subtitle = {startMs: number; endMs: number; text: string; words?: SubtitleWord[]};
 type Segment = {startMs: number; endMs: number};
 type Crop = {x: number; y: number; width: number; height: number};
+type CaptionOverrides = {scale: number; position: 'top' | 'center' | 'bottom'; primaryColor: string; highlightColor: string; uppercase: boolean; wordsPerLine: number};
 
 type Clip = {
   id: string;
@@ -22,6 +23,7 @@ type Clip = {
   segments: Segment[];
   subtitles: Subtitle[];
   captionPreset: string;
+  captionOverrides: CaptionOverrides;
   visualStyle: string;
   aspect: string;
   crop: Crop;
@@ -41,6 +43,7 @@ type Revision = {
   subtitles: Subtitle[];
   style: string;
   captionPreset: string;
+  captionOverrides: CaptionOverrides;
   visualStyle: string;
   aspect: string;
   crop: Crop;
@@ -62,6 +65,8 @@ type EditorMeta = {
     manualCrop: boolean;
     intelligentReframe?: boolean;
     dynamicCaptions?: boolean;
+    captionCustomization?: boolean;
+    coverStyling?: boolean;
   };
 };
 
@@ -140,6 +145,7 @@ const progressLabels: Record<string,string> = {
   BUILDING_BUNDLE: 'Preparando ZIP',
   UPLOADING_OUTPUT: 'Salvando resultado',
   GENERATING_COVER: 'Gerando capa',
+  TRACKING_SUBJECT: 'Acompanhando rosto/pessoa',
   FINALIZING: 'Finalizando',
   DONE: 'Concluído',
 };
@@ -153,6 +159,7 @@ function normalizeClip(clip: Clip): Clip {
     ...clip,
     segments: clip.segments?.length ? clip.segments : [{startMs: clip.startMs, endMs: clip.endMs}],
     captionPreset: clip.captionPreset || 'Clean',
+    captionOverrides: clip.captionOverrides || {scale: 1, position: 'bottom', primaryColor: '#ffffff', highlightColor: '#ffff00', uppercase: false, wordsPerLine: 4},
     visualStyle: clip.visualStyle || 'Cinema',
     aspect: clip.aspect || '9:16',
     crop: clip.crop || {x: 0, y: 0, width: 1, height: 1},
@@ -191,6 +198,7 @@ export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
   const [coverAt, setCoverAt] = useState(0);
   const coverVideoRef = useRef<HTMLVideoElement>(null);
   const [reframeMode, setReframeMode] = useState(false);
+  const [cropAspectLocked, setCropAspectLocked] = useState(true);
   const [reframeAspect, setReframeAspect] = useState(16 / 9);
   const reframeFrameRef = useRef<HTMLDivElement>(null);
   const reframeVideoRef = useRef<HTMLVideoElement>(null);
