@@ -2,6 +2,7 @@
 
 import {use, useEffect, useMemo, useRef, useState} from 'react';
 import Link from 'next/link';
+import NotificationBell from '@/components/NotificationBell';
 import {api, friendly, key} from '@/lib/api';
 
 type SubtitleWord = {startMs: number; endMs: number; word: string};
@@ -551,7 +552,7 @@ export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
     <>
       <nav>
         <Link className="brand" href="/app">slice<span>flow</span></Link>
-        <Link href="/app">← Seus projetos</Link>
+        <div><NotificationBell/><Link href="/app">← Seus projetos</Link></div>
       </nav>
 
       <main className="workspace project-workspace">
