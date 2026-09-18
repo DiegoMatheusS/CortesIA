@@ -103,3 +103,12 @@ O recurso `tracking` não fica disponível por padrão. A API só aceita a cobra
 No perfil `compose.local-ai.yaml`, o worker instala MediaPipe e ativa o provider. O modelo de face é mantido no volume de cache. Em desenvolvimento local o download do modelo oficial pode ser permitido; em produção, prefira empacotar um modelo aprovado na imagem e configurar `MEDIAPIPE_FACE_MODEL`/hash.
 
 A visão não gera comandos FFmpeg. Ela retorna apenas pontos normalizados `x/y` ao longo do tempo. O filtro de crop é construído pelo código do SliceFlow.
+
+
+## Legendas dinâmicas
+
+Quando `dynamic_captions` é selecionado, o Faster-Whisper é chamado com timestamps por palavra. Esses tempos são preservados na transcrição, nos cortes e nas revisões do editor.
+
+O render ASS usa os tempos reais para destacar palavras em sequência. Se um trecho chegar sem word timestamps (fixture, conteúdo legado ou texto editado manualmente), o SliceFlow calcula um alinhamento proporcional dentro do intervalo da legenda e trata esse resultado como fallback, não como timestamp ASR.
+
+Na integração cloud, o pipeline timestamped usa `whisper-1` porque o parâmetro de granularidade por palavra/segmento não é suportado por `gpt-transcribe` no contrato atual da API. O modelo de seleção semântica dos cortes continua separado do transcritor.

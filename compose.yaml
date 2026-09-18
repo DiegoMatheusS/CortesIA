@@ -98,7 +98,7 @@ services:
       FASTER_WHISPER_DEVICE: ${FASTER_WHISPER_DEVICE:-auto}
       FASTER_WHISPER_COMPUTE_TYPE: ${FASTER_WHISPER_COMPUTE_TYPE:-default}
       TRANSCRIPT_FIXTURE: /app/fixtures/transcript.json
-      TRANSCRIPTION_MODEL: gpt-transcribe
+      TRANSCRIPTION_MODEL: whisper-1
       TRIAL_SELECTION_MODEL: gpt-5.6-terra
       PAID_SELECTION_MODEL: gpt-5.6-sol
       WORKER_TOKEN: ${WORKER_TOKEN:?run bootstrap first}

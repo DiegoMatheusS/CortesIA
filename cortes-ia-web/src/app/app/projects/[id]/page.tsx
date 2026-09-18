@@ -4,7 +4,8 @@ import {use, useEffect, useMemo, useState} from 'react';
 import Link from 'next/link';
 import {api, friendly, key} from '@/lib/api';
 
-type Subtitle = {startMs: number; endMs: number; text: string};
+type SubtitleWord = {startMs: number; endMs: number; word: string};
+type Subtitle = {startMs: number; endMs: number; text: string; words?: SubtitleWord[]};
 type Segment = {startMs: number; endMs: number};
 type Crop = {x: number; y: number; width: number; height: number};
 
@@ -58,6 +59,7 @@ type EditorMeta = {
     captionSync: boolean;
     manualCrop: boolean;
     intelligentReframe?: boolean;
+    dynamicCaptions?: boolean;
   };
 };
 
@@ -558,11 +560,11 @@ export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
               <label className="check" key={code}>
                 <input
                   type="checkbox"
-                  disabled={code === 'dynamic_captions' || (code === 'tracking' && !editorMeta?.capabilities.intelligentReframe)}
+                  disabled={(code === 'dynamic_captions' && !editorMeta?.capabilities.dynamicCaptions) || (code === 'tracking' && !editorMeta?.capabilities.intelligentReframe)}
                   checked={features.includes(code)}
                   onChange={event => setFeatures(current => event.target.checked ? [...current, code] : current.filter(item => item !== code))}
                 />
-                {title} <small>{code === 'dynamic_captions' || (code === 'tracking' && !editorMeta?.capabilities.intelligentReframe) ? 'indisponível neste ambiente' : `+${price}`}</small>
+                {title} <small>{(code === 'dynamic_captions' && !editorMeta?.capabilities.dynamicCaptions) || (code === 'tracking' && !editorMeta?.capabilities.intelligentReframe) ? 'indisponível neste ambiente' : `+${price}`}</small>
               </label>
             ))}
           </div>
@@ -779,7 +781,7 @@ export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
                           <textarea
                             value={subtitle.text}
                             onChange={event => patchClip(editorClip.id, {
-                              subtitles: editorClip.subtitles.map((item, position) => position === index ? {...item, text: event.target.value} : item),
+                              subtitles: editorClip.subtitles.map((item, position) => position === index ? {...item, text: event.target.value, words: undefined} : item),
                             })}
                           />
                         </label>

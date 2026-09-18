@@ -1,6 +1,6 @@
 import unittest,os,tempfile,pathlib,subprocess,json,io
 from unittest.mock import patch
-from cortes_worker.models import validate_candidates,ProcessingError
+from cortes_worker.models import validate_candidates,ProcessingError,Segment
 from cortes_worker.security import validate_url,public_addresses
 from cortes_worker.provider import redact,OllamaProvider
 from cortes_worker import media,vision
@@ -28,6 +28,19 @@ class SecurityTests(unittest.TestCase):
   self.assertTrue(all(0<=p['x']<=1 and 0<=p['y']<=1 for p in smoothed))
  def test_invalid_vision_crop(self):
   with self.assertRaises(ProcessingError):vision._crop_values({'x':.9,'y':0,'width':.2,'height':1})
+ def test_segment_restores_nested_word_timings(self):
+  segment=Segment(start_ms=0,end_ms=1000,text='teste aqui',words=[{'start_ms':0,'end_ms':400,'word':'teste'},{'start_ms':400,'end_ms':900,'word':'aqui'}])
+  segment.validate(2000)
+  self.assertEqual(segment.words[1].word,'aqui')
+ def test_dynamic_caption_ass_uses_word_timing(self):
+  with tempfile.TemporaryDirectory() as tmp:
+   path=pathlib.Path(tmp)/'dynamic.ass'
+   media.subtitles(path,[{'startMs':0,'endMs':1000,'text':'Olá mundo','words':[{'startMs':0,'endMs':350,'word':'Olá'},{'startMs':350,'endMs':1000,'word':'mundo'}]}],1080,1920,'Viral',True)
+   text=path.read_text()
+   self.assertIn(r'{\kf35}Olá',text);self.assertIn(r'{\kf65}mundo',text)
+ def test_dynamic_caption_fallback_alignment(self):
+  words=media._word_items({'startMs':0,'endMs':1000,'text':'um teste simples'})
+  self.assertEqual(words[0]['startMs'],0);self.assertEqual(words[-1]['endMs'],1000);self.assertEqual(len(words),3)
  def test_ollama_structured_candidates(self):
   payload={'message':{'content':json.dumps({'candidates':[{'start_ms':100,'end_ms':2000,'title':'Gancho','reason':'Autocontido','score':88}]})}}
   with patch.dict(os.environ,{'OLLAMA_MODEL':'qwen3:8b','OLLAMA_BASE_URL':'http://127.0.0.1:11434'}):
@@ -55,6 +68,11 @@ class MediaIntegration(unittest.TestCase):
  def test_render_multiple_segments_and_mood(self):
   p=self.root/'segments.mp4';result=media.render(self.source,p,0,4000,[{'startMs':0,'endMs':1800,'text':'Primeira parte'},{'startMs':1800,'endMs':3200,'text':'Segunda parte'}],['blur'],'9:16',True,'simple',[{'startMs':0,'endMs':1800},{'startMs':3000,'endMs':4400}],'Viral','Quente',{'x':0.05,'y':0.05,'width':0.9,'height':0.9})
   self.assertAlmostEqual(result['duration_ms'],3200,delta=10);self.assertAlmostEqual(media.probe(p)['duration_ms'],3200,delta=350)
+ def test_render_dynamic_caption(self):
+  p=self.root/'dynamic-caption.mp4'
+  subtitles=[{'startMs':0,'endMs':3000,'text':'SliceFlow legenda dinâmica','words':[{'startMs':0,'endMs':700,'word':'SliceFlow'},{'startMs':700,'endMs':1600,'word':'legenda'},{'startMs':1600,'endMs':3000,'word':'dinâmica'}]}]
+  result=media.render(self.source,p,0,3500,subtitles,['dynamic_captions'],'9:16',True,caption_preset='Viral')
+  self.assertAlmostEqual(media.probe(p)['duration_ms'],3500,delta=300);self.assertEqual(result['duration_ms'],3500)
  def test_dynamic_tracking_crop(self):
   p=self.root/'tracking.mp4'
   plan=[{'timeMs':0,'x':.25,'y':.5},{'timeMs':1800,'x':.5,'y':.5},{'timeMs':3600,'x':.75,'y':.5}]

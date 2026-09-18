@@ -9,7 +9,8 @@ public record LinkDto(string Url,string Title);
 public record QuoteDto(string Modality,VideoConfig Configuration);
 public record StartDto(Guid QuoteId,bool RightsAccepted);
 public record EditDto(string Title,long StartMs,long EndMs,string Selection,SubtitleDto[] Subtitles,string Style="simple");
-public record SubtitleDto(long StartMs,long EndMs,string Text);
+public record WordDto(long StartMs,long EndMs,string Word);
+public record SubtitleDto(long StartMs,long EndMs,string Text,WordDto[]? Words=null);
 public record ManualClipDto(string Title,RevisionSegment[] Segments,string Aspect="9:16",string CaptionPreset="Clean",string VisualStyle="Cinema");
 public record ClipRevisionDto(string Title,string Selection,RevisionSegment[] Segments,SubtitleDto[] Subtitles,bool CaptionsEnabled=true,string CaptionPreset="Clean",string VisualStyle="Cinema",string Aspect="9:16",CropSpec? Crop=null);
 public record ExportDto(Guid ClipId,string Format);
@@ -79,7 +80,7 @@ public static class ProjectEndpoints {
     captionPresets=CaptionPresets.OrderBy(x=>x),
     visualStyles=VisualStyles.OrderBy(x=>x),
     aspects=Aspects.OrderBy(x=>x),
-    capabilities=new{manualCuts=true,nonDestructiveRevisions=true,segments=true,captionSync=true,manualCrop=true,intelligentReframe=trackingEnabled}
+    capabilities=new{manualCuts=true,nonDestructiveRevisions=true,segments=true,captionSync=true,manualCrop=true,intelligentReframe=trackingEnabled,dynamicCaptions=true}
    };
   });
   g.MapGet("/projects/{id:guid}/clips",async(Guid id,HttpContext h,Database d,Cloud cloud)=>{
@@ -180,6 +181,12 @@ public static class ProjectEndpoints {
  }
  static void ValidateSubtitles(SubtitleDto[]? subtitles,long outputDurationMs){
   if(subtitles==null||subtitles.Length>5000||subtitles.Any(x=>x.StartMs<0||x.EndMs<=x.StartMs||x.EndMs>outputDurationMs||x.Text.Length>1000))throw new DomainError("INVALID_SUBTITLE");
+  foreach(var subtitle in subtitles){
+   if(subtitle.Words==null)continue;
+   if(subtitle.Words.Length>500||subtitle.Words.Any(w=>w.StartMs<subtitle.StartMs||w.EndMs<=w.StartMs||w.EndMs>subtitle.EndMs||string.IsNullOrWhiteSpace(w.Word)||w.Word.Length>500))throw new DomainError("INVALID_SUBTITLE");
+   long previous=subtitle.StartMs;
+   foreach(var word in subtitle.Words){if(word.StartMs<previous)throw new DomainError("INVALID_SUBTITLE");previous=word.StartMs;}
+  }
  }
  static void ValidateEditorStyle(string captionPreset,string visualStyle,string aspect,CropSpec crop){
   if(!CaptionPresets.Contains(captionPreset)||!VisualStyles.Contains(visualStyle)||!Aspects.Contains(aspect))throw new DomainError("INVALID_EDITOR_PRESET");
