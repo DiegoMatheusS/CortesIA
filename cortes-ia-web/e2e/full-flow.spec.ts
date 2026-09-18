@@ -45,16 +45,29 @@ async function refreshUntil(page: Page, predicate: () => Promise<boolean>, attem
   throw new Error('Condition was not reached before timeout');
 }
 
-test('cadastro até exportação final usa browser, API, worker e storage reais', async ({page, request}) => {
-  const suffix = Date.now();
+function cpfFor(seed: number) {
+  const base = String(seed).replace(/\D/g, '').padStart(9, '0').slice(-9).split('').map(Number);
+  const digit = (numbers: number[]) => {
+    const sum = numbers.reduce((total, value, index) => total + value * (numbers.length + 1 - index), 0);
+    const remainder = (sum * 10) % 11;
+    return remainder === 10 ? 0 : remainder;
+  };
+  const first = digit(base);
+  const second = digit([...base, first]);
+  return [...base, first, second].join('');
+}
+
+test('cadastro até exportação final usa browser, API, worker e storage reais', async ({page, request}, testInfo) => {
+  const suffix = Date.now() + testInfo.retry + testInfo.workerIndex;
   const email = `e2e-${suffix}@example.test`;
   const password = 'SliceFlow!2026E2E';
+  const cpf = cpfFor(suffix % 1_000_000_000);
   const video = makeVideo();
 
   await page.goto('/register');
   await page.getByLabel('Nome').fill('Teste E2E SliceFlow');
   await page.getByLabel('Telefone').fill('11999999999');
-  await page.getByLabel('CPF').fill('52998224725');
+  await page.getByLabel('CPF').fill(cpf);
   await page.getByLabel('E-mail').fill(email);
   await page.getByLabel('Senha').fill(password);
   await page.getByRole('checkbox').check();
@@ -72,6 +85,7 @@ test('cadastro até exportação final usa browser, API, worker e storage reais'
   await page.getByRole('button', {name: 'Entrar'}).click();
   await page.waitForURL('**/app');
 
+  await expect(page.getByText(/créditos disponíveis/i)).toBeVisible();
   await expect(page.getByText('10', {exact: true}).first()).toBeVisible();
 
   const fileInput = page.locator('input[type="file"]').first();
