@@ -1,3 +1,6 @@
 # Optional local AI dependencies.
 # Install only in the local AI worker environment; base CI remains lightweight.
 faster-whisper==1.2.1
+
+# Local vision / intelligent reframe
+mediapipe==1.0.1
