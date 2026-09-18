@@ -356,6 +356,31 @@ export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
     return result.revision;
   }
 
+  async function restoreRevision(revision: Revision) {
+    if (!editorClip || busy || revision.number === editorClip.revision) return;
+    setBusy(true);
+    setMessage('');
+
+    try {
+      const result = await api<{revision: number; restoredFrom: number}>(
+        `/clips/${editorClip.id}/revisions/${revision.number}/restore`,
+        'POST',
+        {},
+        {version: editorClip.revision},
+      );
+
+      setHistory(old => ({...old, [editorClip.id]: []}));
+      setRedo(old => ({...old, [editorClip.id]: []}));
+      await refresh();
+      await loadRevisions(editorClip.id);
+      setMessage(`Revisão ${result.restoredFrom} restaurada como nova revisão ${result.revision}.`);
+    } catch (error) {
+      setMessage(friendly((error as Error).message));
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function createManualClip() {
     if (busy) return;
     setMessage('');
@@ -664,9 +689,19 @@ export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
               <div className="revision-history">
                 <small>HISTÓRICO</small>
                 {revisions.slice(0, 8).map(revision => (
-                  <div key={revision.id}>
-                    <span>Rev. {revision.number}</span>
-                    <time dateTime={revision.createdAt}>{new Date(revision.createdAt).toLocaleString('pt-BR')}</time>
+                  <div className="revision-history-row" key={revision.id}>
+                    <div>
+                      <span>Rev. {revision.number}</span>
+                      <time dateTime={revision.createdAt}>{new Date(revision.createdAt).toLocaleString('pt-BR')}</time>
+                    </div>
+                    <button
+                      type="button"
+                      className="secondary"
+                      disabled={busy || !editorClip || revision.number === editorClip.revision}
+                      onClick={() => void restoreRevision(revision)}
+                    >
+                      {editorClip && revision.number === editorClip.revision ? 'Atual' : 'Restaurar'}
+                    </button>
                   </div>
                 ))}
               </div>
