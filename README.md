@@ -1,4 +1,4 @@
-# Cortes IA — base integrada v0.5
+# SliceFlow — base integrada v0.5
 
 Projeto integrado com frontend Next.js/React, API .NET 10, workers Python/FFmpeg, editor short-form versionado, pipeline local de IA e fundação AWS.
 
