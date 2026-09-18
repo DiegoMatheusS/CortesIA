@@ -70,3 +70,26 @@ O teste deve confirmar metadata, duração e, quando solicitado, download dentro
 ## Produção
 
 `YOUTUBE_ENABLED` continua sendo feature flag. O Compose local/homologação usa `true` por padrão para permitir testes. Em produção, habilite somente depois de executar smoke tests com fontes reais e validar política operacional/comercial para vídeos longos.
+
+
+## Benchmark recomendado para 4–7 horas
+
+Para cada vídeo longo, registre:
+
+- duração e tamanho do arquivo;
+- tempo de download/importação;
+- se o working master fez remux ou transcode;
+- tempo de extração de áudio;
+- tempo de ASR;
+- número de janelas long-form;
+- número de candidatos por janela;
+- candidatos após ranking global;
+- tempo da revisão final;
+- tempo para gerar previews;
+- pico de memória/CPU;
+- tamanho do working master e transcript;
+- qualidade subjetiva dos cortes escolhidos.
+
+Com a configuração padrão de 15 minutos por janela, um episódio de 7h gera aproximadamente 28 janelas antes da revisão global. Esse valor é configurável e deve ser calibrado em benchmark, não fixado como regra comercial.
+
+A métrica principal de qualidade para vídeos longos deve verificar se os cortes escolhidos estão distribuídos ao longo do episódio e não concentrados no início.
