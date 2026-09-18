@@ -18,7 +18,14 @@ b.Services.Configure<SecurityStampValidatorOptions>(o=>{
   return Task.CompletedTask;};
 });
 b.Services.AddAntiforgery(o=>o.HeaderName="X-CSRF-Token");
-b.Services.AddAuthorization(o=>o.AddPolicy("Admin",p=>p.RequireRole("Admin").RequireClaim("amr","mfa")));
+b.Services.AddAuthorization(o=>{
+ o.AddPolicy("Staff",p=>p.RequireRole(StaffRoles.All).RequireClaim("amr","mfa"));
+ o.AddPolicy("UserRead",p=>p.RequireRole(StaffRoles.UserRead).RequireClaim("amr","mfa"));
+ o.AddPolicy("Support",p=>p.RequireRole(StaffRoles.SupportAccess).RequireClaim("amr","mfa"));
+ o.AddPolicy("Finance",p=>p.RequireRole(StaffRoles.FinanceAccess).RequireClaim("amr","mfa"));
+ o.AddPolicy("Security",p=>p.RequireRole(StaffRoles.SecurityAccess).RequireClaim("amr","mfa"));
+ o.AddPolicy("Admin",p=>p.RequireRole(StaffRoles.Admin).RequireClaim("amr","mfa"));
+});
 b.Services.ConfigureHttpJsonOptions(o=>o.SerializerOptions.UnmappedMemberHandling=JsonUnmappedMemberHandling.Disallow);
 b.Services.AddRateLimiter(o=>{o.RejectionStatusCode=429;o.GlobalLimiter=PartitionedRateLimiter.Create<HttpContext,string>(h=>RateLimitPartition.GetFixedWindowLimiter(h.User.FindFirstValue(ClaimTypes.NameIdentifier)??h.Connection.RemoteIpAddress?.ToString()??"unknown",_=>new FixedWindowRateLimiterOptions{PermitLimit=120,Window=TimeSpan.FromMinutes(1),QueueLimit=0}));o.AddPolicy("auth",h=>RateLimitPartition.GetFixedWindowLimiter(h.Connection.RemoteIpAddress?.ToString()??"unknown",_=>new FixedWindowRateLimiterOptions{PermitLimit=10,Window=TimeSpan.FromMinutes(1),QueueLimit=0}));});
 b.Logging.AddJsonConsole();
@@ -43,13 +50,23 @@ if(args.Contains("--init-db")){
  // Schema changes are versioned EF migrations. This command is explicit and runs before the API container starts.
  await db.Database.MigrateAsync();
  var roles=scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
- if(!await roles.RoleExistsAsync("Admin"))await roles.CreateAsync(new IdentityRole<Guid>("Admin"));
+ foreach(var role in StaffRoles.All)if(!await roles.RoleExistsAsync(role))await roles.CreateAsync(new IdentityRole<Guid>(role));
  return;
 }
 if(args.Contains("--make-admin")){
  using var scope=app.Services.CreateScope();var users=scope.ServiceProvider.GetRequiredService<UserManager<User>>();
  var email=app.Configuration["ADMIN_EMAIL"]??throw new InvalidOperationException("ADMIN_EMAIL required");var user=await users.FindByEmailAsync(email)??throw new InvalidOperationException("Register and verify account first");
- await users.AddToRoleAsync(user,"Admin");await users.UpdateSecurityStampAsync(user);Console.WriteLine("Admin role assigned. MFA enrollment remains mandatory.");return;
+ await users.AddToRoleAsync(user,StaffRoles.Admin);await users.UpdateSecurityStampAsync(user);Console.WriteLine("Admin role assigned. MFA enrollment remains mandatory.");return;
+}
+if(args.Contains("--grant-role")){
+ using var scope=app.Services.CreateScope();var users=scope.ServiceProvider.GetRequiredService<UserManager<User>>();
+ var email=app.Configuration["STAFF_EMAIL"]??throw new InvalidOperationException("STAFF_EMAIL required");
+ var role=app.Configuration["STAFF_ROLE"]??throw new InvalidOperationException("STAFF_ROLE required");
+ if(!StaffRoles.Valid(role))throw new InvalidOperationException("STAFF_ROLE must be Admin, Support, Finance or Security");
+ var user=await users.FindByEmailAsync(email)??throw new InvalidOperationException("Register and verify account first");
+ foreach(var current in await users.GetRolesAsync(user))if(StaffRoles.All.Contains(current)&&current!=role)await users.RemoveFromRoleAsync(user,current);
+ if(!await users.IsInRoleAsync(user,role))await users.AddToRoleAsync(user,role);
+ await users.UpdateSecurityStampAsync(user);Console.WriteLine(role+" role assigned. MFA enrollment remains mandatory.");return;
 }
 app.Run();
 public partial class Program {}
