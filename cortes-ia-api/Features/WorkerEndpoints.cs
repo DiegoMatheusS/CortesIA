@@ -65,7 +65,7 @@ public static class WorkerEndpoints {
    if(j.Stage is "INGEST" or "LINK_METADATA"){
     if(e.DurationMs<=0||e.DurationMs>25_200_000)throw new DomainError("INVALID_DURATION");p.DurationMs=e.DurationMs;p.Status="RECEBIDO";
     var master=(e.Outputs??[]).FirstOrDefault(x=>x.Kind=="WORKING_MASTER");if(master!=null)p.MasterAssetKey=master.Key;
-    if(j.Stage=="INGEST")await NotificationEndpoints.Queue(d,p.UserId,$"video-received:{p.Id}","VIDEO_RECEIVED","PROCESSING","Vídeo recebido",$"Seu vídeo foi validado e entrou no fluxo do SliceFlow. Duração: {TimeSpan.FromMilliseconds(e.DurationMs):hh\:mm\:ss}.",e.DurationMs>=5_400_000?"DEFAULT_ON":"IN_APP_ONLY");
+    if(j.Stage=="INGEST")await NotificationEndpoints.Queue(d,p.UserId,$"video-received:{p.Id}","VIDEO_RECEIVED","PROCESSING","Vídeo recebido",$"Seu vídeo foi validado e entrou no fluxo do SliceFlow. Duração aproximada: {Math.Ceiling(e.DurationMs/60000d)} minutos.",e.DurationMs>=5_400_000?"DEFAULT_ON":"IN_APP_ONLY");
    }else if(j.Stage is "PROCESS" or "ALTERNATIVES"){
     if(run==null)throw new InvalidOperationException("Run missing");
     var clips=e.Clips??[];var config=Json.Read<VideoConfig>(run.Configuration);
