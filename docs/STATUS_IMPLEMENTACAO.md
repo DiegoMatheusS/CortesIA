@@ -6,7 +6,7 @@ Este documento descreve o que existe **no código atual**. Itens ainda não homo
 |---|---|---|
 | 1 Fundação | API .NET 10/Identity/EF, cadastro, confirmação de e-mail, login/logout/reset, CPF/HMAC, trial único, MFA administrativo, ownership, UI responsiva, **baseline EF versionado** e CI com build .NET/Next | RBAC granular, sessões/step-up E2E, política final de telefone e separação da role DDL/runtime em produção |
 | 2 Créditos | Carteira por lotes, comprado/bônus separados, quote discriminada, reserve/capture/refund, ledger, idempotência, ajuste admin e estorno de extra não entregue | Testes ampliados de concorrência/replay, catálogo comercial versionado, combos/promoções e regras comerciais finais |
-| 3 Upload | Multipart S3, formatos/tamanho/duração validados, **limite técnico de até 7 horas**, upload/link, jobs/outbox/SQS, master privado, status e progresso granular até a UI | Retomar/cancelar upload pela interface, limite atual de 5 GB, limites de concorrência por conta, homologação real de YouTube/S3/SQS e políticas comerciais de importação |
+| 3 Upload | Multipart S3, formatos/tamanho/duração validados, **limite técnico de até 7 horas**, importação YouTube com feature flag, SSRF/DNS guard, retries, jobs/outbox/SQS, master privado, status e progresso granular até a UI | Retomar/cancelar upload pela interface, limite atual de 5 GB, limites de concorrência por conta e smoke/homologação real de YouTube/S3/SQS no ambiente alvo |
 | 4 Agente / IA | Pipeline com **slots independentes por etapa**: transcrição, seleção, segunda revisão e visão. Perfil local usa Faster-Whisper + Ollama, com `qwen3:8b` como padrão separado para seleção/revisão, MediaPipe para visão, JSON estruturado, chunking, validação temporal e redaction básica. | Benchmark ≥50 vídeos, avaliação de qualidade/custo/p95, homologação de outros providers/modelos por etapa, tratamento ampliado de dados incidentais e observabilidade de IA |
 | 5 Vídeo | Working master, FFmpeg offline, 9:16/4:5/1:1/16:9/original, segmentos concatenáveis, legenda simples, **legenda dinâmica por palavra**, zoom, blur, capa automática, moods visuais, crop manual, **reenquadramento inteligente com MediaPipe**, previews e ZIP | Golden corpus de codecs/qualidade/performance, empacotar/homologar modelo de visão para produção, melhorar tracking multi-pessoa/cortes complexos e edição avançada de capa |
 | 6 Editor | Editor short-form, corte manual, timeline por segmentos, dividir/remover trecho, revisão não destrutiva, desfazer/refazer local, edição de texto/sincronismo, presets de legenda, estilos visuais, crop, histórico, **restauração de revisão como nova revisão**, **seleção de capa a partir de frame real do master**, preview regenerável/versionado e export por revisão | Reposicionamento visual direto sobre o canvas, edição avançada da capa, quote para operações pesadas adicionais e testes E2E completos |
@@ -84,7 +84,7 @@ Não abrir o serviço ao público apenas porque os containers e o CI passam; pag
 | Tema | Estado atual |
 |---|---|
 | Migrations EF | **Baseline implementado e versionado.** `--init-db` usa `MigrateAsync()`; CI aplica, reverte e checa drift. Falta homologar adoção de banco legado que precise ser preservado e separar permissões DDL/runtime em produção. |
-| YouTube | Host/URL e segurança estão preparados, mas o feature flag local continua desligado e falta homologação ponta a ponta. |
+| YouTube | **Habilitado por padrão em local/homologação via feature flag**, limite alinhado em 7h, retries e testes unitários de duração/tamanho. Falta executar smoke/download real no ambiente alvo e decidir ativação de produção. |
 | Legenda dinâmica | **Implementada.** Timestamps por palavra quando disponíveis e fallback proporcional explícito. |
 | Tracking / reenquadramento | **Implementado**, condicionado a provider de visão habilitado. Ainda falta homologação de qualidade/multi-pessoa. |
 | Pagamentos reais | Estrutura Mercado Pago existe, mas homologação real Pix/cartão, conciliação completa e chargeback ainda estão pendentes. |
@@ -95,7 +95,7 @@ Não abrir o serviço ao público apenas porque os containers e o CI passam; pag
 
 ## Limite de vídeo longo
 
-O limite técnico passa a ser **7 horas**. O limite de arquivo continua em **5 GB**. Em produção, vídeos acima de 90 minutos continuam dependentes de aprovação explícita da política comercial; em desenvolvimento/homologação é possível testar o pipeline longo sem esse bloqueio.
+O limite técnico é **7 horas** e o arquivo continua limitado a **5 GB**. Para podcasts compatíveis, o working master evita transcode integral via remux; a IA usa janelas long-form e ranqueamento global de candidatos. Em produção, vídeos acima de 90 minutos continuam dependentes de aprovação explícita da política comercial.
 
 ## Notificações transacionais
 
