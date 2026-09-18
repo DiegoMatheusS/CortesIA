@@ -172,7 +172,7 @@ export default function Dashboard() {
           <div className="grid">
             <article className="upload">
               <h3>Envie seu vídeo</h3>
-              <p>MP4, MOV, MKV ou WebM · até 5 GB · 180 minutos</p>
+              <p>MP4, MOV, MKV ou WebM · até 5 GB · até 7 horas</p>
               <label className="button">
                 {busy ? `Enviando ${progress}%` : 'Selecionar arquivo'}
                 <input
