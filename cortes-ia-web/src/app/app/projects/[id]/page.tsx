@@ -23,6 +23,7 @@ type Clip = {
   visualStyle: string;
   aspect: string;
   crop: Crop;
+  previewRevision: number;
   preview?: string;
   cover?: string;
 };
@@ -108,6 +109,7 @@ function normalizeClip(clip: Clip): Clip {
     visualStyle: clip.visualStyle || 'Cinema',
     aspect: clip.aspect || '9:16',
     crop: clip.crop || {x: 0, y: 0, width: 1, height: 1},
+    previewRevision: clip.previewRevision ?? 0,
   };
 }
 
@@ -136,6 +138,7 @@ export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
   const [manualTitle, setManualTitle] = useState('Novo corte manual');
   const [manualStart, setManualStart] = useState(0);
   const [manualEnd, setManualEnd] = useState(30);
+  const [previewing, setPreviewing] = useState<string | null>(null);
 
   const editorClip = useMemo(
     () => clips.find(clip => clip.id === editorClipId),
@@ -344,6 +347,47 @@ export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
       setMessage(friendly((error as Error).message));
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function requestPreview(clip: Clip) {
+    if (previewing || busy) return;
+    setPreviewing(clip.id);
+    setMessage('');
+
+    try {
+      let revision = clip.revision;
+      if ((history[clip.id]?.length ?? 0) > 0) {
+        revision = await saveClip(clip, false);
+      }
+
+      await api(
+        `/clips/${clip.id}/preview`,
+        'POST',
+      );
+
+      setMessage(`Gerando prévia da revisão ${revision}…`);
+
+      for (let attempt = 0; attempt < 12; attempt++) {
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        const serverClips = (await api<Clip[]>(`/projects/${id}/clips`)).map(normalizeClip);
+        const updated = serverClips.find(item => item.id === clip.id);
+        if (!updated) break;
+
+        if (updated.previewRevision >= revision) {
+          setClips(current => current.map(item => item.id === clip.id
+            ? {...item, preview: updated.preview, cover: updated.cover, previewRevision: updated.previewRevision}
+            : item));
+          setMessage(`Prévia da revisão ${revision} pronta.`);
+          return;
+        }
+      }
+
+      setMessage('A prévia continua processando. Você pode continuar editando e atualizar novamente em instantes.');
+    } catch (error) {
+      setMessage(friendly((error as Error).message));
+    } finally {
+      setPreviewing(null);
     }
   }
 
@@ -581,6 +625,11 @@ export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
                   <div>
                     <p className="eyebrow">EDITOR SHORT-FORM · REV. {editorClip.revision}</p>
                     <h2>{editorClip.title}</h2>
+                    <div className="preview-revision-state">
+                      {editorClip.previewRevision >= editorClip.revision
+                        ? <span className="current">Prévia atualizada · rev. {editorClip.previewRevision}</span>
+                        : <span className="stale">Prévia desatualizada · rev. {editorClip.previewRevision || '—'}</span>}
+                    </div>
                   </div>
                   <div className="editor-history">
                     <button className="secondary" disabled={!(history[editorClip.id]?.length)} onClick={() => undoClip(editorClip.id)}>↶ Desfazer</button>
@@ -735,7 +784,14 @@ export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
                   </button>
                   <button
                     className="secondary"
-                    disabled={busy || editorClip.selection !== 'SELECTED'}
+                    disabled={busy || previewing === editorClip.id}
+                    onClick={() => void requestPreview(editorClip)}
+                  >
+                    {previewing === editorClip.id ? 'Gerando prévia…' : 'Atualizar prévia'}
+                  </button>
+                  <button
+                    className="secondary"
+                    disabled={busy || previewing === editorClip.id || editorClip.selection !== 'SELECTED'}
                     onClick={() => void requestExport(editorClip)}
                   >
                     Exportar {exportFormat}

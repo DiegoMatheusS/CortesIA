@@ -497,3 +497,10 @@ html{scroll-behavior:smooth}
  .segment-editor-row{grid-template-columns:1fr}
  .segment-editor-row>b{grid-column:auto}
 }
+
+
+/* Preview revision state */
+.preview-revision-state{display:flex;gap:8px;margin-top:8px}
+.preview-revision-state span{display:inline-flex;align-items:center;padding:5px 8px;border-radius:999px;font-size:9px;font-weight:700;letter-spacing:.04em}
+.preview-revision-state .current{border:1px solid #356d63;background:#14322c;color:#9fe0cb}
+.preview-revision-state .stale{border:1px solid #705b37;background:#302714;color:#f1ce89}
