@@ -32,7 +32,7 @@ def command(args, timeout=7200):
     return process.stdout
 
 
-def probe(source, max_bytes=5_000_000_000, max_duration_ms=10_800_000):
+def probe(source, max_bytes=5_000_000_000, max_duration_ms=25_200_000):
     source = pathlib.Path(source)
     if source.stat().st_size > max_bytes:
         raise ProcessingError("FILE_TOO_LARGE")
