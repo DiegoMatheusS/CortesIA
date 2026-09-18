@@ -6,7 +6,7 @@ import NotificationBell from '@/components/NotificationBell';
 import {api, friendly, key} from '@/lib/api';
 
 type Project = {id: string; title: string; status: string; outcome?: string; durationMs: number};
-type Me = {name: string; email: string; admin: boolean; twoFactorEnabled: boolean};
+type Me = {name: string; email: string; admin: boolean; staff: boolean; roles: string[]; twoFactorEnabled: boolean};
 type Wallet = {wallet: {available: number; reserved: number}; lots: {kind: string; available: number}[]};
 type Package = {name: string; credits: number; bonus: number; amountMinor: number};
 
@@ -85,7 +85,7 @@ export default function Dashboard() {
     setMessage('');
 
     try {
-      if (file.size > 5_000_000_000) throw new Error('O limite inicial é 5 GB.');
+      if (file.size > 30_000_000_000) throw new Error('O limite é 30 GB.');
 
       const session = await api<{projectId: string; uploadId: string; partSize: number}>(
         '/projects/uploads',
@@ -135,7 +135,7 @@ export default function Dashboard() {
           <span className="nav-user">{me?.name}</span>
           <NotificationBell />
           <Link href="/app/settings/notifications">Notificações</Link>
-          {me?.admin && <Link href="/admin">Admin</Link>}
+          {me?.staff && <Link href="/admin">Operação</Link>}
           <button
             className="secondary"
             onClick={async () => {
@@ -175,7 +175,7 @@ export default function Dashboard() {
           <div className="grid">
             <article className="upload">
               <h3>Envie seu vídeo</h3>
-              <p>MP4, MOV, MKV ou WebM · até 5 GB · até 7 horas</p>
+              <p>MP4, MOV, MKV ou WebM · até 30 GB · até 7 horas</p>
               <label className="button">
                 {busy ? `Enviando ${progress}%` : 'Selecionar arquivo'}
                 <input
@@ -299,9 +299,9 @@ export default function Dashboard() {
           <small>Preços comerciais sujeitos à ativação no catálogo. Em ambiente local, compras são fictícias.</small>
         </section>
 
-        {me?.admin && !me.twoFactorEnabled && (
+        {me?.staff && !me.twoFactorEnabled && (
           <section className="dashboard-section">
-            <h2>Ative o MFA administrativo</h2>
+            <h2>Ative o MFA da equipe</h2>
             <button
               onClick={async () => {
                 const result = await api<{key: string}>('/auth/mfa/enroll', 'POST', {});
