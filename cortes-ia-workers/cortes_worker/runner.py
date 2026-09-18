@@ -46,7 +46,7 @@ class Processor:
             key=payload['sourceKey']
             if not key.startswith(('quarantine/'+lease['projectId']+'/', 'projects/'+lease['projectId']+'/')):raise ProcessingError('INVALID_SOURCE_KEY')
             head=self.s3.head_object(Bucket=self.bucket,Key=key)
-            if head['ContentLength']>(12_000_000_000 if key.startswith('projects/') else lease['maxBytes']):raise ProcessingError('FILE_TOO_LARGE')
+            if head['ContentLength']>(40_000_000_000 if key.startswith('projects/') else lease['maxBytes']):raise ProcessingError('FILE_TOO_LARGE')
             self.s3.download_file(self.bucket,key,str(source))
         elif payload.get('url'):
             self.progress('DOWNLOADING_LINK',5)
@@ -140,7 +140,7 @@ class Processor:
 
         if stage=='ALTERNATIVES':
             self.progress('LOADING_TRANSCRIPT',22)
-            master=source;meta=media_client.call(source,'probe',**{**limits,'max_bytes':12_000_000_000})
+            master=source;meta=media_client.call(source,'probe',**{**limits,'max_bytes':40_000_000_000})
             key=payload['transcriptKey']
             if not key.startswith('projects/'+lease['projectId']+'/'):raise ProcessingError('INVALID_TRANSCRIPT_KEY')
             data=self.s3.get_object(Bucket=self.bucket,Key=key)
@@ -248,7 +248,7 @@ def main():
             event={'eventId':str(uuid.uuid4()),'jobId':job,'fence':lease['fence'],'kind':'succeeded','error':None,'retryable':False,'durationMs':0,'outputs':[],'clips':[],'failedFeatures':[],'outcome':None}
             try:
                 report('STARTING',1)
-                with tempfile.TemporaryDirectory(prefix='cortes-') as work:event.update(Processor(s3,bucket,work,report).run(lease))
+                with tempfile.TemporaryDirectory(prefix='cortes-',dir=os.getenv('WORK_ROOT') or None) as work:event.update(Processor(s3,bucket,work,report).run(lease))
             except ProcessingError as e:event.update(kind='failed',error=e.code,retryable=e.retryable,outcome=e.outcome)
             except Exception:event.update(kind='failed',error='WORKER_FAILURE',retryable=True,outcome='SYSTEM_FAILURE')
             finally:stop.set();thread.join(timeout=2)
