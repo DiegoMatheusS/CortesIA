@@ -78,12 +78,27 @@ public class Upload {
  public string Key {get;set;}=""; public string MultipartId {get;set;}=""; public long Size {get;set;}
  public string State {get;set;}="UPLOADING"; public DateTimeOffset CreatedAt {get;set;}=DateTimeOffset.UtcNow;
 }
+public record RevisionSegment(long StartMs,long EndMs);
+public record CropSpec(double X=0,double Y=0,double Width=1,double Height=1);
 public class Clip {
  public Guid Id {get;set;}=Guid.NewGuid(); public Guid ProjectId {get;set;} public Guid RunId {get;set;}
  public string Title {get;set;}=""; public string Reason {get;set;}=""; public long StartMs {get;set;} public long EndMs {get;set;}
  public string Selection {get;set;}="SUGGESTED"; public int Revision {get;set;}=1;
- public string Subtitles {get;set;}="[]"; public string Style {get;set;}="simple";
+ public string Segments {get;set;}="[]"; public string Subtitles {get;set;}="[]"; public string Style {get;set;}="simple";
+ public string CaptionPreset {get;set;}="Clean"; public string CaptionOverrides {get;set;}="{}";
+ public string VisualStyle {get;set;}="Cinema"; public string VisualOverrides {get;set;}="{}";
+ public string Aspect {get;set;}="9:16"; public string Crop {get;set;}=Json.Write(new CropSpec());
  public string? PreviewKey {get;set;} public string? CoverKey {get;set;}
+}
+public class ClipRevision {
+ public Guid Id {get;set;}=Guid.NewGuid(); public Guid ClipId {get;set;} public Guid ProjectId {get;set;}
+ public int Number {get;set;} public string Title {get;set;}=""; public string Selection {get;set;}="SUGGESTED";
+ public long StartMs {get;set;} public long EndMs {get;set;}
+ public string Segments {get;set;}="[]"; public string Subtitles {get;set;}="[]"; public string Style {get;set;}="simple";
+ public string CaptionPreset {get;set;}="Clean"; public string CaptionOverrides {get;set;}="{}";
+ public string VisualStyle {get;set;}="Cinema"; public string VisualOverrides {get;set;}="{}";
+ public string Aspect {get;set;}="9:16"; public string Crop {get;set;}=Json.Write(new CropSpec());
+ public string? CoverKey {get;set;} public DateTimeOffset CreatedAt {get;set;}=DateTimeOffset.UtcNow;
 }
 public class Export {
  public Guid Id {get;set;}=Guid.NewGuid(); public Guid ClipId {get;set;} public Guid ProjectId {get;set;}
