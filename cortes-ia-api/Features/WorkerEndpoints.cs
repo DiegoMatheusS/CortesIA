@@ -19,7 +19,7 @@ public static class WorkerEndpoints {
    if(p!.DeletedAt!=null||p.Generation!=j.Generation||j.State is "SUCCEEDED" or "FAILED" or "CANCELLED")return Results.Ok(new{disposition="DONE"});
    if(j.LeaseUntil>DateTimeOffset.UtcNow&&j.State=="RUNNING")return Results.Ok(new{disposition="BUSY"});
    j.State="RUNNING";j.Attempts++;j.Fence++;j.LeaseUntil=DateTimeOffset.UtcNow.AddSeconds(120);j.ProgressPhase="STARTING";j.ProgressPercent=Math.Max(1,j.ProgressPercent);await d.SaveChangesAsync();await tx.CommitAsync();
-   return Results.Ok(new{disposition="GRANTED",j.Id,j.Stage,j.Fence,j.ProjectId,j.Generation,p.DurationMs,payload=System.Text.Json.JsonSerializer.Deserialize<object>(j.Payload),outputPrefix=$"projects/{j.ProjectId}/jobs/{j.Id}/{j.Fence}/",maxBytes=await policy.Number("maxBytes",5_000_000_000),maxDurationMs=await policy.Number("maxDurationMs",10_800_000)});
+   return Results.Ok(new{disposition="GRANTED",j.Id,j.Stage,j.Fence,j.ProjectId,j.Generation,p.DurationMs,payload=System.Text.Json.JsonSerializer.Deserialize<object>(j.Payload),outputPrefix=$"projects/{j.ProjectId}/jobs/{j.Id}/{j.Fence}/",maxBytes=await policy.Number("maxBytes",5_000_000_000),maxDurationMs=await policy.Number("maxDurationMs",25_200_000)});
   });
   g.MapPost("/jobs/{id:guid}/heartbeat",async(Guid id,HeartbeatDto r,Database d)=>{
    if(r.Phase!=null&&(string.IsNullOrWhiteSpace(r.Phase)||r.Phase.Length>64))throw new DomainError("INVALID_PROGRESS");
@@ -61,7 +61,7 @@ public static class WorkerEndpoints {
     d.Media.Add(new Media{UserId=p.UserId,ProjectId=p.Id,Key=output.Key,Kind=output.Kind,Size=output.Size});
    }
    if(j.Stage is "INGEST" or "LINK_METADATA"){
-    if(e.DurationMs<=0||e.DurationMs>10_800_000)throw new DomainError("INVALID_DURATION");p.DurationMs=e.DurationMs;p.Status="RECEBIDO";
+    if(e.DurationMs<=0||e.DurationMs>25_200_000)throw new DomainError("INVALID_DURATION");p.DurationMs=e.DurationMs;p.Status="RECEBIDO";
     var master=(e.Outputs??[]).FirstOrDefault(x=>x.Kind=="WORKING_MASTER");if(master!=null)p.MasterAssetKey=master.Key;
    }else if(j.Stage is "PROCESS" or "ALTERNATIVES"){
     if(run==null)throw new InvalidOperationException("Run missing");
