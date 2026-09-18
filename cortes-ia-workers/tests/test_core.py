@@ -61,7 +61,7 @@ class SecurityTests(unittest.TestCase):
     return {'duration':25200,'url':'https://r1---sn.googlevideo.com/videoplayback?id=x','title':'Podcast longo','availability':'public','height':720,'ext':'mp4','filesize':1234}
   with patch.dict(os.environ,{'YOUTUBE_ENABLED':'true'}):
    with patch('yt_dlp.YoutubeDL',FakeYD),patch('cortes_worker.youtube.youtube_dns_guard',return_value=contextlib.nullcontext()):
-    info=youtube.metadata('https://www.youtube.com/watch?v=abc',max_bytes=5_000_000_000,max_duration_ms=25_200_000)
+    info=youtube.metadata('https://www.youtube.com/watch?v=abc',max_bytes=30_000_000_000,max_duration_ms=25_200_000)
   self.assertEqual(info['duration_ms'],25_200_000)
  def test_youtube_rejects_over_seven_hours(self):
   class FakeYD:
@@ -81,11 +81,11 @@ class SecurityTests(unittest.TestCase):
    def __enter__(self):return self
    def __exit__(self,*args):return False
    def extract_info(self,*args,**kwargs):
-    return {'duration':3600,'url':'https://r1---sn.googlevideo.com/videoplayback?id=x','title':'Grande','availability':'public','filesize':6_000_000_000}
+    return {'duration':3600,'url':'https://r1---sn.googlevideo.com/videoplayback?id=x','title':'Grande','availability':'public','filesize':31_000_000_000}
   with patch.dict(os.environ,{'YOUTUBE_ENABLED':'true'}):
    with patch('yt_dlp.YoutubeDL',FakeYD),patch('cortes_worker.youtube.youtube_dns_guard',return_value=contextlib.nullcontext()):
     with self.assertRaises(ProcessingError) as error:
-     youtube.metadata('https://youtube.com/watch?v=abc',max_bytes=5_000_000_000)
+     youtube.metadata('https://youtube.com/watch?v=abc',max_bytes=30_000_000_000)
   self.assertEqual(error.exception.code,'FILE_TOO_LARGE')
  def test_ollama_structured_candidates(self):
   payload={'message':{'content':json.dumps({'candidates':[{'start_ms':100,'end_ms':2000,'title':'Gancho','reason':'Autocontido','score':88}]})}}
