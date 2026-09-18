@@ -12,7 +12,7 @@ Este documento descreve o que existe **no código atual**. Itens ainda não homo
 | 6 Editor | Editor short-form, corte manual, timeline por segmentos, dividir/remover trecho, revisão não destrutiva, desfazer/refazer local, edição de texto/sincronismo, presets de legenda, estilos visuais, crop, histórico, **restauração de revisão como nova revisão**, **seleção de capa a partir de frame real do master**, preview regenerável/versionado e export por revisão | Reposicionamento visual direto sobre o canvas, edição avançada da capa, quote para operações pesadas adicionais e testes E2E completos |
 | 7 Pagamentos | Estrutura de checkout Mercado Pago, webhook assinado, grants/bônus e modo local fictício | Homologação real Pix/cartão, conciliação sem webhook, estorno monetário/chargeback e aprovação de preços/contrato |
 | 8 Segurança | Ownership, CSRF/MFA, HMAC de CPF, SSRF/DNS, storage privado, audit, adapter antivírus, scans CI, worker token, fencing/leases e validações server-side | Pentest/ASVS, rate limit distribuído, IAM/mTLS, rotação de secrets, ClamAV para arquivos grandes, exclusão completa de conta e testes de retenção/restore |
-| 9 Produção | Dockerfiles/Compose, modo local leve, modo local IA real, Terraform base, CI com backend/web/workers/security/Terraform, **CI de migrations com apply/rollback/drift**, runbooks iniciais e módulo transacional de notificações | ECS/services finais, domínio/TLS/WAF, SES, IAM mínimo, observabilidade completa, homologação de rollback/restore em produção, RPO/RTO e smoke de produção |
+| 9 Produção | Dockerfiles/Compose, modo local leve, modo local IA real, Terraform base, CI com backend/web/workers/security/Terraform, CI de migrations e **E2E navegador → API → S3/SQS → worker → FFmpeg → editor → export**, runbooks iniciais e módulo transacional de notificações | ECS/services finais, domínio/TLS/WAF, SES, IAM mínimo, observabilidade completa, homologação de rollback/restore em produção, RPO/RTO e smoke de produção |
 
 ## Produto e frontend
 
@@ -70,8 +70,8 @@ Os últimos PRs desses recursos passaram o workflow completo antes do merge.
 
 ## Próximos gates recomendados
 
-1. Validar e estabilizar o novo gate E2E navegador → API → worker → storage no CI.
-2. Benchmark real de qualidade da IA e tracking.
+1. Benchmark real de qualidade da IA e tracking.
+2. Reposicionamento visual direto no canvas e edição avançada de capa.
 3. Reposicionamento visual direto no canvas e edição avançada de capa.
 4. Homologação de pagamento e infraestrutura de produção.
 5. Separar role de migration/DDL da role runtime e homologar backup/restore.
@@ -104,3 +104,13 @@ O backend agora separa evento, categoria, leitura, visibilidade interna, políti
 Preferências configuráveis: processamento, suporte, saldo baixo e marketing. Segurança, pagamentos/créditos críticos e armazenamento são obrigatórios.
 
 Detalhes em `docs/NOTIFICACOES_TRANSACIONAIS.md`.
+
+
+## Gate E2E estabilizado
+
+O E2E full-stack passou no CI após corrigir dois problemas reais encontrados pelo navegador:
+
+- volume de ASP.NET Data Protection sem ownership para o usuário não-root da API;
+- URL S3 pré-assinada local sendo emitida como HTTPS para um endpoint LocalStack configurado em HTTP.
+
+O CORS local também aceita `localhost:3000` e `127.0.0.1:3000`, e o teste usa CPF válido único por execução/retry para respeitar corretamente a regra de trial único por CPF.
