@@ -9,7 +9,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace Cortes.Api.Migrations
+namespace Cortes.Migrations
 {
     [DbContext(typeof(Database))]
     [Migration("20260918151024_SliceFlowBaseline")]
