@@ -58,15 +58,20 @@ if(args.Contains("--make-admin")){
  var email=app.Configuration["ADMIN_EMAIL"]??throw new InvalidOperationException("ADMIN_EMAIL required");var user=await users.FindByEmailAsync(email)??throw new InvalidOperationException("Register and verify account first");
  await users.AddToRoleAsync(user,StaffRoles.Admin);await users.UpdateSecurityStampAsync(user);Console.WriteLine("Admin role assigned. MFA enrollment remains mandatory.");return;
 }
-if(args.Contains("--grant-role")){
+if(args.Contains("--grant-role")||args.Contains("--revoke-role")){
  using var scope=app.Services.CreateScope();var users=scope.ServiceProvider.GetRequiredService<UserManager<User>>();
  var email=app.Configuration["STAFF_EMAIL"]??throw new InvalidOperationException("STAFF_EMAIL required");
  var role=app.Configuration["STAFF_ROLE"]??throw new InvalidOperationException("STAFF_ROLE required");
  if(!StaffRoles.Valid(role))throw new InvalidOperationException("STAFF_ROLE must be Admin, Support, Finance or Security");
  var user=await users.FindByEmailAsync(email)??throw new InvalidOperationException("Register and verify account first");
- foreach(var current in await users.GetRolesAsync(user))if(StaffRoles.All.Contains(current)&&current!=role)await users.RemoveFromRoleAsync(user,current);
- if(!await users.IsInRoleAsync(user,role))await users.AddToRoleAsync(user,role);
- await users.UpdateSecurityStampAsync(user);Console.WriteLine(role+" role assigned. MFA enrollment remains mandatory.");return;
+ if(args.Contains("--grant-role")){
+  if(!await users.IsInRoleAsync(user,role))await users.AddToRoleAsync(user,role);
+  await users.UpdateSecurityStampAsync(user);Console.WriteLine(role+" role assigned. MFA enrollment remains mandatory.");
+ }else{
+  if(await users.IsInRoleAsync(user,role))await users.RemoveFromRoleAsync(user,role);
+  await users.UpdateSecurityStampAsync(user);Console.WriteLine(role+" role revoked.");
+ }
+ return;
 }
 app.Run();
 public partial class Program {}
