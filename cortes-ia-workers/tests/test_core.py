@@ -1,9 +1,9 @@
-import unittest,os,tempfile,pathlib,subprocess,json,io
+import unittest,os,tempfile,pathlib,subprocess,json,io,contextlib
 from unittest.mock import patch
 from cortes_worker.models import validate_candidates,ProcessingError,Segment
 from cortes_worker.security import validate_url,public_addresses
 from cortes_worker.provider import redact,OllamaProvider,CompositeProvider
-from cortes_worker import media,vision
+from cortes_worker import media,vision,youtube
 class SecurityTests(unittest.TestCase):
  def test_url_restrictions(self):
   for u in ['http://youtube.com/watch?v=a','https://youtube.com.evil.test/a','https://user:pass@youtube.com/a','https://127.0.0.1/a','file:///etc/passwd','https://youtube.com:444/a']:
@@ -52,6 +52,41 @@ class SecurityTests(unittest.TestCase):
   self.assertEqual(composite.select([], 'trial',1,'AUTO')[0]['title'],'selector')
   self.assertEqual(composite.select([], 'trial',1,'AUTO',review=[])[0]['title'],'reviewer')
   self.assertEqual(selector.calls,1);self.assertEqual(reviewer.calls,1)
+ def test_youtube_accepts_exact_seven_hours(self):
+  class FakeYD:
+   def __init__(self,*args,**kwargs):pass
+   def __enter__(self):return self
+   def __exit__(self,*args):return False
+   def extract_info(self,*args,**kwargs):
+    return {'duration':25200,'url':'https://r1---sn.googlevideo.com/videoplayback?id=x','title':'Podcast longo','availability':'public','height':720,'ext':'mp4','filesize':1234}
+  with patch.dict(os.environ,{'YOUTUBE_ENABLED':'true'}):
+   with patch('yt_dlp.YoutubeDL',FakeYD),patch('cortes_worker.youtube.youtube_dns_guard',return_value=contextlib.nullcontext()):
+    info=youtube.metadata('https://www.youtube.com/watch?v=abc',max_bytes=5_000_000_000,max_duration_ms=25_200_000)
+  self.assertEqual(info['duration_ms'],25_200_000)
+ def test_youtube_rejects_over_seven_hours(self):
+  class FakeYD:
+   def __init__(self,*args,**kwargs):pass
+   def __enter__(self):return self
+   def __exit__(self,*args):return False
+   def extract_info(self,*args,**kwargs):
+    return {'duration':25201,'url':'https://r1---sn.googlevideo.com/videoplayback?id=x','title':'Muito longo','availability':'public'}
+  with patch.dict(os.environ,{'YOUTUBE_ENABLED':'true'}):
+   with patch('yt_dlp.YoutubeDL',FakeYD),patch('cortes_worker.youtube.youtube_dns_guard',return_value=contextlib.nullcontext()):
+    with self.assertRaises(ProcessingError) as error:
+     youtube.metadata('https://youtu.be/abc',max_duration_ms=25_200_000)
+  self.assertEqual(error.exception.code,'INVALID_DURATION')
+ def test_youtube_respects_filesize_before_download(self):
+  class FakeYD:
+   def __init__(self,*args,**kwargs):pass
+   def __enter__(self):return self
+   def __exit__(self,*args):return False
+   def extract_info(self,*args,**kwargs):
+    return {'duration':3600,'url':'https://r1---sn.googlevideo.com/videoplayback?id=x','title':'Grande','availability':'public','filesize':6_000_000_000}
+  with patch.dict(os.environ,{'YOUTUBE_ENABLED':'true'}):
+   with patch('yt_dlp.YoutubeDL',FakeYD),patch('cortes_worker.youtube.youtube_dns_guard',return_value=contextlib.nullcontext()):
+    with self.assertRaises(ProcessingError) as error:
+     youtube.metadata('https://youtube.com/watch?v=abc',max_bytes=5_000_000_000)
+  self.assertEqual(error.exception.code,'FILE_TOO_LARGE')
  def test_ollama_structured_candidates(self):
   payload={'message':{'content':json.dumps({'candidates':[{'start_ms':100,'end_ms':2000,'title':'Gancho','reason':'Autocontido','score':88}]})}}
   with patch.dict(os.environ,{'OLLAMA_MODEL':'qwen3:8b','OLLAMA_BASE_URL':'http://127.0.0.1:11434'}):
@@ -72,7 +107,8 @@ class MediaIntegration(unittest.TestCase):
   p=self.root/'bad.mp4';p.write_text('not video')
   with self.assertRaises(ProcessingError):media.probe(p)
  def test_full_master(self):
-  p=self.root/'master.mp4';media.normalize(self.source,p,media.probe(self.source));self.assertAlmostEqual(media.probe(p)['duration_ms'],5000,delta=150)
+  meta=media.probe(self.source);self.assertEqual(meta['video_codec'],'h264');self.assertEqual(meta['audio_codec'],'aac')
+  p=self.root/'master.mp4';media.normalize(self.source,p,meta);normalized=media.probe(p);self.assertAlmostEqual(normalized['duration_ms'],5000,delta=150);self.assertEqual(normalized['video_codec'],'h264')
  def test_render_blur_zoom_caption(self):
   p=self.root/'final.mp4';result=media.render(self.source,p,0,4000,[{'startMs':0,'endMs':3000,'text':'Cortes IA — teste'}],['zoom','blur'],'9:16',True)
   meta=media.probe(p);self.assertAlmostEqual(meta['width']/meta['height'],9/16,delta=.02);self.assertAlmostEqual(meta['duration_ms'],4000,delta=250)
