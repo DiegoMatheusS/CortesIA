@@ -45,8 +45,9 @@ public static class ProjectEndpoints {
    var meta=await c.S3.GetObjectMetadataAsync(c.Bucket,u.Key);if(meta.ContentLength!=u.Size)throw new DomainError("SIZE_MISMATCH",422);
    var p=await Api.Own(d,h,u.ProjectId);u.State="COMPLETED";Api.Enqueue(d,p,"INGEST",null,new{sourceKey=u.Key});await d.SaveChangesAsync();await tx.CommitAsync();return Results.Accepted();
   });
-  g.MapPost("/projects/imports",async(LinkDto r,HttpContext h,Database d)=>{
-   if(!Uri.TryCreate(r.Url,UriKind.Absolute,out var uri)||uri.Scheme!="https"||!new[]{"www.youtube.com","youtube.com","youtu.be"}.Contains(uri.Host)||!string.IsNullOrEmpty(uri.UserInfo)||uri.Port!=443)throw new DomainError("UNSUPPORTED_SOURCE",422);
+  g.MapPost("/projects/imports",async(LinkDto r,HttpContext h,Database d,IConfiguration cfg)=>{
+   if(!bool.TryParse(cfg["YOUTUBE_ENABLED"],out var youtubeEnabled)||!youtubeEnabled)throw new DomainError("YOUTUBE_NOT_ENABLED",409);
+   if(!Uri.TryCreate(r.Url,UriKind.Absolute,out var uri)||uri.Scheme!="https"||!new[]{"www.youtube.com","youtube.com","m.youtube.com","youtu.be"}.Contains(uri.Host.ToLowerInvariant())||!string.IsNullOrEmpty(uri.UserInfo)||uri.Port!=443)throw new DomainError("UNSUPPORTED_SOURCE",422);
    await using var tx=await d.Database.BeginTransactionAsync();await d.LockWallet(Api.User(h));var key=Api.Key(h);var hash=Api.Hash(r);
    var old=await d.Idempotency.SingleOrDefaultAsync(x=>x.UserId==Api.User(h)&&x.Scope=="link"&&x.Key==key);if(old!=null){if(old.BodyHash!=hash)throw new DomainError("IDEMPOTENCY_CONFLICT",409);return Results.Content(old.Response,"application/json");}
    var p=new Project{UserId=Api.User(h),Title=r.Title,SourceUrl=r.Url};d.Projects.Add(p);Api.Enqueue(d,p,"LINK_METADATA",null,new{url=r.Url});var response=Json.Write(new{projectId=p.Id});d.Idempotency.Add(new Idempotency{UserId=Api.User(h),Scope="link",Key=key,BodyHash=hash,Response=response});await d.SaveChangesAsync();await tx.CommitAsync();return Results.Content(response,"application/json");
