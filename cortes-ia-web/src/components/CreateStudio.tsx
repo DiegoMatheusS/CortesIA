@@ -6,7 +6,7 @@ import {api, friendly, key} from '@/lib/api';
 
 type PendingAction = 'file' | 'youtube' | null;
 
-const MAX_FILE_SIZE = 5_000_000_000;
+const MAX_FILE_SIZE = 30_000_000_000;
 
 function supportedFile(file: File) {
   return /\.(mp4|mov|mkv|webm)$/i.test(file.name);
@@ -135,7 +135,7 @@ export default function CreateStudio() {
     }
 
     if (file.size > MAX_FILE_SIZE) {
-      setMessage('O limite inicial é 5 GB por vídeo.');
+      setMessage('O limite é 30 GB por vídeo.');
       return;
     }
 
@@ -218,7 +218,7 @@ export default function CreateStudio() {
             <div className="dropzone-icon" aria-hidden="true">↑</div>
             <h2>Envie seu vídeo</h2>
             <p>Arraste para cá ou escolha no computador.</p>
-            <p className="source-meta">MP4, MOV, MKV ou WebM · até 5 GB · até 7 horas</p>
+            <p className="source-meta">MP4, MOV, MKV ou WebM · até 30 GB · até 7 horas</p>
             <button
               type="button"
               className="button primary"
