@@ -6,7 +6,7 @@ import NotificationBell from '@/components/NotificationBell';
 import {api, friendly, key} from '@/lib/api';
 
 type Project = {id: string; title: string; status: string; outcome?: string; durationMs: number};
-type Me = {name: string; email: string; admin: boolean; twoFactorEnabled: boolean};
+type Me = {name: string; email: string; admin: boolean; staff: boolean; roles: string[]; twoFactorEnabled: boolean};
 type Wallet = {wallet: {available: number; reserved: number}; lots: {kind: string; available: number}[]};
 type Package = {name: string; credits: number; bonus: number; amountMinor: number};
 
@@ -135,7 +135,7 @@ export default function Dashboard() {
           <span className="nav-user">{me?.name}</span>
           <NotificationBell />
           <Link href="/app/settings/notifications">Notificações</Link>
-          {me?.admin && <Link href="/admin">Admin</Link>}
+          {me?.staff && <Link href="/admin">Operação</Link>}
           <button
             className="secondary"
             onClick={async () => {
@@ -299,9 +299,9 @@ export default function Dashboard() {
           <small>Preços comerciais sujeitos à ativação no catálogo. Em ambiente local, compras são fictícias.</small>
         </section>
 
-        {me?.admin && !me.twoFactorEnabled && (
+        {me?.staff && !me.twoFactorEnabled && (
           <section className="dashboard-section">
-            <h2>Ative o MFA administrativo</h2>
+            <h2>Ative o MFA da equipe</h2>
             <button
               onClick={async () => {
                 const result = await api<{key: string}>('/auth/mfa/enroll', 'POST', {});
