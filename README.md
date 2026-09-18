@@ -6,7 +6,7 @@ Projeto integrado com frontend Next.js/React, API .NET 10, workers Python/FFmpeg
 
 ## Começar no Windows
 
-Requisitos: Docker Desktop com containers Linux/WSL2 e Compose, Python 3.12+, acesso a Docker Hub/MCR/NuGet/npm/PyPI para baixar dependências. Reserve memória e principalmente disco compatíveis com FFmpeg; vídeos grandes usam múltiplas cópias temporárias. Para fontes próximas de 30 GB, planeje ao menos 80 GB de espaço livre para source, working master e temporários.
+Requisitos: Docker Desktop com containers Linux/WSL2 e Compose, Python 3.12+, acesso a Docker Hub/MCR/NuGet/npm/PyPI para baixar dependências. Reserve memória e principalmente disco compatíveis com FFmpeg; vídeos grandes usam múltiplas cópias temporárias. Para fontes próximas de 30 GB, planeje ao menos 80 GB de espaço livre no workspace do worker. No Compose local, como o LocalStack também mantém a cópia do upload, recomenda-se cerca de 120 GB livres no host para testes no limite.
 
 Na pasta descompactada:
 
