@@ -71,14 +71,15 @@ public static class ProjectEndpoints {
    var job=await d.Jobs.Where(x=>x.ProjectId==id).OrderByDescending(x=>x.CreatedAt).Select(x=>new{x.Id,x.Stage,x.State,x.ProgressPhase,x.ProgressPercent,x.Error,x.CreatedAt}).FirstOrDefaultAsync();
    return new{active=job!=null&&(job.State=="QUEUED"||job.State=="RUNNING"),job};
   });
-  g.MapGet("/projects/{id:guid}/editor",async(Guid id,HttpContext h,Database d)=>{
+  g.MapGet("/projects/{id:guid}/editor",async(Guid id,HttpContext h,Database d,IConfiguration cfg)=>{
    var p=await Api.Own(d,h,id);
+   var trackingEnabled=bool.TryParse(cfg["TRACKING_ENABLED"],out var enabled)&&enabled;
    return new{
     p.Id,p.DurationMs,masterAvailable=p.MasterAssetKey!=null,
     captionPresets=CaptionPresets.OrderBy(x=>x),
     visualStyles=VisualStyles.OrderBy(x=>x),
     aspects=Aspects.OrderBy(x=>x),
-    capabilities=new{manualCuts=true,nonDestructiveRevisions=true,segments=true,captionSync=true,manualCrop=true}
+    capabilities=new{manualCuts=true,nonDestructiveRevisions=true,segments=true,captionSync=true,manualCrop=true,intelligentReframe=trackingEnabled}
    };
   });
   g.MapGet("/projects/{id:guid}/clips",async(Guid id,HttpContext h,Database d,Cloud cloud)=>{

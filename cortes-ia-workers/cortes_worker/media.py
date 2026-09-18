@@ -267,6 +267,52 @@ def _crop_filter(crop):
     return f"crop=w='iw*{width:.6f}':h='ih*{height:.6f}':x='iw*{x:.6f}':y='ih*{y:.6f}'"
 
 
+
+def _piecewise_center_expr(points, field):
+    clean = sorted(
+        [
+            (max(0.0, float(item.get("timeMs", 0)) / 1000.0), max(0.0, min(1.0, float(item[field]))))
+            for item in (points or [])
+            if field in item
+        ],
+        key=lambda item: item[0],
+    )
+    if not clean:
+        return "0.5"
+    if len(clean) == 1:
+        return f"{clean[0][1]:.6f}"
+
+    expression = f"{clean[-1][1]:.6f}"
+    for index in range(len(clean) - 2, -1, -1):
+        t0, v0 = clean[index]
+        t1, v1 = clean[index + 1]
+        duration = max(0.001, t1 - t0)
+        slope = (v1 - v0) / duration
+        linear = f"({v0:.6f}+({slope:.8f})*(t-{t0:.3f}))"
+        expression = f"if(lt(t\\,{t1:.3f})\\,{linear}\\,{expression})"
+    first_t, first_v = clean[0]
+    if first_t > 0:
+        expression = f"if(lt(t\\,{first_t:.3f})\\,{first_v:.6f}\\,{expression})"
+    return expression
+
+
+def _tracking_crop_filter(aspect, points):
+    if aspect == "original" or not points:
+        return None
+    ratios = {"9:16": 9 / 16, "4:5": 4 / 5, "1:1": 1.0, "16:9": 16 / 9}
+    ratio = ratios.get(aspect)
+    if ratio is None:
+        raise ProcessingError("INVALID_ASPECT")
+
+    center_x = _piecewise_center_expr(points, "x")
+    center_y = _piecewise_center_expr(points, "y")
+    width = f"if(gt(iw/ih\\,{ratio:.8f})\\,ih*{ratio:.8f}\\,iw)"
+    height = f"if(gt(iw/ih\\,{ratio:.8f})\\,ih\\,iw/{ratio:.8f})"
+    x = f"max(0\\,min(iw-ow\\,({center_x})*iw-ow/2))"
+    y = f"max(0\\,min(ih-oh\\,({center_y})*ih-oh/2))"
+    return f"crop=w='{width}':h='{height}':x='{x}':y='{y}'"
+
+
 def render(
     source,
     target,
@@ -281,6 +327,7 @@ def render(
     caption_preset="Clean",
     visual_style="Cinema",
     crop=None,
+    tracking_plan=None,
 ):
     meta = probe(source, max_bytes=12_000_000_000)
     source_ranges, output_duration_ms = _source_segments(
@@ -355,6 +402,11 @@ def render(
     if crop_filter:
         graph.append(f"[{current}]{crop_filter}[vcrop]")
         current = "vcrop"
+
+    tracking_filter = _tracking_crop_filter(aspect, tracking_plan)
+    if tracking_filter:
+        graph.append(f"[{current}]{tracking_filter}[vtrack]")
+        current = "vtrack"
 
     if "blur" in features:
         graph.append(f"[{current}]split=2[bgsrc][fgsrc]")

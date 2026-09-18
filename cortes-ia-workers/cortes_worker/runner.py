@@ -3,6 +3,7 @@ from .models import ProcessingError,validate_candidates,Segment
 from . import media_client,youtube
 from .provider import provider
 from .security import antivirus
+from .vision import track_faces
 
 def internal(path,body):
     data=json.dumps(body).encode();request=urllib.request.Request(os.getenv('INTERNAL_API','http://api:8080')+'/internal/v1/'+path,data=data,headers={'Content-Type':'application/json','X-Worker-Token':os.environ['WORKER_TOKEN']})
@@ -75,15 +76,29 @@ class Processor:
         if stage in {'RENDER','PREVIEW'}:
             c=payload['clip'];features=payload.get('features',[])
             is_preview=stage=='PREVIEW';output=self.work/('preview.mp4' if is_preview else 'final.mp4')
+            source_segments=c.get('segments') or [{'startMs':c['startMs'],'endMs':c['endMs']}]
+            tracking_plan=[]
+            if 'tracking' in features:
+                self.progress('TRACKING_SUBJECT',22)
+                try:
+                    tracking_plan=track_faces(
+                        source,
+                        source_segments,
+                        crop=c.get('crop'),
+                        fps=float(os.getenv('VISION_SAMPLE_FPS','2')),
+                    )
+                except ProcessingError:
+                    tracking_plan=[]
             self.progress('RENDERING_PREVIEW' if is_preview else 'RENDERING_EXPORT',30)
             media_client.call(source,'render',output,settings={
                 'start_ms':c['startMs'],'end_ms':c['endMs'],
-                'source_segments':c.get('segments'),
+                'source_segments':source_segments,
                 'segments':c['subtitles'],'features':features,
                 'aspect':payload['format'],'style':c['style'],
                 'caption_preset':c.get('captionPreset','Clean'),
                 'visual_style':c.get('visualStyle','Cinema'),
-                'crop':c.get('crop'),'preview':is_preview
+                'crop':c.get('crop'),'preview':is_preview,
+                'tracking_plan':tracking_plan
             })
             self.progress('UPLOADING_OUTPUT',90)
             self.upload(output,'PREVIEW' if is_preview else 'FINAL_EXPORT',lease)
@@ -136,16 +151,33 @@ class Processor:
         selected=validate_candidates(reviewed,meta['duration_ms'],quantity,low,high,[(x['startMs'],x['endMs']) for x in payload.get('rejected',[])])
 
         clips=[];features=config.get('features') or []
-        failed=[f for f in features if f in {'dynamic_captions','tracking'}]
+        failed=[f for f in features if f == 'dynamic_captions']
+        tracking_requested='tracking' in features
+        tracking_delivered=False
         for index,candidate in enumerate(selected):
             self.progress('GENERATING_PREVIEWS',78+int(18*(index)/max(1,len(selected))))
             relative=[{'startMs':max(0,s.start_ms-candidate.start_ms),'endMs':min(candidate.end_ms,s.end_ms)-candidate.start_ms,'text':s.text} for s in segments if s.end_ms>candidate.start_ms and s.start_ms<candidate.end_ms]
+            tracking_plan=[]
+            if tracking_requested:
+                self.progress('TRACKING_SUBJECT',78+int(12*(index+1)/max(1,len(selected))))
+                try:
+                    tracking_plan=track_faces(
+                        master,
+                        [{'startMs':candidate.start_ms,'endMs':candidate.end_ms}],
+                        fps=float(os.getenv('VISION_SAMPLE_FPS','2')),
+                    )
+                except ProcessingError:
+                    tracking_plan=[]
+                tracking_delivered=tracking_delivered or bool(tracking_plan)
             preview=self.work/f'preview-{index}.mp4'
-            media_client.call(master,'render',preview,settings={'start_ms':candidate.start_ms,'end_ms':candidate.end_ms,'segments':relative,'features':features,'aspect':'9:16','preview':True})
+            media_client.call(master,'render',preview,settings={'start_ms':candidate.start_ms,'end_ms':candidate.end_ms,'segments':relative,'features':features,'aspect':'9:16','preview':True,'tracking_plan':tracking_plan})
             key=self.upload(preview,'PREVIEW',lease);cover_key=None
             if 'cover' in features:
                 image=self.work/f'cover-{index}.jpg';media_client.call(master,'cover',image,at_ms=candidate.start_ms);cover_key=self.upload(image,'COVER',lease)
             clips.append({'title':candidate.title,'reason':candidate.reason,'startMs':candidate.start_ms,'endMs':candidate.end_ms,'previewKey':key,'coverKey':cover_key,'subtitles':relative})
+
+        if tracking_requested and selected and not tracking_delivered:
+            failed.append('tracking')
 
         self.progress('FINALIZING',98)
         return {'durationMs':meta['duration_ms'],'outputs':self.outputs,'clips':clips,'failedFeatures':failed,'outcome':'SUCCESS' if clips else 'NO_SUITABLE_CLIPS'}

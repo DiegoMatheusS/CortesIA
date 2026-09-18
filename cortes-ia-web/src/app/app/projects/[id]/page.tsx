@@ -57,6 +57,7 @@ type EditorMeta = {
     segments: boolean;
     captionSync: boolean;
     manualCrop: boolean;
+    intelligentReframe?: boolean;
   };
 };
 
@@ -557,11 +558,11 @@ export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
               <label className="check" key={code}>
                 <input
                   type="checkbox"
-                  disabled={code === 'dynamic_captions' || code === 'tracking'}
+                  disabled={code === 'dynamic_captions' || (code === 'tracking' && !editorMeta?.capabilities.intelligentReframe)}
                   checked={features.includes(code)}
                   onChange={event => setFeatures(current => event.target.checked ? [...current, code] : current.filter(item => item !== code))}
                 />
-                {title} <small>{code === 'dynamic_captions' || code === 'tracking' ? 'em implementação' : `+${price}`}</small>
+                {title} <small>{code === 'dynamic_captions' || (code === 'tracking' && !editorMeta?.capabilities.intelligentReframe) ? 'indisponível neste ambiente' : `+${price}`}</small>
               </label>
             ))}
           </div>
