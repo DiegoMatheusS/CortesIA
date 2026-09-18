@@ -50,7 +50,7 @@ export default function NotificationBell() {
         aria-expanded={open}
         onClick={() => setOpen(value => !value)}
       >
-        <span aria-hidden="true">♢</span>
+        <span aria-hidden="true">🔔</span>
         {feed.unread > 0 && <b>{Math.min(feed.unread, 99)}</b>}
       </button>
 
