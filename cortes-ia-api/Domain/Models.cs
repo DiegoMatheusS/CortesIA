@@ -120,7 +120,15 @@ public class Audit {
 }
 public class Notification {
  public Guid Id {get;set;}=Guid.NewGuid(); public Guid UserId {get;set;} public string Dedupe {get;set;}="";
- public string Subject {get;set;}=""; public string Body {get;set;}=""; public DateTimeOffset? SentAt {get;set;}
+ public string Event {get;set;}="LEGACY"; public string Category {get;set;}="PROCESSING";
+ public string Subject {get;set;}=""; public string Body {get;set;}="";
+ public string EmailPolicy {get;set;}="DEFAULT_ON"; public string EmailStatus {get;set;}="PENDING";
+ public bool InApp {get;set;}=true; public DateTimeOffset CreatedAt {get;set;}=DateTimeOffset.UtcNow;
+ public DateTimeOffset? ReadAt {get;set;} public DateTimeOffset? SentAt {get;set;}
+}
+public class NotificationPreference {
+ public Guid UserId {get;set;} public bool ProcessingEmail {get;set;}=true; public bool SupportEmail {get;set;}=true;
+ public bool LowBalanceEmail {get;set;} public bool MarketingEmail {get;set;}
 }
 public class Setting { public string Key {get;set;}=""; public string Value {get;set;}=""; }
 public class Ticket {
