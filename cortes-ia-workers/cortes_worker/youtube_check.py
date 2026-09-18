@@ -13,7 +13,7 @@ def main():
         print("Uso: YOUTUBE_ENABLED=true python -m cortes_worker.youtube_check <url>")
         raise SystemExit(2)
 
-    max_bytes = int(os.getenv("YOUTUBE_SMOKE_MAX_BYTES", "5000000000"))
+    max_bytes = int(os.getenv("YOUTUBE_SMOKE_MAX_BYTES", "30000000000"))
     max_duration = int(os.getenv("YOUTUBE_MAX_DURATION_MS", "25200000"))
 
     try:
