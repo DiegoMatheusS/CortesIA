@@ -86,8 +86,16 @@ def _sample_frames(source, start_ms, end_ms, fps=2.0, width=640, height=360):
     finally:
         if process.stdout:
             process.stdout.close()
-        _, stderr = process.communicate(timeout=30)
-        if process.returncode not in (0, None):
+        if process.stderr:
+            process.stderr.read()
+            process.stderr.close()
+        try:
+            returncode = process.wait(timeout=30)
+        except subprocess.TimeoutExpired:
+            process.kill()
+            process.wait()
+            raise ProcessingError("VISION_DECODE_FAILED", True)
+        if returncode != 0:
             raise ProcessingError("VISION_DECODE_FAILED", True)
 
 
