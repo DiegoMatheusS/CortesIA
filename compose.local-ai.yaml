@@ -11,6 +11,8 @@ services:
       AI_RUNTIME_PROFILE: LOCAL
       OLLAMA_BASE_URL: http://host.docker.internal:11434
       OLLAMA_MODEL: qwen3:8b
+      OLLAMA_SELECTION_MODEL: qwen3:8b
+      OLLAMA_REVIEW_MODEL: qwen3:8b
       OLLAMA_TIMEOUT_SECONDS: "300"
       TRANSCRIPTION_PROVIDER: faster-whisper
       FASTER_WHISPER_MODEL: medium
