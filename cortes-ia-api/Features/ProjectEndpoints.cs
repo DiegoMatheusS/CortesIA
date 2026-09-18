@@ -10,6 +10,8 @@ public record QuoteDto(string Modality,VideoConfig Configuration);
 public record StartDto(Guid QuoteId,bool RightsAccepted);
 public record EditDto(string Title,long StartMs,long EndMs,string Selection,SubtitleDto[] Subtitles,string Style="simple");
 public record SubtitleDto(long StartMs,long EndMs,string Text);
+public record ManualClipDto(string Title,RevisionSegment[] Segments,string Aspect="9:16",string CaptionPreset="Clean",string VisualStyle="Cinema");
+public record ClipRevisionDto(string Title,string Selection,RevisionSegment[] Segments,SubtitleDto[] Subtitles,bool CaptionsEnabled=true,string CaptionPreset="Clean",string VisualStyle="Cinema",string Aspect="9:16",CropSpec? Crop=null);
 public record ExportDto(Guid ClipId,string Format);
 public record TicketDto(string Subject,string Message,Guid? ProjectId);
 public static class ProjectEndpoints {
@@ -64,12 +66,52 @@ public static class ProjectEndpoints {
    var job=Api.Enqueue(d,p,"PROCESS",run.Id,new{sourceKey=p.MasterAssetKey??p.SourceAssetKey,url=p.SourceUrl,config=Json.Read<VideoConfig>(q.Configuration),modality=q.Modality});
    var response=Json.Write(new{runId=run.Id,jobId=job.Id});d.Idempotency.Add(new Idempotency{UserId=uid,Scope="run",Key=key,BodyHash=hash,Response=response});Api.Audit(d,uid,"RUN_CONFIRMED",run.Id.ToString(),"Direitos aceitos; quote="+q.Id);await d.SaveChangesAsync();await tx.CommitAsync();return Results.Content(response,"application/json");
   });
-  g.MapGet("/projects/{id:guid}/clips",async(Guid id,HttpContext h,Database d,Cloud c)=>{await Api.Own(d,h,id);var clips=await d.Clips.Where(x=>x.ProjectId==id).OrderBy(x=>x.StartMs).ToListAsync();return clips.Select(x=>new{x.Id,x.Title,x.Reason,x.StartMs,x.EndMs,x.Selection,x.Revision,x.Style,subtitles=Json.Read<SubtitleDto[]>(x.Subtitles),preview=x.PreviewKey==null?null:c.Download(x.PreviewKey),cover=x.CoverKey==null?null:c.Download(x.CoverKey)});});
+  g.MapGet("/projects/{id:guid}/editor",async(Guid id,HttpContext h,Database d)=>{
+   var p=await Api.Own(d,h,id);
+   return new{
+    p.Id,p.DurationMs,masterAvailable=p.MasterAssetKey!=null,
+    captionPresets=CaptionPresets.OrderBy(x=>x),
+    visualStyles=VisualStyles.OrderBy(x=>x),
+    aspects=Aspects.OrderBy(x=>x),
+    capabilities=new{manualCuts=true,nonDestructiveRevisions=true,segments=true,captionSync=true,manualCrop=true}
+   };
+  });
+  g.MapGet("/projects/{id:guid}/clips",async(Guid id,HttpContext h,Database d,Cloud cloud)=>{
+   await Api.Own(d,h,id);var clips=await d.Clips.Where(x=>x.ProjectId==id).OrderBy(x=>x.StartMs).ToListAsync();
+   return clips.Select(x=>new{x.Id,x.Title,x.Reason,x.StartMs,x.EndMs,x.Selection,x.Revision,x.Style,
+    segments=ReadSegments(x),subtitles=Json.Read<SubtitleDto[]>(x.Subtitles),x.CaptionPreset,x.VisualStyle,x.Aspect,crop=Json.Read<CropSpec>(x.Crop),
+    preview=x.PreviewKey==null?null:cloud.Download(x.PreviewKey),cover=x.CoverKey==null?null:cloud.Download(x.CoverKey)});
+  });
+  g.MapGet("/clips/{id:guid}/revisions",async(Guid id,HttpContext h,Database d)=>{
+   var clip=await d.Clips.FindAsync(id)??throw new DomainError("NOT_FOUND",404);await Api.Own(d,h,clip.ProjectId);
+   var revisions=await d.ClipRevisions.Where(x=>x.ClipId==id).OrderByDescending(x=>x.Number).ToListAsync();
+   return revisions.Select(x=>new{x.Id,x.Number,x.Title,x.Selection,x.StartMs,x.EndMs,segments=Json.Read<RevisionSegment[]>(x.Segments),subtitles=Json.Read<SubtitleDto[]>(x.Subtitles),x.Style,x.CaptionPreset,x.VisualStyle,x.Aspect,crop=Json.Read<CropSpec>(x.Crop),x.CreatedAt});
+  });
+  g.MapPost("/projects/{id:guid}/clips/manual",async(Guid id,ManualClipDto r,HttpContext h,Database d)=>{
+   await using var tx=await d.Database.BeginTransactionAsync();await d.LockProject(id);var p=await Api.Own(d,h,id);
+   if(p.MasterAssetKey==null)throw new DomainError("MASTER_EXPIRED",410);
+   var run=await d.Runs.Where(x=>x.ProjectId==id).OrderByDescending(x=>x.CreatedAt).FirstOrDefaultAsync()??throw new DomainError("NO_ANALYSIS_AVAILABLE",409);
+   var segments=ValidateSegments(r.Segments,p.DurationMs);ValidateEditorStyle(r.CaptionPreset,r.VisualStyle,r.Aspect,new CropSpec());
+   if(string.IsNullOrWhiteSpace(r.Title)||r.Title.Length>200)throw new DomainError("INVALID_EDIT");
+   var clip=new Clip{ProjectId=id,RunId=run.Id,Title=r.Title.Trim(),Reason="Corte criado manualmente pelo usuário.",StartMs=segments.Min(x=>x.StartMs),EndMs=segments.Max(x=>x.EndMs),Selection="SELECTED",Segments=Json.Write(segments),Subtitles="[]",Style="simple",CaptionPreset=r.CaptionPreset,VisualStyle=r.VisualStyle,Aspect=r.Aspect};
+   d.Clips.Add(clip);d.ClipRevisions.Add(Snapshot(clip));Api.Audit(d,Api.User(h),"MANUAL_CLIP_CREATED",clip.Id.ToString(),"Working master; sem nova análise de IA");
+   await d.SaveChangesAsync();await tx.CommitAsync();return Results.Created($"/api/v1/clips/{clip.Id}",new{clip.Id,clip.Revision});
+  });
+  g.MapPost("/clips/{id:guid}/revisions",async(Guid id,ClipRevisionDto r,HttpContext h,Database d)=>{
+   var clip=await d.Clips.FindAsync(id)??throw new DomainError("NOT_FOUND",404);await using var tx=await d.Database.BeginTransactionAsync();await d.LockProject(clip.ProjectId);var p=await Api.Own(d,h,clip.ProjectId);await d.Entry(clip).ReloadAsync();Api.Version(h,clip.Revision);
+   if(string.IsNullOrWhiteSpace(r.Title)||r.Title.Length>200||!Selections.Contains(r.Selection))throw new DomainError("INVALID_EDIT");
+   var segments=ValidateSegments(r.Segments,p.DurationMs);var total=segments.Sum(x=>x.EndMs-x.StartMs);ValidateSubtitles(r.Subtitles,total);var crop=r.Crop??new CropSpec();ValidateEditorStyle(r.CaptionPreset,r.VisualStyle,r.Aspect,crop);
+   await EnsureCurrentRevision(d,clip);
+   clip.Title=r.Title.Trim();clip.StartMs=segments.Min(x=>x.StartMs);clip.EndMs=segments.Max(x=>x.EndMs);clip.Selection=r.Selection;clip.Segments=Json.Write(segments);clip.Subtitles=Json.Write(r.Subtitles);clip.Style=r.CaptionsEnabled?"simple":"none";clip.CaptionPreset=r.CaptionPreset;clip.VisualStyle=r.VisualStyle;clip.Aspect=r.Aspect;clip.Crop=Json.Write(crop);clip.Revision++;
+   d.ClipRevisions.Add(Snapshot(clip));Api.Audit(d,Api.User(h),"CLIP_REVISION_CREATED",clip.Id.ToString(),"Revision "+clip.Revision);
+   await d.SaveChangesAsync();await tx.CommitAsync();return Results.Ok(new{clip.Revision});
+  });
   g.MapPut("/clips/{id:guid}",async(Guid id,EditDto r,HttpContext h,Database d)=>{
    var clip=await d.Clips.FindAsync(id)??throw new DomainError("NOT_FOUND",404);await using var tx=await d.Database.BeginTransactionAsync();await d.LockProject(clip.ProjectId);var p=await Api.Own(d,h,clip.ProjectId);await d.Entry(clip).ReloadAsync();Api.Version(h,clip.Revision);
-   if(r.StartMs<0||r.EndMs<=r.StartMs||r.EndMs>p.DurationMs||r.Title.Length>200||!new[]{"SELECTED","REJECTED","SUGGESTED"}.Contains(r.Selection)||!new[]{"simple","none"}.Contains(r.Style))throw new DomainError("INVALID_EDIT");
-   if(r.Subtitles.Length>5000||r.Subtitles.Any(x=>x.StartMs<0||x.EndMs<=x.StartMs||x.EndMs>r.EndMs-r.StartMs||x.Text.Length>1000))throw new DomainError("INVALID_SUBTITLE");
-   clip.Title=r.Title;clip.StartMs=r.StartMs;clip.EndMs=r.EndMs;clip.Selection=r.Selection;clip.Subtitles=Json.Write(r.Subtitles);clip.Style=r.Style;clip.Revision++;await d.SaveChangesAsync();await tx.CommitAsync();return Results.Ok(new{clip.Revision});
+   if(r.StartMs<0||r.EndMs<=r.StartMs||r.EndMs>p.DurationMs||string.IsNullOrWhiteSpace(r.Title)||r.Title.Length>200||!Selections.Contains(r.Selection)||!new[]{"simple","none"}.Contains(r.Style))throw new DomainError("INVALID_EDIT");
+   ValidateSubtitles(r.Subtitles,r.EndMs-r.StartMs);await EnsureCurrentRevision(d,clip);
+   clip.Title=r.Title.Trim();clip.StartMs=r.StartMs;clip.EndMs=r.EndMs;clip.Selection=r.Selection;clip.Segments=Json.Write(new[]{new RevisionSegment(r.StartMs,r.EndMs)});clip.Subtitles=Json.Write(r.Subtitles);clip.Style=r.Style;clip.Revision++;d.ClipRevisions.Add(Snapshot(clip));
+   await d.SaveChangesAsync();await tx.CommitAsync();return Results.Ok(new{clip.Revision});
   });
   g.MapPost("/projects/{id:guid}/exports",async(Guid id,ExportDto r,HttpContext h,Database d)=>{
    await using var tx=await d.Database.BeginTransactionAsync();await d.LockProject(id);var p=await Api.Own(d,h,id);
@@ -77,7 +119,7 @@ public static class ProjectEndpoints {
    var clip=await d.Clips.SingleOrDefaultAsync(x=>x.Id==r.ClipId&&x.ProjectId==id)??throw new DomainError("NOT_FOUND",404);if(clip.Selection!="SELECTED")throw new DomainError("SELECT_CLIP_FIRST",409);
    var run=await d.Runs.FindAsync(clip.RunId);var config=Json.Read<VideoConfig>(run!.Configuration);if(!(config.Formats??["9:16"]).Contains(r.Format))throw new DomainError("ADDITIONAL_FORMAT_QUOTE_REQUIRED",409);
    var old=await d.Exports.SingleOrDefaultAsync(x=>x.ClipId==clip.Id&&x.Revision==clip.Revision&&x.Format==r.Format);if(old!=null){if(old.State=="FAILED"){var prior=await d.Jobs.FindAsync(old.JobId);prior!.State="QUEUED";prior.LeaseUntil=null;prior.Attempts=0;old.State="QUEUED";d.Outbox.Add(new Outbox{JobId=prior.Id});await d.SaveChangesAsync();await tx.CommitAsync();}return Results.Accepted(value:new{exportId=old.Id});}
-   var job=Api.Enqueue(d,p,"RENDER",run.Id,new{sourceKey=p.MasterAssetKey,clip=new{clip.Id,clip.StartMs,clip.EndMs,clip.Title,subtitles=Json.Read<SubtitleDto[]>(clip.Subtitles),clip.Style,clip.Revision},format=r.Format,features=Json.Read<QuoteItem[]>(run.Items).Where(x=>x.Feature!=null).Select(x=>x.Feature).ToArray()});
+   var job=Api.Enqueue(d,p,"RENDER",run.Id,new{sourceKey=p.MasterAssetKey,clip=new{clip.Id,clip.StartMs,clip.EndMs,clip.Title,segments=ReadSegments(clip),subtitles=Json.Read<SubtitleDto[]>(clip.Subtitles),clip.Style,clip.CaptionPreset,clip.VisualStyle,clip.Aspect,crop=Json.Read<CropSpec>(clip.Crop),clip.Revision},format=r.Format,features=Json.Read<QuoteItem[]>(run.Items).Where(x=>x.Feature!=null).Select(x=>x.Feature).ToArray()});
    var export=new Export{ClipId=clip.Id,ProjectId=id,JobId=job.Id,Revision=clip.Revision,Format=r.Format};d.Exports.Add(export);p.Status="RENDERIZANDO";await d.SaveChangesAsync();await tx.CommitAsync();return Results.Accepted(value:new{exportId=export.Id});
   });
   g.MapGet("/projects/{id:guid}/exports",async(Guid id,HttpContext h,Database d,Cloud c)=>{await Api.Own(d,h,id);var list=await d.Exports.Where(x=>x.ProjectId==id).ToListAsync();return list.Select(x=>new{x.Id,x.ClipId,x.Format,x.Revision,x.State,url=x.Key==null?null:c.Download(x.Key)});});
