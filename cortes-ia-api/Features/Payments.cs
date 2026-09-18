@@ -18,7 +18,7 @@ public class Payments(Database d,WalletService wallet,IHttpClientFactory clients
    if(!policy.Development)throw new InvalidOperationException("Local payments forbidden outside Development");
   }else{
    using var c=Client();c.DefaultRequestHeaders.Add("X-Idempotency-Key",purchase.Id.ToString());
-   var response=await c.PostAsJsonAsync("checkout/preferences",new{external_reference=purchase.Id.ToString(),items=new[]{new{id=name,title="Créditos Cortes IA - "+name,quantity=1,currency_id="BRL",unit_price=purchase.AmountMinor/100m}},notification_url=cfg["MP_WEBHOOK_URL"],back_urls=new{success=cfg["PUBLIC_URL"]+"/app",failure=cfg["PUBLIC_URL"]+"/app",pending=cfg["PUBLIC_URL"]+"/app"}});
+   var response=await c.PostAsJsonAsync("checkout/preferences",new{external_reference=purchase.Id.ToString(),items=new[]{new{id=name,title="Créditos SliceFlow - "+name,quantity=1,currency_id="BRL",unit_price=purchase.AmountMinor/100m}},notification_url=cfg["MP_WEBHOOK_URL"],back_urls=new{success=cfg["PUBLIC_URL"]+"/app",failure=cfg["PUBLIC_URL"]+"/app",pending=cfg["PUBLIC_URL"]+"/app"}});
    response.EnsureSuccessStatusCode();using var json=JsonDocument.Parse(await response.Content.ReadAsStringAsync());purchase.CheckoutUrl=json.RootElement.GetProperty(cfg["MP_SANDBOX"]=="true"?"sandbox_init_point":"init_point").GetString();
   }
   d.Idempotency.Add(new Idempotency{UserId=uid,Scope="purchase",Key=key,BodyHash=hash,Response=Json.Write(purchase)});await d.SaveChangesAsync();await tx.CommitAsync();return purchase;
@@ -27,7 +27,9 @@ public class Payments(Database d,WalletService wallet,IHttpClientFactory clients
   var p=await d.Purchases.FindAsync(id)??throw new DomainError("UNKNOWN_PURCHASE",404);await using var tx=await d.Database.BeginTransactionAsync();await d.LockWallet(p.UserId);await d.Entry(p).ReloadAsync();
   if(p.State=="APPROVED")return;if(p.State is "REFUNDED" or "CHARGEBACK")throw new DomainError("PAYMENT_CLOSED",409);
   p.State="APPROVED";p.ProviderId=providerId;await wallet.Grant(p.UserId,"PURCHASED",p.Credits,"purchase:"+p.Id,p.Id);await wallet.Grant(p.UserId,"PURCHASE_BONUS",p.Bonus,"bonus:"+p.Id,p.Id);
-  if(!await d.Notifications.AnyAsync(x=>x.Dedupe=="purchase:"+p.Id))d.Notifications.Add(new Notification{UserId=p.UserId,Dedupe="purchase:"+p.Id,Subject="Créditos adicionados",Body=$"{p.Credits+p.Bonus} créditos adicionados. Compra {p.Id}."});await d.SaveChangesAsync();await tx.CommitAsync();
+  var balance=(await d.Wallets.SingleAsync(x=>x.Id==p.UserId)).Available;
+  await NotificationEndpoints.Queue(d,p.UserId,"purchase:"+p.Id,"PURCHASE_APPROVED","PAYMENTS","Compra aprovada",$"Pacote {p.Package}: {p.Credits} créditos + {p.Bonus} bônus. Novo saldo: {balance}.","REQUIRED");
+  await d.SaveChangesAsync();await tx.CommitAsync();
  }
  public async Task ReconcilePending(CancellationToken ct){
   if(cfg["PAYMENTS_MODE"]=="sandbox-local")return;
@@ -37,9 +39,12 @@ public class Payments(Database d,WalletService wallet,IHttpClientFactory clients
    if(x.GetProperty("currency_id").GetString()!="BRL"||x.GetProperty("transaction_amount").GetDecimal()!=p.AmountMinor/100m||x.GetProperty("collector_id").ToString()!=cfg["MP_COLLECTOR_ID"])throw new DomainError("PAYMENT_VALUE_MISMATCH");
    var status=x.GetProperty("status").GetString();if(status=="approved")await Grant(id,e.PaymentId);
    else if(status is "refunded" or "charged_back"){
-    // No silent negative credit balance: freeze access and require audited reconciliation.
     var u=await d.Users.FindAsync([p.UserId],ct);u!.Blocked=true;p.State=status=="refunded"?"REFUNDED":"CHARGEBACK";Api.Audit(d,null,"PAYMENT_REVERSAL_REVIEW",p.Id.ToString(),"Reembolso/chargeback requer conciliação dos lotes consumidos");
-   }else if(status is "rejected" or "cancelled")p.State=status.ToUpperInvariant();
+    await NotificationEndpoints.Queue(d,p.UserId,"payment-reversal:"+p.Id+":"+status,status=="refunded"?"PAYMENT_REFUNDED":"PAYMENT_CHARGEBACK","PAYMENTS",status=="refunded"?"Reembolso financeiro recebido":"Contestação de pagamento recebida",status=="refunded"?"O provedor informou um reembolso financeiro. A conciliação dos créditos será revisada.":"O provedor informou um chargeback. A conta foi protegida enquanto os créditos são conciliados.","REQUIRED");
+   }else if(status is "rejected" or "cancelled"){
+    p.State=status.ToUpperInvariant();
+    await NotificationEndpoints.Queue(d,p.UserId,"payment-failed:"+p.Id+":"+status,"PAYMENT_NOT_APPROVED","PAYMENTS",status=="rejected"?"Pagamento recusado":"Pagamento expirado ou cancelado",status=="rejected"?"O pagamento não foi aprovado. Nenhum crédito foi adicionado.":"O pagamento não foi concluído. Gere uma nova cobrança quando quiser tentar novamente.","REQUIRED");
+   }
    e.ProcessedAt=DateTimeOffset.UtcNow;await d.SaveChangesAsync(ct);
   }
  }
