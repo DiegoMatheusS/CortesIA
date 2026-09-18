@@ -9,46 +9,73 @@ def internal(path,body):
     try:
         with urllib.request.urlopen(request,timeout=20) as r:
             content=r.read();return json.loads(content) if content else {}
-    except urllib.error.HTTPError as e:raise ProcessingError('INTERNAL_API_'+str(e.code),e.code>=500)
+    except urllib.error.HTTPError as e:raise ProcessingError('INTERNAL_API_'+str(e.code),e.code==429 or e.code>=500)
+
 class Processor:
-    def __init__(self,s3,bucket,work):self.s3=s3;self.bucket=bucket;self.work=pathlib.Path(work);self.outputs=[]
+    def __init__(self,s3,bucket,work,report=None):
+        self.s3=s3;self.bucket=bucket;self.work=pathlib.Path(work);self.outputs=[]
+        self.report=report or (lambda phase,progress:None)
+
+    def progress(self,phase,percent):
+        self.report(str(phase),max(0,min(100,int(percent))))
+
     def upload(self,path,kind,lease):
         suffix=pathlib.Path(path).suffix;key=lease['outputPrefix']+str(uuid.uuid4())+suffix
         self.s3.upload_file(str(path),self.bucket,key)
         self.outputs.append({'key':key,'kind':kind,'size':pathlib.Path(path).stat().st_size});return key
+
     def source(self,lease):
         payload=lease['payload'];source=self.work/'source'
+        self.progress('DOWNLOADING_SOURCE',5)
         if payload.get('sourceKey'):
             key=payload['sourceKey']
             if not key.startswith(('quarantine/'+lease['projectId']+'/', 'projects/'+lease['projectId']+'/')):raise ProcessingError('INVALID_SOURCE_KEY')
             head=self.s3.head_object(Bucket=self.bucket,Key=key)
             if head['ContentLength']>(12_000_000_000 if key.startswith('projects/') else lease['maxBytes']):raise ProcessingError('FILE_TOO_LARGE')
             self.s3.download_file(self.bucket,key,str(source))
-        elif payload.get('url'):youtube.download(payload['url'],source,lease['maxBytes'])
+        elif payload.get('url'):
+            self.progress('DOWNLOADING_LINK',5)
+            youtube.download(payload['url'],source,lease['maxBytes'])
         else:raise ProcessingError('SOURCE_MISSING')
+        self.progress('SCANNING_SOURCE',10)
         antivirus(source)
         return source
+
     def run(self,lease):
         stage=lease['stage'];payload=lease['payload'];limits={'max_bytes':lease['maxBytes'],'max_duration_ms':lease['maxDurationMs']}
+
         if stage=='LINK_METADATA':
-            info=youtube.metadata(payload['url']);return {'durationMs':info['duration_ms'],'outputs':[],'clips':[]}
+            self.progress('READING_LINK',20)
+            info=youtube.metadata(payload['url'])
+            self.progress('VALIDATING_SOURCE',95)
+            return {'durationMs':info['duration_ms'],'outputs':[],'clips':[]}
+
         if stage=='BUNDLE':
             import zipfile
-            archive=self.work/'cortes.zip'
+            self.progress('BUILDING_BUNDLE',10)
+            archive=self.work/'cortes.zip';exports=payload['exports']
             with zipfile.ZipFile(archive,'w',compression=zipfile.ZIP_STORED) as z:
-                for item in payload['exports']:
+                for index,item in enumerate(exports):
                     key=item['key']
                     if not key.startswith('projects/'+lease['projectId']+'/'):raise ProcessingError('INVALID_EXPORT')
                     local=self.work/(str(uuid.UUID(item['id']))+'.mp4')
                     self.s3.download_file(self.bucket,key,str(local));z.write(local,local.name);local.unlink()
+                    self.progress('BUILDING_BUNDLE',10+int(70*(index+1)/max(1,len(exports))))
+            self.progress('UPLOADING_OUTPUT',90)
             self.upload(archive,'BUNDLE',lease);return {'outputs':self.outputs,'clips':[]}
+
         source=self.source(lease)
+
         if stage=='INGEST':
-            # Validation only. No paid normalization/AI before confirmation.
-            meta=media_client.call(source,'probe',**limits);return {'durationMs':meta['duration_ms'],'outputs':[],'clips':[]}
+            self.progress('VALIDATING_MEDIA',45)
+            meta=media_client.call(source,'probe',**limits)
+            self.progress('SOURCE_READY',95)
+            return {'durationMs':meta['duration_ms'],'outputs':[],'clips':[]}
+
         if stage in {'RENDER','PREVIEW'}:
             c=payload['clip'];features=payload.get('features',[])
             is_preview=stage=='PREVIEW';output=self.work/('preview.mp4' if is_preview else 'final.mp4')
+            self.progress('RENDERING_PREVIEW' if is_preview else 'RENDERING_EXPORT',30)
             media_client.call(source,'render',output,settings={
                 'start_ms':c['startMs'],'end_ms':c['endMs'],
                 'source_segments':c.get('segments'),
@@ -58,46 +85,71 @@ class Processor:
                 'visual_style':c.get('visualStyle','Cinema'),
                 'crop':c.get('crop'),'preview':is_preview
             })
-            self.upload(output,'PREVIEW' if is_preview else 'FINAL_EXPORT',lease);return {'outputs':self.outputs,'clips':[]}
+            self.progress('UPLOADING_OUTPUT',90)
+            self.upload(output,'PREVIEW' if is_preview else 'FINAL_EXPORT',lease)
+            self.progress('FINALIZING',98)
+            return {'outputs':self.outputs,'clips':[]}
+
         if stage not in {'PROCESS','ALTERNATIVES'}:raise ProcessingError('UNKNOWN_STAGE')
+
+        self.progress('PREPARING_AI',15)
         ai=provider()
+
         if stage=='ALTERNATIVES':
+            self.progress('LOADING_TRANSCRIPT',22)
             master=source;meta=media_client.call(source,'probe',**{**limits,'max_bytes':12_000_000_000})
             key=payload['transcriptKey']
             if not key.startswith('projects/'+lease['projectId']+'/'):raise ProcessingError('INVALID_TRANSCRIPT_KEY')
             data=self.s3.get_object(Bucket=self.bucket,Key=key)
             if data['ContentLength']>20_000_000:raise ProcessingError('TRANSCRIPT_TOO_LARGE')
             segments=[Segment(**x) for x in json.loads(data['Body'].read())]
+            self.progress('TRANSCRIPT_READY',50)
         else:
+            self.progress('NORMALIZING_MEDIA',18)
             master=self.work/'master.mp4';meta=media_client.call(source,'normalize',master,**limits)
+            self.progress('SAVING_MASTER',24)
             self.upload(master,'WORKING_MASTER',lease)
+            self.progress('EXTRACTING_AUDIO',28)
             audio=self.work/'audio.wav';media_client.call(master,'audio',audio)
+            self.progress('TRANSCRIBING',32)
             segments=ai.transcribe(audio)
+            self.progress('TRANSCRIPT_READY',52)
+
         for s in segments:s.validate(meta['duration_ms'])
-        transcript=self.work/'transcript.json';transcript.write_text(json.dumps([dataclasses.asdict(s) for s in segments],ensure_ascii=False));self.upload(transcript,'TRANSCRIPT',lease)
+        transcript=self.work/'transcript.json'
+        transcript.write_text(json.dumps([dataclasses.asdict(s) for s in segments],ensure_ascii=False))
+        self.upload(transcript,'TRANSCRIPT',lease)
+
         config=payload['config'];quantity=config.get('quantity',5);mode=config.get('durationMode','UP_TO_1_MIN')
         ranges={'UP_TO_1_MIN':(0,60000),'ONE_TO_TWO_MIN':(60000,120000),'TWO_TO_THREE_MIN':(120000,180000),'AUTO':(0,180000)}
         low,high=ranges[mode];raw=[]
-        # Bounded context windows, full-video coverage; final review sees candidate context.
-        for offset in range(0,meta['duration_ms'],600000):
+        offsets=list(range(0,meta['duration_ms'],600000))
+        for index,offset in enumerate(offsets):
             window=[s for s in segments if s.end_ms>offset and s.start_ms<offset+660000]
             if window:raw.extend(ai.select(window,payload['modality'],quantity,mode))
+            self.progress('SELECTING_CLIPS',55+int(15*(index+1)/max(1,len(offsets))))
+
         candidates=validate_candidates(raw,meta['duration_ms'],min(quantity*3,100),low,high)
         context=[s for s in segments if any(s.end_ms>c.start_ms-5000 and s.start_ms<c.end_ms+5000 for c in candidates)]
+        self.progress('REVIEWING_CLIPS',73)
         reviewed=ai.select(context,payload['modality'],quantity,mode,review=[dataclasses.asdict(c) for c in candidates]) if candidates else []
         selected=validate_candidates(reviewed,meta['duration_ms'],quantity,low,high,[(x['startMs'],x['endMs']) for x in payload.get('rejected',[])])
+
         clips=[];features=config.get('features') or []
-        # Never pretend unsupported effects were delivered. Refund corresponding quote item.
         failed=[f for f in features if f in {'dynamic_captions','tracking'}]
-        for index,c in enumerate(selected):
-            relative=[{'startMs':max(0,s.start_ms-c.start_ms),'endMs':min(c.end_ms,s.end_ms)-c.start_ms,'text':s.text} for s in segments if s.end_ms>c.start_ms and s.start_ms<c.end_ms]
+        for index,candidate in enumerate(selected):
+            self.progress('GENERATING_PREVIEWS',78+int(18*(index)/max(1,len(selected))))
+            relative=[{'startMs':max(0,s.start_ms-candidate.start_ms),'endMs':min(candidate.end_ms,s.end_ms)-candidate.start_ms,'text':s.text} for s in segments if s.end_ms>candidate.start_ms and s.start_ms<candidate.end_ms]
             preview=self.work/f'preview-{index}.mp4'
-            media_client.call(master,'render',preview,settings={'start_ms':c.start_ms,'end_ms':c.end_ms,'segments':relative,'features':features,'aspect':'9:16','preview':True})
+            media_client.call(master,'render',preview,settings={'start_ms':candidate.start_ms,'end_ms':candidate.end_ms,'segments':relative,'features':features,'aspect':'9:16','preview':True})
             key=self.upload(preview,'PREVIEW',lease);cover_key=None
             if 'cover' in features:
-                image=self.work/f'cover-{index}.jpg';media_client.call(master,'cover',image,at_ms=c.start_ms);cover_key=self.upload(image,'COVER',lease)
-            clips.append({'title':c.title,'reason':c.reason,'startMs':c.start_ms,'endMs':c.end_ms,'previewKey':key,'coverKey':cover_key,'subtitles':relative})
+                image=self.work/f'cover-{index}.jpg';media_client.call(master,'cover',image,at_ms=candidate.start_ms);cover_key=self.upload(image,'COVER',lease)
+            clips.append({'title':candidate.title,'reason':candidate.reason,'startMs':candidate.start_ms,'endMs':candidate.end_ms,'previewKey':key,'coverKey':cover_key,'subtitles':relative})
+
+        self.progress('FINALIZING',98)
         return {'durationMs':meta['duration_ms'],'outputs':self.outputs,'clips':clips,'failedFeatures':failed,'outcome':'SUCCESS' if clips else 'NO_SUITABLE_CLIPS'}
+
 def main():
     import boto3
     endpoint=os.getenv('AWS_ENDPOINT_URL');region=os.getenv('AWS_DEFAULT_REGION','us-east-1')
@@ -111,23 +163,39 @@ def main():
             except ProcessingError:continue
             if lease['disposition']=='DONE':sqs.delete_message(QueueUrl=queue,ReceiptHandle=receipt);continue
             if lease['disposition']=='BUSY':continue
-            stop=threading.Event();lost=threading.Event()
+
+            stop=threading.Event();lost=threading.Event();progress_lock=threading.Lock()
+            progress_state={'phase':'STARTING','progress':1}
+
+            def send_progress():
+                with progress_lock:body={'fence':lease['fence'],'phase':progress_state['phase'],'progress':progress_state['progress']}
+                internal(f'jobs/{job}/heartbeat',body)
+                sqs.change_message_visibility(QueueUrl=queue,ReceiptHandle=receipt,VisibilityTimeout=120)
+
+            def report(phase,progress):
+                with progress_lock:
+                    progress_state['phase']=phase;progress_state['progress']=progress
+                try:send_progress()
+                except Exception:
+                    lost.set();raise ProcessingError('LEASE_LOST')
+
             def heartbeat():
                 while not stop.wait(30):
-                    try:
-                        internal(f'jobs/{job}/heartbeat',{'fence':lease['fence']})
-                        sqs.change_message_visibility(QueueUrl=queue,ReceiptHandle=receipt,VisibilityTimeout=120)
+                    try:send_progress()
                     except Exception:lost.set();return
+
             thread=threading.Thread(target=heartbeat,daemon=True);thread.start()
             event={'eventId':str(uuid.uuid4()),'jobId':job,'fence':lease['fence'],'kind':'succeeded','error':None,'retryable':False,'durationMs':0,'outputs':[],'clips':[],'failedFeatures':[],'outcome':None}
             try:
-                with tempfile.TemporaryDirectory(prefix='cortes-') as work:event.update(Processor(s3,bucket,work).run(lease))
+                report('STARTING',1)
+                with tempfile.TemporaryDirectory(prefix='cortes-') as work:event.update(Processor(s3,bucket,work,report).run(lease))
             except ProcessingError as e:event.update(kind='failed',error=e.code,retryable=e.retryable,outcome=e.outcome)
-            except Exception as e:event.update(kind='failed',error='WORKER_FAILURE',retryable=True,outcome='SYSTEM_FAILURE')
+            except Exception:event.update(kind='failed',error='WORKER_FAILURE',retryable=True,outcome='SYSTEM_FAILURE')
             finally:stop.set();thread.join(timeout=2)
+
             if lost.is_set():continue
-            # Large result stored as private manifest, not SQS payload.
             event_key=lease['outputPrefix']+'event.json';s3.put_object(Bucket=bucket,Key=event_key,Body=json.dumps(event).encode(),ContentType='application/json')
             sqs.send_message(QueueUrl=events,MessageBody=json.dumps({'schemaVersion':1,'jobId':job,'fence':lease['fence'],'manifestKey':event_key}))
             sqs.delete_message(QueueUrl=queue,ReceiptHandle=receipt)
+
 if __name__=='__main__':main()

@@ -66,6 +66,11 @@ public static class ProjectEndpoints {
    var job=Api.Enqueue(d,p,"PROCESS",run.Id,new{sourceKey=p.MasterAssetKey??p.SourceAssetKey,url=p.SourceUrl,config=Json.Read<VideoConfig>(q.Configuration),modality=q.Modality});
    var response=Json.Write(new{runId=run.Id,jobId=job.Id});d.Idempotency.Add(new Idempotency{UserId=uid,Scope="run",Key=key,BodyHash=hash,Response=response});Api.Audit(d,uid,"RUN_CONFIRMED",run.Id.ToString(),"Direitos aceitos; quote="+q.Id);await d.SaveChangesAsync();await tx.CommitAsync();return Results.Content(response,"application/json");
   });
+  g.MapGet("/projects/{id:guid}/progress",async(Guid id,HttpContext h,Database d)=>{
+   await Api.Own(d,h,id);
+   var job=await d.Jobs.Where(x=>x.ProjectId==id).OrderByDescending(x=>x.CreatedAt).Select(x=>new{x.Id,x.Stage,x.State,x.ProgressPhase,x.ProgressPercent,x.Error,x.CreatedAt}).FirstOrDefaultAsync();
+   return new{active=job!=null&&(job.State=="QUEUED"||job.State=="RUNNING"),job};
+  });
   g.MapGet("/projects/{id:guid}/editor",async(Guid id,HttpContext h,Database d)=>{
    var p=await Api.Own(d,h,id);
    return new{

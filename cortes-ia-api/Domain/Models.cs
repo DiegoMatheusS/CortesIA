@@ -55,6 +55,7 @@ public class Job {
  public Guid Id {get;set;}=Guid.NewGuid(); public Guid ProjectId {get;set;} public Guid? RunId {get;set;}
  public string Stage {get;set;}="INGEST"; public string State {get;set;}="QUEUED"; public int Generation {get;set;}
  public int Attempts {get;set;} public int Fence {get;set;}
+ public string ProgressPhase {get;set;}="QUEUED"; public int ProgressPercent {get;set;}
  public string Payload {get;set;}="{}"; public DateTimeOffset? LeaseUntil {get;set;}
  public DateTimeOffset CreatedAt {get;set;}=DateTimeOffset.UtcNow; public string? Error {get;set;}
 }

@@ -14,8 +14,12 @@ class PipelineTests(unittest.TestCase):
             storage=MemoryStorage();storage.files['quarantine/test/video']=source.read_bytes()
             env={'APP_ENV':'development','AI_PROVIDER':'fixture','MEDIA_EXECUTION':'local','SCAN_MODE':'disabled-development','MEDIA_TASK_ROOT':str(root/'tasks'),'TRANSCRIPT_FIXTURE':str(pathlib.Path('fixtures/transcript.json').resolve())}
             lease={'stage':'PROCESS','projectId':'test','maxBytes':5_000_000_000,'maxDurationMs':10_800_000,'outputPrefix':'projects/test/jobs/123/1/','payload':{'sourceKey':'quarantine/test/video','config':{'quantity':5,'durationMode':'UP_TO_1_MIN','features':['zoom','blur','cover']},'modality':'trial'}}
-            with patch.dict(os.environ,env):result=Processor(storage,'test',root).run(lease)
+            progress=[]
+            with patch.dict(os.environ,env):result=Processor(storage,'test',root,lambda phase,percent:progress.append((phase,percent))).run(lease)
             self.assertEqual(result['outcome'],'SUCCESS');self.assertEqual(len(result['clips']),1)
+            phases={phase for phase,_ in progress}
+            self.assertTrue({'NORMALIZING_MEDIA','TRANSCRIBING','SELECTING_CLIPS','REVIEWING_CLIPS','GENERATING_PREVIEWS','FINALIZING'}<=phases)
+            self.assertTrue(all(0<=percent<=100 for _,percent in progress))
             kinds={x['kind'] for x in result['outputs']};self.assertTrue({'WORKING_MASTER','PREVIEW','COVER','TRANSCRIPT'}<=kinds)
             self.assertTrue(all(x['key'].startswith(lease['outputPrefix']) for x in result['outputs']))
             self.assertEqual(result['failedFeatures'],[])

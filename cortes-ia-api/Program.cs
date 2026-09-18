@@ -45,7 +45,9 @@ if(args.Contains("--init-db")){
  // Development bootstrap upgrade for databases created by the pre-v0.5 prototype.
  // Production continues to require reviewed/versioned EF migrations.
  await db.Database.ExecuteSqlRawAsync("""
- ALTER TABLE "Clips" ADD COLUMN IF NOT EXISTS "Segments" jsonb NOT NULL DEFAULT '[]'::jsonb;
+ ALTER TABLE "Jobs" ADD COLUMN IF NOT EXISTS "ProgressPhase" text NOT NULL DEFAULT 'QUEUED';
+ ALTER TABLE "Jobs" ADD COLUMN IF NOT EXISTS "ProgressPercent" integer NOT NULL DEFAULT 0;
+  ALTER TABLE "Clips" ADD COLUMN IF NOT EXISTS "Segments" jsonb NOT NULL DEFAULT '[]'::jsonb;
  ALTER TABLE "Clips" ADD COLUMN IF NOT EXISTS "PreviewRevision" integer NOT NULL DEFAULT 0;
  ALTER TABLE "Clips" ADD COLUMN IF NOT EXISTS "CaptionPreset" text NOT NULL DEFAULT 'Clean';
  ALTER TABLE "Clips" ADD COLUMN IF NOT EXISTS "CaptionOverrides" jsonb NOT NULL DEFAULT '{}'::jsonb;
