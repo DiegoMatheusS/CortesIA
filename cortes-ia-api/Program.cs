@@ -53,6 +53,12 @@ if(args.Contains("--init-db")){
  ALTER TABLE "Notifications" ADD COLUMN IF NOT EXISTS "InApp" boolean NOT NULL DEFAULT true;
  ALTER TABLE "Notifications" ADD COLUMN IF NOT EXISTS "CreatedAt" timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP;
  ALTER TABLE "Notifications" ADD COLUMN IF NOT EXISTS "ReadAt" timestamptz NULL;
+ UPDATE "Notifications" SET "EmailStatus"='SENT' WHERE "SentAt" IS NOT NULL AND "EmailStatus"='PENDING';
+ UPDATE "Notifications" SET "InApp"=false,"Category"='SECURITY',"EmailPolicy"='REQUIRED',"Event"='EMAIL_CONFIRMATION' WHERE "Dedupe" LIKE 'verify:%';
+ UPDATE "Notifications" SET "InApp"=false,"Category"='SECURITY',"EmailPolicy"='REQUIRED',"Event"='PASSWORD_RESET_REQUESTED' WHERE "Dedupe" LIKE 'reset:%';
+ UPDATE "Notifications" SET "Category"='PAYMENTS',"EmailPolicy"='REQUIRED',"Event"='PURCHASE_APPROVED' WHERE "Dedupe" LIKE 'purchase:%';
+ UPDATE "Notifications" SET "Category"='PROCESSING',"Event"='PREVIEWS_READY' WHERE "Dedupe" LIKE 'ready:%';
+ UPDATE "Notifications" SET "Category"='STORAGE',"EmailPolicy"='REQUIRED',"Event"='STORAGE_RETENTION_WARNING' WHERE "Dedupe" LIKE 'retention:%';
  CREATE TABLE IF NOT EXISTS "NotificationPreferences" (
   "UserId" uuid PRIMARY KEY,
   "ProcessingEmail" boolean NOT NULL DEFAULT true,
