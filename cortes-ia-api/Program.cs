@@ -40,74 +40,10 @@ app.MapGet("/api/v1/auth/csrf",(HttpContext h,IAntiforgery a)=>new{token=a.GetAn
 AuthEndpoints.Map(app);ProjectEndpoints.Map(app);AdminEndpoints.Map(app);WorkerEndpoints.Map(app);Payments.Map(app);NotificationEndpoints.Map(app);
 if(args.Contains("--init-db")){
  using var scope=app.Services.CreateScope();var db=scope.ServiceProvider.GetRequiredService<Database>();
- // Explicit bootstrap, never automatic per API startup. Existing schema must use migrations.
- await db.Database.EnsureCreatedAsync();
- // Development bootstrap upgrade for databases created by the pre-v0.5 prototype.
- // Production continues to require reviewed/versioned EF migrations.
- await db.Database.ExecuteSqlRawAsync("""
- ALTER TABLE "Jobs" ADD COLUMN IF NOT EXISTS "ProgressPhase" text NOT NULL DEFAULT 'QUEUED';
- ALTER TABLE "Notifications" ADD COLUMN IF NOT EXISTS "Event" text NOT NULL DEFAULT 'LEGACY';
- ALTER TABLE "Notifications" ADD COLUMN IF NOT EXISTS "Category" text NOT NULL DEFAULT 'PROCESSING';
- ALTER TABLE "Notifications" ADD COLUMN IF NOT EXISTS "EmailPolicy" text NOT NULL DEFAULT 'DEFAULT_ON';
- ALTER TABLE "Notifications" ADD COLUMN IF NOT EXISTS "EmailStatus" text NOT NULL DEFAULT 'PENDING';
- ALTER TABLE "Notifications" ADD COLUMN IF NOT EXISTS "InApp" boolean NOT NULL DEFAULT true;
- ALTER TABLE "Notifications" ADD COLUMN IF NOT EXISTS "CreatedAt" timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP;
- ALTER TABLE "Notifications" ADD COLUMN IF NOT EXISTS "ReadAt" timestamptz NULL;
- UPDATE "Notifications" SET "EmailStatus"='SENT' WHERE "SentAt" IS NOT NULL AND "EmailStatus"='PENDING';
- UPDATE "Notifications" SET "InApp"=false,"Category"='SECURITY',"EmailPolicy"='REQUIRED',"Event"='EMAIL_CONFIRMATION' WHERE "Dedupe" LIKE 'verify:%';
- UPDATE "Notifications" SET "InApp"=false,"Category"='SECURITY',"EmailPolicy"='REQUIRED',"Event"='PASSWORD_RESET_REQUESTED' WHERE "Dedupe" LIKE 'reset:%';
- UPDATE "Notifications" SET "Category"='PAYMENTS',"EmailPolicy"='REQUIRED',"Event"='PURCHASE_APPROVED' WHERE "Dedupe" LIKE 'purchase:%';
- UPDATE "Notifications" SET "Category"='PROCESSING',"Event"='PREVIEWS_READY' WHERE "Dedupe" LIKE 'ready:%';
- UPDATE "Notifications" SET "Category"='STORAGE',"EmailPolicy"='REQUIRED',"Event"='STORAGE_RETENTION_WARNING' WHERE "Dedupe" LIKE 'retention:%';
- CREATE TABLE IF NOT EXISTS "NotificationPreferences" (
-  "UserId" uuid PRIMARY KEY,
-  "ProcessingEmail" boolean NOT NULL DEFAULT true,
-  "SupportEmail" boolean NOT NULL DEFAULT true,
-  "LowBalanceEmail" boolean NOT NULL DEFAULT false,
-  "MarketingEmail" boolean NOT NULL DEFAULT false,
-  CONSTRAINT "FK_NotificationPreferences_AspNetUsers_UserId" FOREIGN KEY ("UserId") REFERENCES "AspNetUsers" ("Id") ON DELETE CASCADE
- );
- ALTER TABLE "Jobs" ADD COLUMN IF NOT EXISTS "ProgressPercent" integer NOT NULL DEFAULT 0;
-  ALTER TABLE "Clips" ADD COLUMN IF NOT EXISTS "Segments" jsonb NOT NULL DEFAULT '[]'::jsonb;
- ALTER TABLE "Clips" ADD COLUMN IF NOT EXISTS "PreviewRevision" integer NOT NULL DEFAULT 0;
- ALTER TABLE "Clips" ADD COLUMN IF NOT EXISTS "CaptionPreset" text NOT NULL DEFAULT 'Clean';
- ALTER TABLE "Clips" ADD COLUMN IF NOT EXISTS "CaptionOverrides" jsonb NOT NULL DEFAULT '{}'::jsonb;
- ALTER TABLE "Clips" ADD COLUMN IF NOT EXISTS "VisualStyle" text NOT NULL DEFAULT 'Cinema';
- ALTER TABLE "Clips" ADD COLUMN IF NOT EXISTS "VisualOverrides" jsonb NOT NULL DEFAULT '{}'::jsonb;
- ALTER TABLE "Clips" ADD COLUMN IF NOT EXISTS "Aspect" text NOT NULL DEFAULT '9:16';
- ALTER TABLE "Clips" ADD COLUMN IF NOT EXISTS "Crop" jsonb NOT NULL DEFAULT '{"x":0,"y":0,"width":1,"height":1}'::jsonb;
- CREATE TABLE IF NOT EXISTS "ClipRevisions" (
-  "Id" uuid PRIMARY KEY,
-  "ClipId" uuid NOT NULL,
-  "ProjectId" uuid NOT NULL,
-  "Number" integer NOT NULL,
-  "Title" text NOT NULL,
-  "Selection" text NOT NULL,
-  "StartMs" bigint NOT NULL,
-  "EndMs" bigint NOT NULL,
-  "Segments" jsonb NOT NULL DEFAULT '[]'::jsonb,
-  "Subtitles" jsonb NOT NULL DEFAULT '[]'::jsonb,
-  "Style" text NOT NULL DEFAULT 'simple',
-  "CaptionPreset" text NOT NULL DEFAULT 'Clean',
-  "CaptionOverrides" jsonb NOT NULL DEFAULT '{}'::jsonb,
-  "VisualStyle" text NOT NULL DEFAULT 'Cinema',
-  "VisualOverrides" jsonb NOT NULL DEFAULT '{}'::jsonb,
-  "Aspect" text NOT NULL DEFAULT '9:16',
-  "Crop" jsonb NOT NULL DEFAULT '{"x":0,"y":0,"width":1,"height":1}'::jsonb,
-  "CoverKey" text NULL,
-  "CreatedAt" timestamptz NOT NULL,
-  CONSTRAINT "FK_ClipRevisions_Clips_ClipId" FOREIGN KEY ("ClipId") REFERENCES "Clips" ("Id") ON DELETE RESTRICT
- );
- CREATE UNIQUE INDEX IF NOT EXISTS "IX_ClipRevisions_ClipId_Number" ON "ClipRevisions" ("ClipId","Number");
- """);
- await db.Database.ExecuteSqlRawAsync("""
- CREATE OR REPLACE FUNCTION deny_ledger_mutation() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'append only'; END; $$;
- DROP TRIGGER IF EXISTS ledger_immutable ON "Ledger";
- CREATE TRIGGER ledger_immutable BEFORE UPDATE OR DELETE ON "Ledger" FOR EACH ROW EXECUTE FUNCTION deny_ledger_mutation();
- DROP TRIGGER IF EXISTS audit_immutable ON "Audit";
- CREATE TRIGGER audit_immutable BEFORE UPDATE OR DELETE ON "Audit" FOR EACH ROW EXECUTE FUNCTION deny_ledger_mutation();
- """);
- var roles=scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole<Guid>>>();if(!await roles.RoleExistsAsync("Admin"))await roles.CreateAsync(new IdentityRole<Guid>("Admin"));
+ // Schema changes are versioned EF migrations. This command is explicit and runs before the API container starts.
+ await db.Database.MigrateAsync();
+ var roles=scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
+ if(!await roles.RoleExistsAsync("Admin"))await roles.CreateAsync(new IdentityRole<Guid>("Admin"));
  return;
 }
 if(args.Contains("--make-admin")){

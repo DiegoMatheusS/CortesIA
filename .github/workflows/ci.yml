@@ -1,5 +1,8 @@
 name: validate
-on: [push, pull_request]
+on:
+  push:
+    branches: [main]
+  pull_request:
 permissions: {contents: read}
 jobs:
   backend:
@@ -51,3 +54,39 @@ jobs:
       - uses: hashicorp/setup-terraform@v3
       - run: terraform init -backend=false && terraform validate
         working-directory: cortes-ia-infra/terraform
+
+  migrations:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17.6
+        env: {POSTGRES_USER: test, POSTGRES_PASSWORD: test, POSTGRES_DB: cortes_test}
+        ports: ["5432:5432"]
+        options: --health-cmd "pg_isready -U test -d cortes_test" --health-interval 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with: {dotnet-version: '10.0.x'}
+      - run: dotnet tool restore
+      - run: dotnet build cortes-ia-api/Cortes.Api.csproj --configuration Release
+      - name: Apply EF migrations to fresh PostgreSQL
+        run: dotnet ef database update --project cortes-ia-api/Cortes.Api.csproj --no-build --configuration Release
+        env:
+          ASPNETCORE_ENVIRONMENT: Development
+          ConnectionStrings__Database: Host=localhost;Database=cortes_test;Username=test;Password=test
+          CPF_HMAC_KEY: 0123456789012345678901234567890123456789
+          WORKER_TOKEN: 0123456789012345678901234567890123456789
+      - name: Roll back EF migrations to zero
+        run: dotnet ef database update 0 --project cortes-ia-api/Cortes.Api.csproj --no-build --configuration Release
+        env:
+          ASPNETCORE_ENVIRONMENT: Development
+          ConnectionStrings__Database: Host=localhost;Database=cortes_test;Username=test;Password=test
+          CPF_HMAC_KEY: 0123456789012345678901234567890123456789
+          WORKER_TOKEN: 0123456789012345678901234567890123456789
+      - name: Fail on model/migration drift
+        run: dotnet ef migrations has-pending-model-changes --project cortes-ia-api/Cortes.Api.csproj --no-build --configuration Release
+        env:
+          ASPNETCORE_ENVIRONMENT: Development
+          ConnectionStrings__Database: Host=localhost;Database=cortes_test;Username=test;Password=test
+          CPF_HMAC_KEY: 0123456789012345678901234567890123456789
+          WORKER_TOKEN: 0123456789012345678901234567890123456789
