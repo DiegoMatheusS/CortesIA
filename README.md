@@ -71,9 +71,9 @@ Frontend: `npm install --package-lock-only`, `npm ci`, `npm run typecheck`, `npm
 
 ## Banco
 
-O modelo efetivamente usado está em `Infrastructure/Database.cs` e `Domain/Models.cs`. O bootstrap de desenvolvimento cria o schema inicial e aplica upgrades idempotentes necessários à base v0.5 do editor. Homologação/produção devem usar migrations EF revisadas e versionadas; não trate o bootstrap de desenvolvimento como mecanismo de deploy.
+O modelo efetivamente usado está em `Infrastructure/Database.cs` e `Domain/Models.cs`. O schema agora é versionado em `cortes-ia-api/Migrations`; `--init-db` executa `Database.MigrateAsync()` em vez de `EnsureCreated` + ALTER TABLE manual.
 
-Antes da primeira evolução de banco de homologação, gerar/revisar migration EF e baseline do schema, substituir bootstrap por processo controlado, testar upgrade/rollback e separar role runtime de DDL. A entrega não inclui migration gerada por ferramenta sem tê-la executado.
+O CI aplica o baseline em PostgreSQL limpo, faz rollback até zero e falha se o modelo tiver mudanças sem migration. O fluxo e a transição de bancos locais antigos estão em `docs/DATABASE_MIGRATIONS.md`. A separação entre role de migration/DDL e role de runtime continua pendente para produção.
 
 ## Cuidados operacionais concretos
 
