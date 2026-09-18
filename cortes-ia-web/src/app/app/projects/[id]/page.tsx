@@ -191,6 +191,7 @@ export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
   const [coverAt, setCoverAt] = useState(0);
   const coverVideoRef = useRef<HTMLVideoElement>(null);
   const [reframeMode, setReframeMode] = useState(false);
+  const [reframeAspect, setReframeAspect] = useState(16 / 9);
   const reframeFrameRef = useRef<HTMLDivElement>(null);
   const reframeVideoRef = useRef<HTMLVideoElement>(null);
   const cropGesture = useRef<{
@@ -884,6 +885,7 @@ export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
                       <div
                         className="reframe-source"
                         ref={reframeFrameRef}
+                        style={{aspectRatio: String(reframeAspect)}}
                         onPointerMove={moveCropGesture}
                         onPointerUp={endCropGesture}
                         onPointerCancel={endCropGesture}
@@ -894,6 +896,10 @@ export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
                           muted
                           playsInline
                           src={editorMeta.masterUrl}
+                          onLoadedMetadata={event => {
+                            const {videoWidth, videoHeight} = event.currentTarget;
+                            if (videoWidth > 0 && videoHeight > 0) setReframeAspect(videoWidth / videoHeight);
+                          }}
                         />
                         <div className="reframe-shade" aria-hidden="true" />
                         <div
