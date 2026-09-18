@@ -19,4 +19,30 @@ class PipelineTests(unittest.TestCase):
             kinds={x['kind'] for x in result['outputs']};self.assertTrue({'WORKING_MASTER','PREVIEW','COVER','TRANSCRIPT'}<=kinds)
             self.assertTrue(all(x['key'].startswith(lease['outputPrefix']) for x in result['outputs']))
             self.assertEqual(result['failedFeatures'],[])
+
+    def test_editor_preview_renders_saved_revision_plan(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=pathlib.Path(tmp);source=root/'source.mp4'
+            subprocess.run(['ffmpeg','-v','error','-y','-f','lavfi','-i','testsrc2=size=640x360:rate=24','-f','lavfi','-i','sine=frequency=440:sample_rate=16000','-t','5','-c:v','libx264','-pix_fmt','yuv420p','-c:a','aac','-threads','2',str(source)],check=True)
+            storage=MemoryStorage();storage.files['projects/test/master.mp4']=source.read_bytes()
+            env={'APP_ENV':'development','MEDIA_EXECUTION':'local','SCAN_MODE':'disabled-development','MEDIA_TASK_ROOT':str(root/'tasks')}
+            lease={
+                'stage':'PREVIEW','projectId':'test','maxBytes':5_000_000_000,'maxDurationMs':10_800_000,
+                'outputPrefix':'projects/test/jobs/preview/1/',
+                'payload':{
+                    'sourceKey':'projects/test/master.mp4','format':'9:16','features':['blur'],
+                    'clip':{
+                        'id':'00000000-0000-0000-0000-000000000001','revision':3,
+                        'startMs':0,'endMs':4000,'title':'Preview',
+                        'segments':[{'startMs':0,'endMs':1500},{'startMs':2500,'endMs':4000}],
+                        'subtitles':[{'startMs':0,'endMs':1200,'text':'Primeiro trecho'},{'startMs':1500,'endMs':2700,'text':'Segundo trecho'}],
+                        'style':'simple','captionPreset':'Viral','visualStyle':'Quente',
+                        'aspect':'9:16','crop':{'x':0.05,'y':0.05,'width':0.9,'height':0.9}
+                    }
+                }
+            }
+            with patch.dict(os.environ,env):result=Processor(storage,'test',root).run(lease)
+            self.assertEqual([x['kind'] for x in result['outputs']],['PREVIEW'])
+            key=result['outputs'][0]['key'];self.assertIn(key,storage.files);self.assertGreater(len(storage.files[key]),1000)
+
 if __name__=='__main__':unittest.main()
