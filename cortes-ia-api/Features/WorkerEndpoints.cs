@@ -5,6 +5,8 @@ namespace Cortes;
 public record HeartbeatDto(int Fence);
 public record OutputDto(string Key,string Kind,long Size);
 public record CandidateDto(string Title,string Reason,long StartMs,long EndMs,string PreviewKey,string? CoverKey,SubtitleDto[] Subtitles);
+public record PreviewClipRef(Guid Id,int Revision);
+public record PreviewPayload(PreviewClipRef Clip);
 public record WorkerEvent(Guid EventId,Guid JobId,int Fence,string Kind,string? Error,bool Retryable,long DurationMs,OutputDto[]? Outputs,CandidateDto[]? Clips,string[]? FailedFeatures,string? Outcome);
 public static class WorkerEndpoints {
  public static void Map(WebApplication app){var g=app.MapGroup("/internal/v1");
@@ -67,6 +69,10 @@ public static class WorkerEndpoints {
      foreach(var feature in (e.FailedFeatures??[]).Distinct()){var item=Json.Read<QuoteItem[]>(run.Items).SingleOrDefault(x=>x.Feature==feature);if(item!=null)await wallet.Refund(run,item.Code,item.Credits,"Extra não entregue em nenhum output");}
      if(!await d.Notifications.AnyAsync(x=>x.Dedupe=="ready:"+run.Id))d.Notifications.Add(new Notification{UserId=p.UserId,Dedupe="ready:"+run.Id,Subject="Suas prévias estão prontas",Body="Acesse o projeto para revisar e escolher os cortes finais."});
     }
+   }else if(j.Stage=="PREVIEW"){
+    var payload=Json.Read<PreviewPayload>(j.Payload);var output=(e.Outputs??[]).Single(x=>x.Kind=="PREVIEW");
+    var clip=await d.Clips.SingleOrDefaultAsync(x=>x.Id==payload.Clip.Id&&x.ProjectId==p.Id)??throw new DomainError("INVALID_PREVIEW_TARGET");
+    if(clip.Revision==payload.Clip.Revision)clip.PreviewKey=output.Key;
    }else if(j.Stage=="RENDER"){
     var ex=await d.Exports.SingleAsync(x=>x.JobId==j.Id);var output=(e.Outputs??[]).Single(x=>x.Kind=="FINAL_EXPORT");ex.Key=output.Key;ex.State="SUCCEEDED";
     p.Status=await d.Exports.AnyAsync(x=>x.ProjectId==p.Id&&x.Id!=ex.Id&&x.State!="SUCCEEDED")?"RENDERIZANDO":"PRONTO";
