@@ -259,7 +259,7 @@ def _word_items(segment):
     return result
 
 
-def _dynamic_dialogues(segment, words_per_line=4):
+def _dynamic_dialogues(segment, words_per_line=4, uppercase=False):
     words = _word_items(segment)
     if not words:
         return []
@@ -271,7 +271,8 @@ def _dynamic_dialogues(segment, words_per_line=4):
         parts = []
         for word in group:
             duration_cs = max(1, int(round((word["endMs"] - word["startMs"]) / 10)))
-            safe = ass_escape(word["word"]).replace("\\N", " ").strip()
+            token = str(word["word"]).upper() if uppercase else str(word["word"])
+            safe = ass_escape(token).replace("\\N", " ").strip()
             parts.append(f"{{\\kf{duration_cs}}}{safe}")
         lines.append((start, end, " ".join(parts)))
     return lines
