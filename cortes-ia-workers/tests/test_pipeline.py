@@ -13,7 +13,7 @@ class PipelineTests(unittest.TestCase):
             subprocess.run(['ffmpeg','-v','error','-y','-f','lavfi','-i','testsrc2=size=320x180:rate=24','-f','lavfi','-i','sine=frequency=440:sample_rate=16000','-t','5','-c:v','libx264','-pix_fmt','yuv420p','-c:a','aac','-threads','2',str(source)],check=True)
             storage=MemoryStorage();storage.files['quarantine/test/video']=source.read_bytes()
             env={'APP_ENV':'development','AI_PROVIDER':'fixture','MEDIA_EXECUTION':'local','SCAN_MODE':'disabled-development','MEDIA_TASK_ROOT':str(root/'tasks'),'TRANSCRIPT_FIXTURE':str(pathlib.Path('fixtures/transcript.json').resolve())}
-            lease={'stage':'PROCESS','projectId':'test','maxBytes':5_000_000_000,'maxDurationMs':10_800_000,'outputPrefix':'projects/test/jobs/123/1/','payload':{'sourceKey':'quarantine/test/video','config':{'quantity':5,'durationMode':'UP_TO_1_MIN','features':['zoom','blur','cover']},'modality':'trial'}}
+            lease={'stage':'PROCESS','projectId':'test','maxBytes':5_000_000_000,'maxDurationMs':25_200_000,'outputPrefix':'projects/test/jobs/123/1/','payload':{'sourceKey':'quarantine/test/video','config':{'quantity':5,'durationMode':'UP_TO_1_MIN','features':['zoom','blur','cover']},'modality':'trial'}}
             progress=[]
             with patch.dict(os.environ,env):result=Processor(storage,'test',root,lambda phase,percent:progress.append((phase,percent))).run(lease)
             self.assertEqual(result['outcome'],'SUCCESS');self.assertEqual(len(result['clips']),1)
@@ -31,7 +31,7 @@ class PipelineTests(unittest.TestCase):
             storage=MemoryStorage();storage.files['projects/test/master.mp4']=source.read_bytes()
             env={'APP_ENV':'development','MEDIA_EXECUTION':'local','SCAN_MODE':'disabled-development','MEDIA_TASK_ROOT':str(root/'tasks')}
             lease={
-                'stage':'PREVIEW','projectId':'test','maxBytes':5_000_000_000,'maxDurationMs':10_800_000,
+                'stage':'PREVIEW','projectId':'test','maxBytes':5_000_000_000,'maxDurationMs':25_200_000,
                 'outputPrefix':'projects/test/jobs/preview/1/',
                 'payload':{
                     'sourceKey':'projects/test/master.mp4','format':'9:16','features':['blur'],
@@ -56,7 +56,7 @@ class PipelineTests(unittest.TestCase):
             storage=MemoryStorage();storage.files['projects/test/master.mp4']=source.read_bytes()
             env={'APP_ENV':'development','MEDIA_EXECUTION':'local','SCAN_MODE':'disabled-development','MEDIA_TASK_ROOT':str(root/'tasks')}
             lease={
-                'stage':'COVER','projectId':'test','maxBytes':5_000_000_000,'maxDurationMs':10_800_000,
+                'stage':'COVER','projectId':'test','maxBytes':5_000_000_000,'maxDurationMs':25_200_000,
                 'outputPrefix':'projects/test/jobs/cover/1/',
                 'payload':{
                     'sourceKey':'projects/test/master.mp4',
