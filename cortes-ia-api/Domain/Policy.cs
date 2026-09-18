@@ -25,7 +25,6 @@ public class Policy(Database db,IConfiguration cfg) {
   var items=new List<QuoteItem>{new("base","Processamento com legenda simples",basis)};
   var prices=new Dictionary<string,long>{{"dynamic_captions",3},{"zoom",2},{"blur",3},{"tracking",2},{"cover",2}};
   foreach(var code in (c.Features??[]).Distinct()) {
-   if(code=="dynamic_captions")throw new DomainError("FEATURE_IMPLEMENTATION_PENDING",409);
    if(code=="tracking"){
     var trackingEnabled=bool.TryParse(cfg["TRACKING_ENABLED"],out var enabled)&&enabled;
     if(!trackingEnabled)throw new DomainError("FEATURE_IMPLEMENTATION_PENDING",409);
