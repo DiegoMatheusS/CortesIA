@@ -1,4 +1,8 @@
 services:
+  api:
+    environment:
+      TRACKING_ENABLED: "true"
+
   worker:
     build:
       context: ./cortes-ia-workers
@@ -12,6 +16,10 @@ services:
       FASTER_WHISPER_MODEL: medium
       FASTER_WHISPER_DEVICE: cpu
       FASTER_WHISPER_COMPUTE_TYPE: int8
+      VISION_PROVIDER: mediapipe
+      VISION_ALLOW_MODEL_DOWNLOAD: "true"
+      VISION_SAMPLE_FPS: "2"
+      VISION_MIN_CONFIDENCE: "0.5"
     volumes:
       - mediawork:/work
       - modelcache:/home/cortes/.cache
