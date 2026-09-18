@@ -49,4 +49,25 @@ class PipelineTests(unittest.TestCase):
             self.assertEqual([x['kind'] for x in result['outputs']],['PREVIEW'])
             key=result['outputs'][0]['key'];self.assertIn(key,storage.files);self.assertGreater(len(storage.files[key]),1000)
 
+    def test_cover_job_extracts_selected_master_frame(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=pathlib.Path(tmp);source=root/'source.mp4'
+            subprocess.run(['ffmpeg','-v','error','-y','-f','lavfi','-i','testsrc2=size=640x360:rate=24','-f','lavfi','-i','sine=frequency=550:sample_rate=16000','-t','5','-c:v','libx264','-pix_fmt','yuv420p','-c:a','aac','-threads','2',str(source)],check=True)
+            storage=MemoryStorage();storage.files['projects/test/master.mp4']=source.read_bytes()
+            env={'APP_ENV':'development','MEDIA_EXECUTION':'local','SCAN_MODE':'disabled-development','MEDIA_TASK_ROOT':str(root/'tasks')}
+            lease={
+                'stage':'COVER','projectId':'test','maxBytes':5_000_000_000,'maxDurationMs':10_800_000,
+                'outputPrefix':'projects/test/jobs/cover/1/',
+                'payload':{
+                    'sourceKey':'projects/test/master.mp4',
+                    'clip':{'id':'00000000-0000-0000-0000-000000000001','revision':4},
+                    'atMs':2200
+                }
+            }
+            progress=[]
+            with patch.dict(os.environ,env):result=Processor(storage,'test',root,lambda phase,percent:progress.append((phase,percent))).run(lease)
+            self.assertEqual([x['kind'] for x in result['outputs']],['COVER'])
+            key=result['outputs'][0]['key'];self.assertIn(key,storage.files);self.assertGreater(len(storage.files[key]),1000)
+            self.assertIn('GENERATING_COVER',{phase for phase,_ in progress})
+
 if __name__=='__main__':unittest.main()

@@ -81,6 +81,18 @@ class Processor:
 
         source=self.source(lease)
 
+        if stage=='COVER':
+            at_ms=int(payload.get('atMs',-1))
+            if at_ms<0:
+                raise ProcessingError('INVALID_COVER_TIME')
+            self.progress('GENERATING_COVER',45)
+            image=self.work/'cover.jpg'
+            media_client.call(source,'cover',image,at_ms=at_ms)
+            self.progress('UPLOADING_OUTPUT',90)
+            self.upload(image,'COVER',lease)
+            self.progress('FINALIZING',98)
+            return {'outputs':self.outputs,'clips':[]}
+
         if stage=='INGEST':
             self.progress('VALIDATING_MEDIA',45)
             meta=media_client.call(source,'probe',**limits)

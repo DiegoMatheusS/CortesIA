@@ -13,6 +13,7 @@ public record WordDto(long StartMs,long EndMs,string Word);
 public record SubtitleDto(long StartMs,long EndMs,string Text,WordDto[]? Words=null);
 public record ManualClipDto(string Title,RevisionSegment[] Segments,string Aspect="9:16",string CaptionPreset="Clean",string VisualStyle="Cinema");
 public record ClipRevisionDto(string Title,string Selection,RevisionSegment[] Segments,SubtitleDto[] Subtitles,bool CaptionsEnabled=true,string CaptionPreset="Clean",string VisualStyle="Cinema",string Aspect="9:16",CropSpec? Crop=null);
+public record CoverDto(long AtMs);
 public record ExportDto(Guid ClipId,string Format);
 public record TicketDto(string Subject,string Message,Guid? ProjectId);
 public static class ProjectEndpoints {
@@ -72,11 +73,11 @@ public static class ProjectEndpoints {
    var job=await d.Jobs.Where(x=>x.ProjectId==id).OrderByDescending(x=>x.CreatedAt).Select(x=>new{x.Id,x.Stage,x.State,x.ProgressPhase,x.ProgressPercent,x.Error,x.CreatedAt}).FirstOrDefaultAsync();
    return new{active=job!=null&&(job.State=="QUEUED"||job.State=="RUNNING"),job};
   });
-  g.MapGet("/projects/{id:guid}/editor",async(Guid id,HttpContext h,Database d,IConfiguration cfg)=>{
+  g.MapGet("/projects/{id:guid}/editor",async(Guid id,HttpContext h,Database d,IConfiguration cfg,Cloud cloud)=>{
    var p=await Api.Own(d,h,id);
    var trackingEnabled=bool.TryParse(cfg["TRACKING_ENABLED"],out var enabled)&&enabled;
    return new{
-    p.Id,p.DurationMs,masterAvailable=p.MasterAssetKey!=null,
+    p.Id,p.DurationMs,masterAvailable=p.MasterAssetKey!=null,masterUrl=p.MasterAssetKey==null?null:cloud.Download(p.MasterAssetKey),
     captionPresets=CaptionPresets.OrderBy(x=>x),
     visualStyles=VisualStyles.OrderBy(x=>x),
     aspects=Aspects.OrderBy(x=>x),
@@ -143,6 +144,18 @@ public static class ProjectEndpoints {
    var run=await d.Runs.FindAsync(found.RunId)??throw new DomainError("NO_ANALYSIS_AVAILABLE",409);
    var job=Api.Enqueue(d,p,"PREVIEW",run.Id,new{sourceKey=p.MasterAssetKey,clip=new{found.Id,found.StartMs,found.EndMs,found.Title,segments=ReadSegments(found),subtitles=Json.Read<SubtitleDto[]>(found.Subtitles),found.Style,found.CaptionPreset,found.VisualStyle,found.Aspect,crop=Json.Read<CropSpec>(found.Crop),found.Revision},format=found.Aspect,features=Json.Read<QuoteItem[]>(run.Items).Where(x=>x.Feature!=null).Select(x=>x.Feature).ToArray()});
    await d.SaveChangesAsync();await tx.CommitAsync();return Results.Accepted(value:new{jobId=job.Id,revision=found.Revision});
+  });
+  g.MapPost("/clips/{id:guid}/cover",async(Guid id,CoverDto r,HttpContext h,Database d)=>{
+   var clip=await d.Clips.FindAsync(id)??throw new DomainError("NOT_FOUND",404);
+   await using var tx=await d.Database.BeginTransactionAsync();await d.LockProject(clip.ProjectId);var p=await Api.Own(d,h,clip.ProjectId);await d.Entry(clip).ReloadAsync();Api.Version(h,clip.Revision);
+   if(p.MasterAssetKey==null)throw new DomainError("MASTER_EXPIRED",410);
+   if(r.AtMs<0||r.AtMs>p.DurationMs)throw new DomainError("INVALID_COVER_TIME");
+   if(await d.Jobs.AnyAsync(x=>x.ProjectId==p.Id&&(x.State=="QUEUED"||x.State=="RUNNING")))throw new DomainError("PROJECT_BUSY",409);
+   var run=await d.Runs.FindAsync(clip.RunId)??throw new DomainError("NO_ANALYSIS_AVAILABLE",409);
+   var job=Api.Enqueue(d,p,"COVER",run.Id,new{sourceKey=p.MasterAssetKey,clip=new{clip.Id,clip.Revision},atMs=r.AtMs});
+   Api.Audit(d,Api.User(h),"CLIP_COVER_REQUESTED",clip.Id.ToString(),$"Revision {clip.Revision}; atMs={r.AtMs}");
+   await d.SaveChangesAsync();await tx.CommitAsync();
+   return Results.Accepted(value:new{jobId=job.Id,revision=clip.Revision,atMs=r.AtMs});
   });
   g.MapPost("/projects/{id:guid}/exports",async(Guid id,ExportDto r,HttpContext h,Database d)=>{
    await using var tx=await d.Database.BeginTransactionAsync();await d.LockProject(id);var p=await Api.Own(d,h,id);
