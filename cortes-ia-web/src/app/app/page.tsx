@@ -129,7 +129,7 @@ export default function Dashboard() {
   return (
     <>
       <nav>
-        <Link className="brand" href="/">cortes<span>ia</span></Link>
+        <Link className="brand" href="/">slice<span>flow</span></Link>
         <div>
           <span className="nav-user">{me?.name}</span>
           {me?.admin && <Link href="/admin">Admin</Link>}
