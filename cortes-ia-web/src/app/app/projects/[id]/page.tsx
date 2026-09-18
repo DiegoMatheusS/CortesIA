@@ -993,8 +993,18 @@ export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
                       ? <video controls preload="metadata" src={editorClip.preview} poster={editorClip.cover} />
                       : <div className="editor-placeholder"><span className="preview-person" /><strong>Prévia do corte</strong></div>}
                     {!reframeMode && editorClip.style !== 'none' && (
-                      <div className={`editor-caption-preview caption-preview-${editorClip.captionPreset.toLowerCase().replace(/\s+/g, '-')}`}>
-                        A IA cria. <b>Você ajusta.</b>
+                      <div
+                        className={`editor-caption-preview caption-preview-${editorClip.captionPreset.toLowerCase().replace(/\s+/g, '-')}`}
+                        style={{
+                          color: editorClip.captionOverrides.primaryColor,
+                          fontSize: `calc(clamp(20px,2.5vw,34px) * ${editorClip.captionOverrides.scale})`,
+                          textTransform: editorClip.captionOverrides.uppercase ? 'uppercase' : 'none',
+                          top: editorClip.captionOverrides.position === 'top' ? '8%' : editorClip.captionOverrides.position === 'center' ? '50%' : 'auto',
+                          bottom: editorClip.captionOverrides.position === 'bottom' ? '44px' : 'auto',
+                          transform: editorClip.captionOverrides.position === 'center' ? 'translate(-50%, -50%)' : 'translateX(-50%)',
+                        }}
+                      >
+                        A IA cria. <b style={{color: editorClip.captionOverrides.highlightColor}}>Você ajusta.</b>
                       </div>
                     )}
                   </div>
@@ -1003,7 +1013,12 @@ export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
                     <label>Título<input value={editorClip.title} maxLength={200} onChange={event => patchClip(editorClip.id, {title: event.target.value})} /></label>
                     <label>Escolha<select value={editorClip.selection} onChange={event => patchClip(editorClip.id, {selection: event.target.value})}><option value="SUGGESTED">Sugestão</option><option value="SELECTED">Selecionado</option><option value="REJECTED">Descartado</option></select></label>
                     <label>Legenda<select value={editorClip.style} onChange={event => patchClip(editorClip.id, {style: event.target.value})}><option value="simple">Ativada</option><option value="none">Desativada</option></select></label>
-                    <label>Formato<select value={exportFormat} onChange={event => {setExportFormat(event.target.value);patchClip(editorClip.id, {aspect: event.target.value});}}>{aspects.map(format => <option key={format}>{format}</option>)}</select></label>
+                    <label>Formato<select value={exportFormat} onChange={event => {
+                      const next = event.target.value;
+                      setExportFormat(next);
+                      if (cropAspectLocked) fitCropToFormat(editorClip, next);
+                      else patchClip(editorClip.id, {aspect: next});
+                    }}>{aspects.map(format => <option key={format}>{format}</option>)}</select></label>
 
                     <fieldset className="crop-fields">
                       <legend>Enquadramento manual</legend>
@@ -1014,13 +1029,27 @@ export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
                           disabled={!editorMeta?.masterUrl}
                           onClick={() => setReframeMode(value => !value)}
                         >
-                          {reframeMode ? '✓ Reposicionando no vídeo' : 'Reposicionar no vídeo'}
+                          {reframeMode ? '✓ Editando no vídeo' : 'Editar enquadramento'}
+                        </button>
+                        <button type="button" className="secondary" onClick={() => fitCropToFormat(editorClip)}>
+                          Ajustar ao formato
+                        </button>
+                        <button type="button" className="secondary" onClick={() => centerCrop(editorClip)}>
+                          Centralizar
                         </button>
                         <button type="button" className="secondary" onClick={() => resetCrop(editorClip)}>
-                          Usar quadro inteiro
+                          Quadro inteiro
                         </button>
                       </div>
-                      {reframeMode && <small>Arraste a área no master. Use o ponto no canto inferior direito para redimensionar.</small>}
+                      <label className="crop-lock">
+                        <input type="checkbox" checked={cropAspectLocked} onChange={event => setCropAspectLocked(event.target.checked)} />
+                        Manter proporção do formato ao redimensionar
+                      </label>
+                      <div className={`tracking-status ${editorMeta?.capabilities.intelligentReframe ? 'available' : ''}`}>
+                        <strong>Tracking de rosto/pessoa</strong>
+                        <span>{editorMeta?.capabilities.intelligentReframe ? 'Motor disponível neste ambiente. Quando o recurso Tracking estiver no processamento, o render acompanha o sujeito automaticamente.' : 'Tracking automático indisponível neste ambiente; o enquadramento manual continua funcionando.'}</span>
+                      </div>
+                      {reframeMode && <small>Arraste a área para reposicionar. O ponto no canto redimensiona; com a trava ativa, a proporção do formato é preservada.</small>}
                       <details className="crop-advanced">
                         <summary>Valores avançados</summary>
                         <div className="crop-fields-grid">
