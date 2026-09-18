@@ -1,0 +1,22 @@
+services:
+  worker:
+    build:
+      context: ./cortes-ia-workers
+      target: local-ai
+    environment:
+      AI_RUNTIME_PROFILE: LOCAL
+      OLLAMA_BASE_URL: http://host.docker.internal:11434
+      OLLAMA_MODEL: qwen3:8b
+      OLLAMA_TIMEOUT_SECONDS: "300"
+      TRANSCRIPTION_PROVIDER: faster-whisper
+      FASTER_WHISPER_MODEL: medium
+      FASTER_WHISPER_DEVICE: cpu
+      FASTER_WHISPER_COMPUTE_TYPE: int8
+    volumes:
+      - mediawork:/work
+      - modelcache:/home/cortes/.cache
+    mem_limit: 8g
+    cpus: 4
+
+volumes:
+  modelcache:
