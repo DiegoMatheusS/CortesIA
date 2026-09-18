@@ -13,8 +13,11 @@ public static class Cpf {
  public static string Digest(string value,string secret)=>Convert.ToHexString(HMACSHA256.HashData(Encoding.UTF8.GetBytes(secret),Encoding.UTF8.GetBytes(Normalize(value))));
 }
 public class Policy(Database db,IConfiguration cfg) {
+ public const long MaxUploadBytes=30_000_000_000;
+ public const long MaxInternalMediaBytes=40_000_000_000;
  public async Task<long> Number(string key,long fallback)=>long.TryParse(await db.Settings.Where(x=>x.Key==key).Select(x=>x.Value).SingleOrDefaultAsync(),out var n)?n:fallback;
  public async Task<bool> Enabled(string key,bool fallback=false)=>bool.TryParse(await db.Settings.Where(x=>x.Key==key).Select(x=>x.Value).SingleOrDefaultAsync(),out var b)?b:fallback;
+ public async Task<long> UploadLimit()=>Math.Min(await Number("maxBytes",MaxUploadBytes),MaxUploadBytes);
  public async Task<QuoteItem[]> Price(long ms,VideoConfig c) {
   if(ms<=0||ms>await Number("maxDurationMs",25_200_000))throw new DomainError("INVALID_DURATION",422);
   if(c.Quantity<1||c.Quantity>await Number("maxClips",20))throw new DomainError("INVALID_QUANTITY");
