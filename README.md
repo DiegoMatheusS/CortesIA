@@ -1,8 +1,8 @@
-# Cortes IA — código inicial v0.2
+# Cortes IA — base integrada v0.5
 
-Projeto organizado nas nove fases solicitadas, com as decisões aprovadas v0.2 incorporadas. Contém código .NET 10, Next.js/React, Python/FFmpeg, configuração local e fundação AWS.
+Projeto integrado com frontend Next.js/React, API .NET 10, workers Python/FFmpeg, editor short-form versionado, pipeline local de IA e fundação AWS.
 
-**Estado real:** implementação inicial para desenvolvimento e homologação, não MVP completo nem release de produção. Python/FFmpeg tiveram execução de testes reais. .NET, Next e Docker precisam do primeiro build integrado em ambiente com SDKs e acesso aos registries. Recursos ainda não implementados e diferenças entre contrato-alvo e runtime estão discriminados em `docs/STATUS_IMPLEMENTACAO.md`; o escopo aprovado foi mantido no backlog.
+**Estado real:** base funcional de desenvolvimento/homologação, ainda não release de produção. CI executa testes .NET, workers Python/FFmpeg, build Next.js, scans de segurança e validação Terraform. Recursos pendentes e diferenças entre contrato-alvo e runtime continuam documentados em `docs/STATUS_IMPLEMENTACAO.md`.
 
 ## Começar no Windows
 
@@ -26,9 +26,12 @@ Linux/macOS: `sh scripts/start.sh`.
 
 Cadastre sua conta, abra o e-mail no Mailpit e confirme. Você recebe um benefício de 10 créditos uma vez por CPF válido. A senha usa a política do ASP.NET Identity (mínimo 12 caracteres e requisitos de complexidade).
 
-**IA local:** usa fixture explícita de cinco segundos; não interpreta áudio real. Para testar o fluxo sem cobrança externa, envie um vídeo de pelo menos cinco segundos, com áudio. O título do corte identifica a fixture. Renderização é real com FFmpeg. Compras locais são fictícias, não cobram Pix/cartão.
+**IA local:** há dois modos.
 
-Para transcrição/seleção real, configure o override descrito em `docs/INTEGRACOES.md`; valide modelos, timestamps, orçamento e privacidade antes de usar dados reais.
+- `docker compose up --build`: modo leve de desenvolvimento, com transcrição fixture e renderização FFmpeg real.
+- `scripts/start-local-ai.ps1` (Windows) ou `scripts/start-local-ai.sh` (Linux/macOS): modo local real com Faster-Whisper para transcrição e Ollama + `qwen3:8b` para seleção/revisão semântica.
+
+O modelo local padrão é somente `qwen3:8b`; não existe fallback automático para modelos menores. Consulte `docs/LOCAL_AI.md` para requisitos, diagnóstico e configuração. Compras locais continuam fictícias.
 
 ## Admin
 
@@ -68,7 +71,7 @@ Frontend: `npm install --package-lock-only`, `npm ci`, `npm run typecheck`, `npm
 
 ## Banco
 
-O modelo efetivamente usado está em `Infrastructure/Database.cs` e `Domain/Models.cs`; `--init-db` cria banco **vazio** explicitamente com Identity e constraints. Não altera automaticamente banco existente. O DDL em `docs/database/modelo.sql` é o domínio-alvo ampliado, não deve ser aplicado por cima do schema EF.
+O modelo efetivamente usado está em `Infrastructure/Database.cs` e `Domain/Models.cs`. O bootstrap de desenvolvimento cria o schema inicial e aplica upgrades idempotentes necessários à base v0.5 do editor. Homologação/produção devem usar migrations EF revisadas e versionadas; não trate o bootstrap de desenvolvimento como mecanismo de deploy.
 
 Antes da primeira evolução de banco de homologação, gerar/revisar migration EF e baseline do schema, substituir bootstrap por processo controlado, testar upgrade/rollback e separar role runtime de DDL. A entrega não inclui migration gerada por ferramenta sem tê-la executado.
 
