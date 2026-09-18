@@ -41,7 +41,7 @@ Não há senha administrativa no ZIP. Depois de cadastrar e verificar sua conta:
 docker compose run --rm -e ADMIN_EMAIL=seu-email@exemplo.com api --make-admin
 ```
 
-Entre novamente, ative o autenticador na plataforma e faça novo login com código MFA. Ações administrativas sensíveis exigem login recente (cinco minutos). O painel inicial permite consultas e ajustes auditados. A role inicial é Admin; divisão granular Finance/Support/Security permanece no backlog.
+Entre novamente, ative o autenticador na plataforma e faça novo login com código MFA. Ações administrativas sensíveis exigem login recente (cinco minutos). O painel operacional usa RBAC granular: `Support`, `Finance`, `Security` e `Admin` (superusuário). Todos os perfis de equipe exigem MFA.
 
 ## Pastas / repositórios
 
@@ -92,3 +92,16 @@ Comece por `docs/STATUS_IMPLEMENTACAO.md` e `docs/BACKLOG_MVP.md` para decidir o
 ## Notificações
 
 O SliceFlow possui central interna de notificações e preferências de e-mail. Segurança, pagamentos/créditos críticos e armazenamento são obrigatórios; processamento e suporte ficam ligados por padrão; saldo baixo e marketing são opcionais. Ver `docs/NOTIFICACOES_TRANSACIONAIS.md`.
+
+
+### Conceder ou revogar funções da equipe
+
+Depois que a pessoa criar e confirmar a conta:
+
+```powershell
+docker compose run --rm -e STAFF_EMAIL=suporte@exemplo.com -e STAFF_ROLE=Support api --grant-role
+docker compose run --rm -e STAFF_EMAIL=financeiro@exemplo.com -e STAFF_ROLE=Finance api --grant-role
+docker compose run --rm -e STAFF_EMAIL=seguranca@exemplo.com -e STAFF_ROLE=Security api --grant-role
+```
+
+As roles são aditivas. Para revogar uma role, use o mesmo `STAFF_EMAIL`/`STAFF_ROLE` com `--revoke-role`. Toda alteração atualiza o security stamp, exigindo novo login.
