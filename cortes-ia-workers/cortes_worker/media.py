@@ -200,7 +200,64 @@ VISUAL_FILTERS = {
 }
 
 
-def subtitles(path, segments, width, height, preset="Clean"):
+def _word_items(segment):
+    start = int(segment.get("startMs", segment.get("start_ms", 0)))
+    end = int(segment.get("endMs", segment.get("end_ms", 0)))
+    words = segment.get("words") or []
+    valid = []
+    for item in words:
+        word_start = item.get("startMs", item.get("start_ms"))
+        word_end = item.get("endMs", item.get("end_ms"))
+        token = str(item.get("word", "")).strip()
+        if word_start is None or word_end is None or not token:
+            continue
+        word_start, word_end = int(word_start), int(word_end)
+        if start <= word_start < word_end <= end:
+            valid.append({"startMs": word_start, "endMs": word_end, "word": token})
+    if valid:
+        return valid
+
+    tokens = [token for token in str(segment.get("text", "")).split() if token]
+    if not tokens or end <= start:
+        return []
+    weights = [max(1, len(token.strip(".,!?;:()[]{}\"'"))) for token in tokens]
+    total_weight = max(1, sum(weights))
+    cursor = start
+    result = []
+    for index, (token, weight) in enumerate(zip(tokens, weights)):
+        if index == len(tokens) - 1:
+            word_end = end
+        else:
+            word_end = cursor + max(10, int((end - start) * weight / total_weight))
+            word_end = min(end, word_end)
+        if word_end <= cursor:
+            word_end = min(end, cursor + 10)
+        result.append({"startMs": cursor, "endMs": word_end, "word": token})
+        cursor = word_end
+    if result:
+        result[-1]["endMs"] = end
+    return result
+
+
+def _dynamic_dialogues(segment, words_per_line=4):
+    words = _word_items(segment)
+    if not words:
+        return []
+    lines = []
+    for offset in range(0, len(words), max(1, words_per_line)):
+        group = words[offset:offset + max(1, words_per_line)]
+        start = group[0]["startMs"]
+        end = group[-1]["endMs"]
+        parts = []
+        for word in group:
+            duration_cs = max(1, int(round((word["endMs"] - word["startMs"]) / 10)))
+            safe = ass_escape(word["word"]).replace("\\N", " ").strip()
+            parts.append(f"{{\\kf{duration_cs}}}{safe}")
+        lines.append((start, end, " ".join(parts)))
+    return lines
+
+
+def subtitles(path, segments, width, height, preset="Clean", dynamic=False):
     style = CAPTION_STYLES.get(preset)
     if style is None:
         raise ProcessingError("INVALID_CAPTION_PRESET")
@@ -222,9 +279,15 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
         end = segment.get("endMs", segment.get("end_ms"))
         if start is None or end is None or end <= start:
             raise ProcessingError("INVALID_SUBTITLE")
-        lines.append(
-            f'Dialogue: 0,{ass_time(start)},{ass_time(end)},Default,,0,0,0,,{ass_escape(segment["text"])}'
-        )
+        if dynamic:
+            for line_start, line_end, text in _dynamic_dialogues(segment):
+                lines.append(
+                    f"Dialogue: 0,{ass_time(line_start)},{ass_time(line_end)},Default,,0,0,0,,{text}"
+                )
+        else:
+            lines.append(
+                f'Dialogue: 0,{ass_time(start)},{ass_time(end)},Default,,0,0,0,,{ass_escape(segment["text"])}'
+            )
     pathlib.Path(path).write_text(header + "\n".join(lines) + "\n", encoding="utf-8")
 
 
@@ -359,7 +422,7 @@ def render(
 
     work = pathlib.Path(target).parent
     ass = work / "captions.ass"
-    subtitles(ass, segments, w, h, caption_preset)
+    subtitles(ass, segments, w, h, caption_preset, dynamic="dynamic_captions" in features)
     safe_ass = (
         str(ass).replace("\\", "/").replace(":", r"\:").replace("'", r"\'")
     )
