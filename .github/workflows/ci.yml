@@ -51,3 +51,23 @@ jobs:
       - uses: hashicorp/setup-terraform@v3
       - run: terraform init -backend=false && terraform validate
         working-directory: cortes-ia-infra/terraform
+
+  migration-baseline-generator:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with: {dotnet-version: '10.0.x'}
+      - run: dotnet tool restore
+      - run: dotnet build cortes-ia-api/Cortes.Api.csproj --configuration Release
+      - run: dotnet ef migrations add SliceFlowBaseline --project cortes-ia-api/Cortes.Api.csproj --output-dir MigrationsGenerated --no-build --configuration Release
+        env:
+          ASPNETCORE_ENVIRONMENT: Development
+          ConnectionStrings__Database: Host=localhost;Database=cortes_test;Username=test;Password=test
+          CPF_HMAC_KEY: 0123456789012345678901234567890123456789
+          WORKER_TOKEN: 0123456789012345678901234567890123456789
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ef-migration-baseline
+          path: cortes-ia-api/MigrationsGenerated
+          if-no-files-found: error
