@@ -1,8 +1,8 @@
-import unittest,os,tempfile,pathlib,subprocess,json
+import unittest,os,tempfile,pathlib,subprocess,json,io
 from unittest.mock import patch
 from cortes_worker.models import validate_candidates,ProcessingError
 from cortes_worker.security import validate_url,public_addresses
-from cortes_worker.provider import redact
+from cortes_worker.provider import redact,OllamaProvider
 from cortes_worker import media
 class SecurityTests(unittest.TestCase):
  def test_url_restrictions(self):
@@ -20,6 +20,12 @@ class SecurityTests(unittest.TestCase):
   self.assertEqual(len(validate_candidates(items,200,5)),1)
  def test_zero_candidates(self):self.assertEqual(validate_candidates([],100,5),[])
  def test_caption_override(self):self.assertNotIn('{',media.ass_escape(r'{\pos(0,0)}foo'))
+ def test_ollama_structured_candidates(self):
+  payload={'message':{'content':json.dumps({'candidates':[{'start_ms':100,'end_ms':2000,'title':'Gancho','reason':'Autocontido','score':88}]})}}
+  with patch.dict(os.environ,{'OLLAMA_MODEL':'qwen3:8b','OLLAMA_BASE_URL':'http://127.0.0.1:11434'}):
+   with patch('urllib.request.urlopen',return_value=io.BytesIO(json.dumps(payload).encode())):
+    result=OllamaProvider().select([type('S',(),{'start_ms':0,'end_ms':3000,'text':'teste'})()], 'trial',1,'UP_TO_1_MIN')
+  self.assertEqual(result[0]['title'],'Gancho')
 class MediaIntegration(unittest.TestCase):
  @classmethod
  def setUpClass(cls):
@@ -38,5 +44,10 @@ class MediaIntegration(unittest.TestCase):
  def test_render_blur_zoom_caption(self):
   p=self.root/'final.mp4';result=media.render(self.source,p,0,4000,[{'startMs':0,'endMs':3000,'text':'Cortes IA — teste'}],['zoom','blur'],'9:16',True)
   meta=media.probe(p);self.assertAlmostEqual(meta['width']/meta['height'],9/16,delta=.02);self.assertAlmostEqual(meta['duration_ms'],4000,delta=250)
+ def test_render_multiple_segments_and_mood(self):
+  p=self.root/'segments.mp4';result=media.render(self.source,p,0,4000,[{'startMs':0,'endMs':1800,'text':'Primeira parte'},{'startMs':1800,'endMs':3200,'text':'Segunda parte'}],['blur'],'9:16',True,'simple',[{'startMs':0,'endMs':1800},{'startMs':3000,'endMs':4400}],'Viral','Quente',{'x':0.05,'y':0.05,'width':0.9,'height':0.9})
+  self.assertAlmostEqual(result['duration_ms'],3200,delta=10);self.assertAlmostEqual(media.probe(p)['duration_ms'],3200,delta=350)
+ def test_invalid_manual_crop(self):
+  with self.assertRaises(ProcessingError):media.render(self.source,self.root/'badcrop.mp4',0,3000,[],aspect='9:16',crop={'x':.8,'y':0,'width':.4,'height':1})
  def test_cover(self):p=self.root/'cover.jpg';media.cover(self.source,p,1000);self.assertGreater(p.stat().st_size,100)
 if __name__=='__main__':unittest.main()
