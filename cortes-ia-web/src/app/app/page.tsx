@@ -2,6 +2,7 @@
 
 import {useEffect, useMemo, useState} from 'react';
 import Link from 'next/link';
+import NotificationBell from '@/components/NotificationBell';
 import {api, friendly, key} from '@/lib/api';
 
 type Project = {id: string; title: string; status: string; outcome?: string; durationMs: number};
@@ -132,6 +133,8 @@ export default function Dashboard() {
         <Link className="brand" href="/">slice<span>flow</span></Link>
         <div>
           <span className="nav-user">{me?.name}</span>
+          <NotificationBell />
+          <Link href="/app/settings/notifications">Notificações</Link>
           {me?.admin && <Link href="/admin">Admin</Link>}
           <button
             className="secondary"
