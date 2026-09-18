@@ -18,7 +18,7 @@ public record ExportDto(Guid ClipId,string Format);
 public record TicketDto(string Subject,string Message,Guid? ProjectId);
 public static class ProjectEndpoints {
  public static void Map(WebApplication app){var g=app.MapGroup("/api/v1").RequireAuthorization();
-  g.MapGet("/catalog",async(Policy p)=>new{maxBytes=await p.Number("maxBytes",5_000_000_000),maxDurationMs=await p.Number("maxDurationMs",25_200_000),maxClips=await p.Number("maxClips",20),formats=new[]{"mp4","mov","mkv","webm"},features=new Dictionary<string,int>{{"dynamic_captions",3},{"zoom",2},{"blur",3},{"tracking",2},{"cover",2}},paidPackagesEnabled=await p.Enabled("packagesApproved")});
+  g.MapGet("/catalog",async(Policy p)=>new{maxBytes=await p.UploadLimit(),maxDurationMs=await p.Number("maxDurationMs",25_200_000),maxClips=await p.Number("maxClips",20),formats=new[]{"mp4","mov","mkv","webm"},features=new Dictionary<string,int>{{"dynamic_captions",3},{"zoom",2},{"blur",3},{"tracking",2},{"cover",2}},paidPackagesEnabled=await p.Enabled("packagesApproved")});
   g.MapGet("/wallet",async(HttpContext h,Database d)=>new{wallet=await d.Wallets.SingleAsync(x=>x.Id==Api.User(h)),lots=await d.Lots.Where(x=>x.UserId==Api.User(h)).ToListAsync()});
   g.MapGet("/wallet/transactions",async(HttpContext h,Database d)=>await d.Ledger.Where(x=>x.UserId==Api.User(h)).OrderByDescending(x=>x.CreatedAt).Take(100).ToListAsync());
   g.MapGet("/projects",async(HttpContext h,Database d)=>await d.Projects.Where(x=>x.UserId==Api.User(h)&&x.DeletedAt==null).OrderByDescending(x=>x.CreatedAt).Take(100).Select(x=>new{x.Id,x.Title,x.Status,x.Outcome,x.DurationMs,x.Version,x.CreatedAt,x.FirstProcessedAt}).ToListAsync());
@@ -27,7 +27,7 @@ public static class ProjectEndpoints {
    var key=Api.Key(h);var hash=Api.Hash(r);var uid=Api.User(h);
    await using var tx=await d.Database.BeginTransactionAsync();await d.LockWallet(uid);
    var old=await d.Idempotency.SingleOrDefaultAsync(x=>x.UserId==uid&&x.Scope=="upload"&&x.Key==key);if(old!=null){if(old.BodyHash!=hash)throw new DomainError("IDEMPOTENCY_CONFLICT",409);return Results.Content(old.Response,"application/json");}
-   if(r.Size<=0||r.Size>await policy.Number("maxBytes",5_000_000_000))throw new DomainError("FILE_TOO_LARGE",413);
+   if(r.Size<=0||r.Size>await policy.UploadLimit())throw new DomainError("FILE_TOO_LARGE",413);
    if(!new[]{".mp4",".mov",".mkv",".webm"}.Contains(Path.GetExtension(r.Filename).ToLowerInvariant()))throw new DomainError("UNSUPPORTED_MEDIA",415);
    var p=new Project{UserId=uid,Title=r.Title.Length>200?r.Title[..200]:r.Title};
    var u=new Upload{UserId=uid,ProjectId=p.Id,Key=$"quarantine/{p.Id}/{Guid.NewGuid()}",Size=r.Size};
@@ -45,8 +45,9 @@ public static class ProjectEndpoints {
    var meta=await c.S3.GetObjectMetadataAsync(c.Bucket,u.Key);if(meta.ContentLength!=u.Size)throw new DomainError("SIZE_MISMATCH",422);
    var p=await Api.Own(d,h,u.ProjectId);u.State="COMPLETED";Api.Enqueue(d,p,"INGEST",null,new{sourceKey=u.Key});await d.SaveChangesAsync();await tx.CommitAsync();return Results.Accepted();
   });
-  g.MapPost("/projects/imports",async(LinkDto r,HttpContext h,Database d)=>{
-   if(!Uri.TryCreate(r.Url,UriKind.Absolute,out var uri)||uri.Scheme!="https"||!new[]{"www.youtube.com","youtube.com","youtu.be"}.Contains(uri.Host)||!string.IsNullOrEmpty(uri.UserInfo)||uri.Port!=443)throw new DomainError("UNSUPPORTED_SOURCE",422);
+  g.MapPost("/projects/imports",async(LinkDto r,HttpContext h,Database d,IConfiguration cfg)=>{
+   if(!bool.TryParse(cfg["YOUTUBE_ENABLED"],out var youtubeEnabled)||!youtubeEnabled)throw new DomainError("YOUTUBE_NOT_ENABLED",409);
+   if(!Uri.TryCreate(r.Url,UriKind.Absolute,out var uri)||uri.Scheme!="https"||!new[]{"www.youtube.com","youtube.com","m.youtube.com","youtu.be"}.Contains(uri.Host.ToLowerInvariant())||!string.IsNullOrEmpty(uri.UserInfo)||uri.Port!=443)throw new DomainError("UNSUPPORTED_SOURCE",422);
    await using var tx=await d.Database.BeginTransactionAsync();await d.LockWallet(Api.User(h));var key=Api.Key(h);var hash=Api.Hash(r);
    var old=await d.Idempotency.SingleOrDefaultAsync(x=>x.UserId==Api.User(h)&&x.Scope=="link"&&x.Key==key);if(old!=null){if(old.BodyHash!=hash)throw new DomainError("IDEMPOTENCY_CONFLICT",409);return Results.Content(old.Response,"application/json");}
    var p=new Project{UserId=Api.User(h),Title=r.Title,SourceUrl=r.Url};d.Projects.Add(p);Api.Enqueue(d,p,"LINK_METADATA",null,new{url=r.Url});var response=Json.Write(new{projectId=p.Id});d.Idempotency.Add(new Idempotency{UserId=Api.User(h),Scope="link",Key=key,BodyHash=hash,Response=response});await d.SaveChangesAsync();await tx.CommitAsync();return Results.Content(response,"application/json");

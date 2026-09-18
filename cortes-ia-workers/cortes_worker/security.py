@@ -33,10 +33,11 @@ class PinnedHTTPS(http.client.HTTPSConnection):
                 last=ex;raw.close()
         raise last or ProcessingError("CONNECT_FAILED",True)
 def download_https(url,path,max_bytes,redirects=3):
+    timeout=int(os.getenv('DOWNLOAD_SOCKET_TIMEOUT_SECONDS','60'))
     for _ in range(redirects+1):
-        p=validate_url(url);conn=PinnedHTTPS(p.hostname,timeout=30,context=ssl.create_default_context())
+        p=validate_url(url);conn=PinnedHTTPS(p.hostname,timeout=timeout,context=ssl.create_default_context())
         try:
-            conn.request('GET',urllib.parse.urlunsplit(('', '', p.path or '/',p.query,'')),headers={'User-Agent':'CortesIA/0.2'})
+            conn.request('GET',urllib.parse.urlunsplit(('', '', p.path or '/',p.query,'')),headers={'User-Agent':'SliceFlow/0.5'})
             response=conn.getresponse()
             if response.status in (301,302,303,307,308):url=urllib.parse.urljoin(url,response.getheader('Location',''));validate_url(url);continue
             if response.status!=200:raise ProcessingError("SOURCE_RESTRICTED",outcome="SOURCE_RESTRICTED")
@@ -49,6 +50,8 @@ def download_https(url,path,max_bytes,redirects=3):
                     if size>max_bytes:raise ProcessingError("FILE_TOO_LARGE")
                     f.write(block)
             return size
+        except (OSError,TimeoutError,ssl.SSLError,http.client.HTTPException) as exc:
+            raise ProcessingError("DOWNLOAD_FAILED",True) from exc
         finally:conn.close()
     raise ProcessingError("REDIRECT_LIMIT",outcome="SOURCE_RESTRICTED")
 @contextmanager

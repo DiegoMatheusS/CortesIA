@@ -46,11 +46,11 @@ class Processor:
             key=payload['sourceKey']
             if not key.startswith(('quarantine/'+lease['projectId']+'/', 'projects/'+lease['projectId']+'/')):raise ProcessingError('INVALID_SOURCE_KEY')
             head=self.s3.head_object(Bucket=self.bucket,Key=key)
-            if head['ContentLength']>(12_000_000_000 if key.startswith('projects/') else lease['maxBytes']):raise ProcessingError('FILE_TOO_LARGE')
+            if head['ContentLength']>(40_000_000_000 if key.startswith('projects/') else lease['maxBytes']):raise ProcessingError('FILE_TOO_LARGE')
             self.s3.download_file(self.bucket,key,str(source))
         elif payload.get('url'):
             self.progress('DOWNLOADING_LINK',5)
-            youtube.download(payload['url'],source,lease['maxBytes'])
+            youtube.download(payload['url'],source,lease['maxBytes'],lease['maxDurationMs'])
         else:raise ProcessingError('SOURCE_MISSING')
         self.progress('SCANNING_SOURCE',10)
         antivirus(source)
@@ -61,7 +61,7 @@ class Processor:
 
         if stage=='LINK_METADATA':
             self.progress('READING_LINK',20)
-            info=youtube.metadata(payload['url'])
+            info=youtube.metadata(payload['url'],lease['maxBytes'],lease['maxDurationMs'])
             self.progress('VALIDATING_SOURCE',95)
             return {'durationMs':info['duration_ms'],'outputs':[],'clips':[]}
 
@@ -140,7 +140,7 @@ class Processor:
 
         if stage=='ALTERNATIVES':
             self.progress('LOADING_TRANSCRIPT',22)
-            master=source;meta=media_client.call(source,'probe',**{**limits,'max_bytes':12_000_000_000})
+            master=source;meta=media_client.call(source,'probe',**{**limits,'max_bytes':40_000_000_000})
             key=payload['transcriptKey']
             if not key.startswith('projects/'+lease['projectId']+'/'):raise ProcessingError('INVALID_TRANSCRIPT_KEY')
             data=self.s3.get_object(Bucket=self.bucket,Key=key)
@@ -166,13 +166,17 @@ class Processor:
         quantity=config.get('quantity',5);mode=config.get('durationMode','UP_TO_1_MIN')
         ranges={'UP_TO_1_MIN':(0,60000),'ONE_TO_TWO_MIN':(60000,120000),'TWO_TO_THREE_MIN':(120000,180000),'AUTO':(0,180000)}
         low,high=ranges[mode];raw=[]
-        offsets=list(range(0,meta['duration_ms'],600000))
+        window_ms=max(300000,int(os.getenv('AI_LONGFORM_WINDOW_MS','900000')))
+        overlap_ms=max(0,min(window_ms//2,int(os.getenv('AI_LONGFORM_OVERLAP_MS','90000'))))
+        offsets=list(range(0,meta['duration_ms'],window_ms))
+        per_window=max(3,min(8,quantity))
         for index,offset in enumerate(offsets):
-            window=[s for s in segments if s.end_ms>offset and s.start_ms<offset+660000]
-            if window:raw.extend(ai.select(window,payload['modality'],quantity,mode))
+            window=[s for s in segments if s.end_ms>offset and s.start_ms<offset+window_ms+overlap_ms]
+            if window:raw.extend(ai.select(window,payload['modality'],per_window,mode))
             self.progress('SELECTING_CLIPS',55+int(15*(index+1)/max(1,len(offsets))))
 
-        candidates=validate_candidates(raw,meta['duration_ms'],min(quantity*3,100),low,high)
+        raw.sort(key=lambda item:float(item.get('score',0) or 0),reverse=True)
+        candidates=validate_candidates(raw,meta['duration_ms'],min(max(quantity*4,20),120),low,high)
         context=[s for s in segments if any(s.end_ms>c.start_ms-5000 and s.start_ms<c.end_ms+5000 for c in candidates)]
         self.progress('REVIEWING_CLIPS',73)
         reviewed=ai.select(context,payload['modality'],quantity,mode,review=[dataclasses.asdict(c) for c in candidates]) if candidates else []
@@ -248,7 +252,7 @@ def main():
             event={'eventId':str(uuid.uuid4()),'jobId':job,'fence':lease['fence'],'kind':'succeeded','error':None,'retryable':False,'durationMs':0,'outputs':[],'clips':[],'failedFeatures':[],'outcome':None}
             try:
                 report('STARTING',1)
-                with tempfile.TemporaryDirectory(prefix='cortes-') as work:event.update(Processor(s3,bucket,work,report).run(lease))
+                with tempfile.TemporaryDirectory(prefix='cortes-',dir=os.getenv('WORK_ROOT') or None) as work:event.update(Processor(s3,bucket,work,report).run(lease))
             except ProcessingError as e:event.update(kind='failed',error=e.code,retryable=e.retryable,outcome=e.outcome)
             except Exception:event.update(kind='failed',error='WORKER_FAILURE',retryable=True,outcome='SYSTEM_FAILURE')
             finally:stop.set();thread.join(timeout=2)

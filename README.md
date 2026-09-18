@@ -6,7 +6,7 @@ Projeto integrado com frontend Next.js/React, API .NET 10, workers Python/FFmpeg
 
 ## Começar no Windows
 
-Requisitos: Docker Desktop com containers Linux/WSL2 e Compose, Python 3.12+, acesso a Docker Hub/MCR/NuGet/npm/PyPI para baixar dependências. Reserve memória e disco compatíveis com FFmpeg; vídeos grandes usam múltiplas cópias temporárias.
+Requisitos: Docker Desktop com containers Linux/WSL2 e Compose, Python 3.12+, acesso a Docker Hub/MCR/NuGet/npm/PyPI para baixar dependências. Reserve memória e principalmente disco compatíveis com FFmpeg. Para fontes próximas de 30 GB, planeje ao menos 80 GB de espaço livre no workspace do worker; no Compose local, como o LocalStack mantém a cópia do upload, recomenda-se cerca de 120 GB livres no host para testar o limite.
 
 Na pasta descompactada:
 
@@ -41,7 +41,19 @@ Não há senha administrativa no ZIP. Depois de cadastrar e verificar sua conta:
 docker compose run --rm -e ADMIN_EMAIL=seu-email@exemplo.com api --make-admin
 ```
 
-Entre novamente, ative o autenticador na plataforma e faça novo login com código MFA. Ações administrativas sensíveis exigem login recente (cinco minutos). O painel inicial permite consultas e ajustes auditados. A role inicial é Admin; divisão granular Finance/Support/Security permanece no backlog.
+Entre novamente, ative o autenticador na plataforma e faça novo login com código MFA. Ações administrativas sensíveis exigem login recente (cinco minutos). O painel operacional usa RBAC granular: `Support`, `Finance`, `Security` e `Admin` (superusuário). Todos os perfis de equipe exigem MFA.
+
+### Conceder ou revogar funções da equipe
+
+Depois que a pessoa criar e confirmar a conta:
+
+```powershell
+docker compose run --rm -e STAFF_EMAIL=suporte@exemplo.com -e STAFF_ROLE=Support api --grant-role
+docker compose run --rm -e STAFF_EMAIL=financeiro@exemplo.com -e STAFF_ROLE=Finance api --grant-role
+docker compose run --rm -e STAFF_EMAIL=seguranca@exemplo.com -e STAFF_ROLE=Security api --grant-role
+```
+
+As roles são aditivas. Para revogar uma role, use o mesmo `STAFF_EMAIL`/`STAFF_ROLE` com `--revoke-role`. Toda alteração atualiza o security stamp e exige novo login.
 
 ## Pastas / repositórios
 
@@ -82,9 +94,9 @@ O CI aplica o baseline em PostgreSQL limpo, faz rollback até zero e falha se o 
 - O Compose abre somente portas localhost. Não é configuração de produção.
 - Banco e carteira são reais no ambiente local; os créditos/compras são de teste.
 - Antivírus vem desativado somente no modo de desenvolvimento e identificado em Compose. Ative o perfil e `SCAN_MODE=required` para homologação; arquivos acima do limite suportado pelo ClamAV devem falhar fechados, nunca passar sem scan.
-- YouTube fica desligado até habilitação e teste. Restrições retornam bloqueio sem consumo; não se promete acesso a qualquer vídeo.
+- YouTube fica habilitado por padrão no ambiente local/homologação via feature flag. Restrições retornam bloqueio sem consumo; produção só deve habilitar após smoke test real.
 - Legenda dinâmica está implementada com timestamps por palavra quando o transcritor fornece esse dado e alinhamento proporcional como fallback explícito. O tracking inteligente está disponível somente em ambientes com provider de visão habilitado; recursos indisponíveis não são cobrados.
-- O limite técnico de duração é 7 horas (25.200.000 ms), ainda sujeito ao limite de 5 GB por arquivo. Em desenvolvimento essa faixa pode ser testada; em produção, acima de 90 minutos exige aprovação explícita da política comercial para não inventar preço.
+- O limite técnico de duração é 7 horas (25.200.000 ms), com limite máximo de 30 GB por arquivo. Podcasts compatíveis podem usar remux do vídeo em vez de transcode integral; a seleção de IA ranqueia candidatos entre várias janelas long-form antes da revisão final. Em produção, acima de 90 minutos continua exigindo aprovação comercial explícita.
 
 Comece por `docs/STATUS_IMPLEMENTACAO.md` e `docs/BACKLOG_MVP.md` para decidir o próximo incremento sem confundir código presente com fase homologada.
 
@@ -92,3 +104,12 @@ Comece por `docs/STATUS_IMPLEMENTACAO.md` e `docs/BACKLOG_MVP.md` para decidir o
 ## Notificações
 
 O SliceFlow possui central interna de notificações e preferências de e-mail. Segurança, pagamentos/créditos críticos e armazenamento são obrigatórios; processamento e suporte ficam ligados por padrão; saldo baixo e marketing são opcionais. Ver `docs/NOTIFICACOES_TRANSACIONAIS.md`.
+
+
+## YouTube e podcasts longos
+
+O fluxo de importação, segurança, smoke test e tuning para fontes de até 7 horas e 30 GB está em `docs/YOUTUBE_LONGFORM.md`.
+
+## E2E full-stack
+
+O fluxo navegador → API → S3/SQS → worker → FFmpeg → editor → exportação é validado em CI. Veja `docs/E2E_TESTING.md`.

@@ -6,6 +6,7 @@ public class DomainTests {
  public void InvalidCpfRejected(string value)=>Assert.Throws<DomainError>(()=>Cpf.Normalize(value));
  [Fact] public void HmacDependsOnSecret(){Assert.NotEqual(Cpf.Digest("52998224725","secret1"),Cpf.Digest("52998224725","secret2"));}
  [Fact] public void QuoteItemIsPerRun(){var item=new QuoteItem("zoom","Zoom",2,"PER_RUN","zoom");Assert.Equal("PER_RUN",item.Unit);}
+ [Fact] public void UploadLimitIsThirtyGigabytes(){Assert.Equal(30_000_000_000,Policy.MaxUploadBytes);Assert.Equal(40_000_000_000,Policy.MaxInternalMediaBytes);}
  [Fact] public void RequiredNotificationAlwaysEmails(){
   var n=new Notification{EmailPolicy="REQUIRED",Category="SECURITY"};
   var p=new NotificationPreference{ProcessingEmail=false,SupportEmail=false,LowBalanceEmail=false,MarketingEmail=false};
@@ -20,5 +21,20 @@ public class DomainTests {
   var n=new Notification{EmailPolicy="DEFAULT_ON",Category="PROCESSING"};
   Assert.True(NotificationEndpoints.WantsEmail(n,null));
   Assert.False(NotificationEndpoints.WantsEmail(n,new NotificationPreference{ProcessingEmail=false}));
+ }
+ [Fact] public void StaffRoleMatrixIsExplicit(){
+  Assert.True(StaffRoles.IsStaff(new[]{StaffRoles.Support}));
+  Assert.True(StaffRoles.IsStaff(new[]{StaffRoles.Finance,StaffRoles.Security}));
+  Assert.False(StaffRoles.IsStaff(Array.Empty<string>()));
+  Assert.True(StaffRoles.Valid("Admin"));
+  Assert.False(StaffRoles.Valid("Owner"));
+ }
+ [Fact] public void StaffRoleCapabilitiesStaySeparated(){
+  Assert.Contains(StaffRoles.Support,StaffRoles.SupportAccess);
+  Assert.DoesNotContain(StaffRoles.Finance,StaffRoles.SupportAccess);
+  Assert.Contains(StaffRoles.Finance,StaffRoles.FinanceAccess);
+  Assert.DoesNotContain(StaffRoles.Security,StaffRoles.FinanceAccess);
+  Assert.Contains(StaffRoles.Security,StaffRoles.SecurityAccess);
+  Assert.DoesNotContain(StaffRoles.Support,StaffRoles.SecurityAccess);
  }
 }

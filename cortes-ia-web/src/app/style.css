@@ -569,3 +569,27 @@ html{scroll-behavior:smooth}
 .notification-preference-list small{color:#8391aa;line-height:1.5}
 .notification-preference-list .required{opacity:.82}
 @media(max-width:620px){.notification-popover{position:fixed;left:14px;right:14px;top:78px;width:auto}.nav-user{display:none}}
+
+
+/* Direct crop/reframe editor */
+.editor-video.reframe-active{filter:none;background:#02050a;display:grid;place-items:center;padding:12px}
+.reframe-source{position:relative;width:100%;max-width:100%;max-height:72vh;overflow:hidden;background:#000;touch-action:none;user-select:none}
+.reframe-source>video{position:absolute;inset:0;display:block;width:100%;height:100%;object-fit:fill;pointer-events:none}
+.reframe-shade{position:absolute;inset:0;background:#0008;pointer-events:none}
+.reframe-selection{position:absolute;min-width:8%;min-height:8%;border:2px solid #d7d9ff;box-shadow:0 0 0 9999px #0008,0 0 28px #7c84ff55;cursor:grab;touch-action:none;background:transparent}
+.reframe-selection:active{cursor:grabbing}
+.reframe-selection>span{position:absolute;left:8px;top:8px;padding:5px 7px;border-radius:7px;background:#070d19d9;color:#fff;font-size:9px;letter-spacing:.04em;pointer-events:none}
+.reframe-resize-handle{position:absolute;right:-9px;bottom:-9px;width:20px;height:20px;min-height:0;padding:0;border-radius:50%;border:2px solid #fff;background:#8187ff;cursor:nwse-resize;box-shadow:0 3px 12px #0009}
+.crop-fields{display:block}
+.reframe-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.reframe-actions button{min-height:38px;font-size:10px}
+.reframe-actions button.active{background:#7d83ff;color:#fff;border-color:#9da2ff}
+.crop-fields>small{display:block;margin:6px 0 10px;color:#8e9bb6;line-height:1.45}
+.crop-advanced{margin-top:10px;border-top:1px solid #ffffff12;padding-top:8px}
+.crop-advanced summary{cursor:pointer;font-size:9px;color:#8f9bb4;letter-spacing:.07em;text-transform:uppercase}
+.crop-fields-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:9px}
+@media(max-width:760px){
+ .editor-video.reframe-active{min-height:420px;padding:8px}
+ .reframe-actions,.crop-fields-grid{grid-template-columns:1fr}
+ .reframe-selection>span{font-size:8px}
+}
