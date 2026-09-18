@@ -87,7 +87,8 @@ class Processor:
                 raise ProcessingError('INVALID_COVER_TIME')
             self.progress('GENERATING_COVER',45)
             image=self.work/'cover.jpg'
-            media_client.call(source,'cover',image,at_ms=at_ms)
+            cover_settings=payload.get('clip') or {}
+            media_client.call(source,'cover',image,at_ms=at_ms,aspect=cover_settings.get('aspect','original'),crop=cover_settings.get('crop'),visual_style=cover_settings.get('visualStyle','Cinema'))
             self.progress('UPLOADING_OUTPUT',90)
             self.upload(image,'COVER',lease)
             self.progress('FINALIZING',98)
@@ -122,6 +123,7 @@ class Processor:
                 'segments':c['subtitles'],'features':features,
                 'aspect':payload['format'],'style':c['style'],
                 'caption_preset':c.get('captionPreset','Clean'),
+                'caption_overrides':c.get('captionOverrides') or {},
                 'visual_style':c.get('visualStyle','Cinema'),
                 'crop':c.get('crop'),'preview':is_preview,
                 'tracking_plan':tracking_plan

@@ -1,3 +1,4 @@
+import contextlib
 import hashlib
 import math
 import os
@@ -7,7 +8,8 @@ import urllib.request
 
 from .models import ProcessingError
 
-MODEL_URL = "https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite"
+FACE_MODEL_URL = "https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite"
+PERSON_MODEL_URL = "https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float32/1/efficientdet_lite0.tflite"
 
 
 def _clamp(value, low=0.0, high=1.0):
@@ -28,12 +30,12 @@ def _crop_values(crop):
     return x, y, width, height
 
 
-def _model_path():
-    configured = os.getenv("MEDIAPIPE_FACE_MODEL")
+def _model_path(path_env, url_env, filename, default_url):
+    configured = os.getenv(path_env)
     if configured:
         path = pathlib.Path(configured).expanduser()
     else:
-        path = pathlib.Path.home() / ".cache" / "sliceflow" / "vision" / "blaze_face_short_range.tflite"
+        path = pathlib.Path.home() / ".cache" / "sliceflow" / "vision" / filename
 
     if path.exists():
         return path
@@ -42,15 +44,15 @@ def _model_path():
         raise ProcessingError("VISION_MODEL_MISSING")
 
     path.parent.mkdir(parents=True, exist_ok=True)
-    url = os.getenv("MEDIAPIPE_FACE_MODEL_URL", MODEL_URL)
-    tmp = path.with_suffix(".download")
+    url = os.getenv(url_env, default_url)
+    tmp = path.with_suffix(path.suffix + ".download")
     try:
         urllib.request.urlretrieve(url, tmp)
     except Exception as exc:
         tmp.unlink(missing_ok=True)
         raise ProcessingError("VISION_MODEL_DOWNLOAD_FAILED", True) from exc
 
-    expected = os.getenv("MEDIAPIPE_FACE_MODEL_SHA256", "").strip().lower()
+    expected = os.getenv(path_env + "_SHA256", "").strip().lower()
     if expected:
         digest = hashlib.sha256(tmp.read_bytes()).hexdigest()
         if digest != expected:
@@ -99,7 +101,7 @@ def _sample_frames(source, start_ms, end_ms, fps=2.0, width=640, height=360):
             raise ProcessingError("VISION_DECODE_FAILED", True)
 
 
-def _select_face(detections, previous=None):
+def _select_detection(detections, previous=None):
     best = None
     best_score = -1.0
     for detection in detections:
@@ -114,14 +116,18 @@ def _select_face(detections, previous=None):
             dx = cx - previous[0]
             dy = cy - previous[1]
             continuity = 1.0 / (1.0 + math.sqrt(dx * dx + dy * dy))
-        score = area * (1.0 + continuity * 0.35)
+        confidence = 1.0
+        categories = getattr(detection, "categories", None) or []
+        if categories:
+            confidence = max(.05, float(getattr(categories[0], "score", 1.0) or 1.0))
+        score = area * confidence * (1.0 + continuity * 0.45)
         if score > best_score:
             best = (cx, cy)
             best_score = score
     return best
 
 
-def _smooth(points, alpha=0.35):
+def _smooth(points, alpha=0.28):
     if not points:
         return []
     result = []
@@ -134,11 +140,12 @@ def _smooth(points, alpha=0.35):
     return result
 
 
-def track_faces(source, source_segments, crop=None, fps=2.0):
-    """Return smoothed subject-center keyframes on the output timeline.
+def track_subjects(source, source_segments, crop=None, fps=2.0):
+    """Track a face first and fall back to a person detector.
 
-    Coordinates are normalized after the optional manual crop so media.render can
-    apply the plan to the post-crop frame.
+    Returned coordinates are smoothed normalized subject-center keyframes on the
+    output timeline. If neither detector sees the subject briefly, the previous
+    center is held to avoid abrupt crop jumps.
     """
     if os.getenv("VISION_PROVIDER", "none").lower() != "mediapipe":
         return []
@@ -149,34 +156,77 @@ def track_faces(source, source_segments, crop=None, fps=2.0):
     except ImportError as exc:
         raise ProcessingError("VISION_PROVIDER_NOT_INSTALLED") from exc
 
-    model = _model_path()
-    options = mp.tasks.vision.FaceDetectorOptions(
-        base_options=mp.tasks.BaseOptions(model_asset_path=str(model)),
+    face_model = _model_path(
+        "MEDIAPIPE_FACE_MODEL",
+        "MEDIAPIPE_FACE_MODEL_URL",
+        "blaze_face_short_range.tflite",
+        FACE_MODEL_URL,
+    )
+    person_model = None
+    if os.getenv("VISION_PERSON_FALLBACK", "true").lower() in {"1", "true", "yes"}:
+        try:
+            person_model = _model_path(
+                "MEDIAPIPE_PERSON_MODEL",
+                "MEDIAPIPE_PERSON_MODEL_URL",
+                "efficientdet_lite0.tflite",
+                PERSON_MODEL_URL,
+            )
+        except ProcessingError:
+            person_model = None
+
+    face_options = mp.tasks.vision.FaceDetectorOptions(
+        base_options=mp.tasks.BaseOptions(model_asset_path=str(face_model)),
         running_mode=mp.tasks.vision.RunningMode.VIDEO,
         min_detection_confidence=float(os.getenv("VISION_MIN_CONFIDENCE", "0.5")),
     )
+
+    person_options = None
+    if person_model is not None:
+        person_options = mp.tasks.vision.ObjectDetectorOptions(
+            base_options=mp.tasks.BaseOptions(model_asset_path=str(person_model)),
+            running_mode=mp.tasks.vision.RunningMode.VIDEO,
+            score_threshold=float(os.getenv("VISION_PERSON_MIN_CONFIDENCE", "0.45")),
+            category_allowlist=["person"],
+            max_results=4,
+        )
 
     cx0, cy0, cw, ch = _crop_values(crop)
     raw_points = []
     output_offset = 0
     previous = None
 
-    with mp.tasks.vision.FaceDetector.create_from_options(options) as detector:
+    with contextlib.ExitStack() as stack:
+        face_detector = stack.enter_context(
+            mp.tasks.vision.FaceDetector.create_from_options(face_options)
+        )
+        person_detector = (
+            stack.enter_context(mp.tasks.vision.ObjectDetector.create_from_options(person_options))
+            if person_options is not None
+            else None
+        )
+
         for segment in source_segments:
             start = int(segment.get("startMs", segment.get("start_ms", 0)))
             end = int(segment.get("endMs", segment.get("end_ms", 0)))
             for timestamp, raw, width, height in _sample_frames(source, start, end, fps=fps):
                 array = np.frombuffer(raw, dtype=np.uint8).reshape((height, width, 3)).copy()
                 image = mp.Image(image_format=mp.ImageFormat.SRGB, data=array)
-                result = detector.detect_for_video(image, timestamp)
-                selected = _select_face(result.detections, previous)
+
+                face_result = face_detector.detect_for_video(image, timestamp)
+                selected = _select_detection(face_result.detections, previous)
+
+                if selected is None and person_detector is not None:
+                    person_result = person_detector.detect_for_video(image, timestamp)
+                    selected = _select_detection(person_result.detections, previous)
+
+                if selected is None:
+                    selected = previous
                 if selected is None:
                     continue
+
                 previous = selected
-                norm_x = selected[0] / width
-                norm_y = selected[1] / height
-                norm_x = _clamp((norm_x - cx0) / cw)
-                norm_y = _clamp((norm_y - cy0) / ch)
+                norm_x = _clamp((selected[0] / width - cx0) / cw)
+                norm_y = _clamp((selected[1] / height - cy0) / ch)
                 raw_points.append({
                     "timeMs": output_offset + (timestamp - start),
                     "x": norm_x,
@@ -186,4 +236,12 @@ def track_faces(source, source_segments, crop=None, fps=2.0):
 
     if len(raw_points) < 2:
         return []
-    return _smooth(raw_points)
+    return _smooth(
+        raw_points,
+        alpha=float(os.getenv("VISION_SMOOTHING_ALPHA", "0.28")),
+    )
+
+
+def track_faces(source, source_segments, crop=None, fps=2.0):
+    """Backward-compatible alias for older worker callers."""
+    return track_subjects(source, source_segments, crop=crop, fps=fps)

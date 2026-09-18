@@ -22,6 +22,9 @@ services:
       VISION_ALLOW_MODEL_DOWNLOAD: "true"
       VISION_SAMPLE_FPS: "2"
       VISION_MIN_CONFIDENCE: "0.5"
+      VISION_PERSON_FALLBACK: "true"
+      VISION_PERSON_MIN_CONFIDENCE: "0.45"
+      VISION_SMOOTHING_ALPHA: "0.28"
     volumes:
       - mediawork:/work
       - modelcache:/home/cortes/.cache

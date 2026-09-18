@@ -9,6 +9,7 @@ type SubtitleWord = {startMs: number; endMs: number; word: string};
 type Subtitle = {startMs: number; endMs: number; text: string; words?: SubtitleWord[]};
 type Segment = {startMs: number; endMs: number};
 type Crop = {x: number; y: number; width: number; height: number};
+type CaptionOverrides = {scale: number; position: 'top' | 'center' | 'bottom'; primaryColor: string; highlightColor: string; uppercase: boolean; wordsPerLine: number};
 
 type Clip = {
   id: string;
@@ -22,6 +23,7 @@ type Clip = {
   segments: Segment[];
   subtitles: Subtitle[];
   captionPreset: string;
+  captionOverrides: CaptionOverrides;
   visualStyle: string;
   aspect: string;
   crop: Crop;
@@ -41,6 +43,7 @@ type Revision = {
   subtitles: Subtitle[];
   style: string;
   captionPreset: string;
+  captionOverrides: CaptionOverrides;
   visualStyle: string;
   aspect: string;
   crop: Crop;
@@ -62,6 +65,8 @@ type EditorMeta = {
     manualCrop: boolean;
     intelligentReframe?: boolean;
     dynamicCaptions?: boolean;
+    captionCustomization?: boolean;
+    coverStyling?: boolean;
   };
 };
 
@@ -140,6 +145,7 @@ const progressLabels: Record<string,string> = {
   BUILDING_BUNDLE: 'Preparando ZIP',
   UPLOADING_OUTPUT: 'Salvando resultado',
   GENERATING_COVER: 'Gerando capa',
+  TRACKING_SUBJECT: 'Acompanhando rosto/pessoa',
   FINALIZING: 'Finalizando',
   DONE: 'Concluído',
 };
@@ -153,6 +159,7 @@ function normalizeClip(clip: Clip): Clip {
     ...clip,
     segments: clip.segments?.length ? clip.segments : [{startMs: clip.startMs, endMs: clip.endMs}],
     captionPreset: clip.captionPreset || 'Clean',
+    captionOverrides: clip.captionOverrides || {scale: 1, position: 'bottom', primaryColor: '#ffffff', highlightColor: '#ffff00', uppercase: false, wordsPerLine: 4},
     visualStyle: clip.visualStyle || 'Cinema',
     aspect: clip.aspect || '9:16',
     crop: clip.crop || {x: 0, y: 0, width: 1, height: 1},
@@ -191,6 +198,7 @@ export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
   const [coverAt, setCoverAt] = useState(0);
   const coverVideoRef = useRef<HTMLVideoElement>(null);
   const [reframeMode, setReframeMode] = useState(false);
+  const [cropAspectLocked, setCropAspectLocked] = useState(true);
   const [reframeAspect, setReframeAspect] = useState(16 / 9);
   const reframeFrameRef = useRef<HTMLDivElement>(null);
   const reframeVideoRef = useRef<HTMLVideoElement>(null);
@@ -288,6 +296,37 @@ export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
     return Math.min(max, Math.max(min, value));
   }
 
+  function targetAspectRatio(aspect: string) {
+    const ratios: Record<string, number> = {'9:16': 9 / 16, '4:5': 4 / 5, '1:1': 1, '16:9': 16 / 9};
+    return ratios[aspect] ?? reframeAspect;
+  }
+
+  function cropForAspect(aspect: string): Crop {
+    if (aspect === 'original') return {x: 0, y: 0, width: 1, height: 1};
+    const target = targetAspectRatio(aspect);
+    const source = Math.max(.01, reframeAspect);
+    if (source > target) {
+      const width = clamp(target / source, .08, 1);
+      return {x: (1 - width) / 2, y: 0, width, height: 1};
+    }
+    const height = clamp(source / target, .08, 1);
+    return {x: 0, y: (1 - height) / 2, width: 1, height};
+  }
+
+  function centerCrop(clip: Clip) {
+    patchClip(clip.id, {
+      crop: {
+        ...clip.crop,
+        x: (1 - clip.crop.width) / 2,
+        y: (1 - clip.crop.height) / 2,
+      },
+    });
+  }
+
+  function fitCropToFormat(clip: Clip, aspect = clip.aspect) {
+    patchClip(clip.id, {aspect, crop: cropForAspect(aspect)});
+  }
+
   function beginCropGesture(event: React.PointerEvent, mode: 'move' | 'resize') {
     if (!editorClip || !reframeFrameRef.current) return;
     event.preventDefault();
@@ -313,7 +352,8 @@ export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
   function moveCropGesture(event: React.PointerEvent) {
     const gesture = cropGesture.current;
     const frame = reframeFrameRef.current;
-    if (!gesture || !frame) return;
+    const active = clips.find(clip => clip.id === gesture?.clipId);
+    if (!gesture || !frame || !active) return;
 
     const rect = frame.getBoundingClientRect();
     if (!rect.width || !rect.height) return;
@@ -326,9 +366,28 @@ export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
     if (gesture.mode === 'move') {
       crop.x = clamp(gesture.crop.x + dx, 0, 1 - gesture.crop.width);
       crop.y = clamp(gesture.crop.y + dy, 0, 1 - gesture.crop.height);
-    } else {
+    } else if (!cropAspectLocked || active.aspect === 'original') {
       crop.width = clamp(gesture.crop.width + dx, minSize, 1 - gesture.crop.x);
       crop.height = clamp(gesture.crop.height + dy, minSize, 1 - gesture.crop.y);
+    } else {
+      const normalizedRatio = targetAspectRatio(active.aspect) / Math.max(.01, reframeAspect);
+      const widthFromX = clamp(gesture.crop.width + dx, minSize, 1 - gesture.crop.x);
+      const heightFromY = clamp(gesture.crop.height + dy, minSize, 1 - gesture.crop.y);
+      const useWidth = Math.abs(dx) >= Math.abs(dy);
+      let width = useWidth ? widthFromX : heightFromY * normalizedRatio;
+      let height = width / normalizedRatio;
+      const maxWidth = 1 - gesture.crop.x;
+      const maxHeight = 1 - gesture.crop.y;
+      if (width > maxWidth) {
+        width = maxWidth;
+        height = width / normalizedRatio;
+      }
+      if (height > maxHeight) {
+        height = maxHeight;
+        width = height * normalizedRatio;
+      }
+      crop.width = clamp(width, minSize, maxWidth);
+      crop.height = clamp(height, minSize, maxHeight);
     }
 
     setClips(old => old.map(clip => clip.id === gesture.clipId ? {...clip, crop} : clip));
@@ -344,6 +403,12 @@ export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
 
   function resetCrop(clip: Clip) {
     patchClip(clip.id, {crop: {x: 0, y: 0, width: 1, height: 1}});
+  }
+
+  function nudgeCover(delta: number) {
+    const next = clamp(coverAt + delta, 0, maxSeconds);
+    setCoverAt(next);
+    if (coverVideoRef.current) coverVideoRef.current.currentTime = next;
   }
 
   async function calculate() {
@@ -442,6 +507,7 @@ export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
         subtitles: clip.subtitles,
         captionsEnabled: clip.style !== 'none',
         captionPreset: clip.captionPreset,
+        captionOverrides: clip.captionOverrides,
         visualStyle: clip.visualStyle,
         aspect: clip.aspect,
         crop: clip.crop,
@@ -927,8 +993,18 @@ export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
                       ? <video controls preload="metadata" src={editorClip.preview} poster={editorClip.cover} />
                       : <div className="editor-placeholder"><span className="preview-person" /><strong>Prévia do corte</strong></div>}
                     {!reframeMode && editorClip.style !== 'none' && (
-                      <div className={`editor-caption-preview caption-preview-${editorClip.captionPreset.toLowerCase().replace(/\s+/g, '-')}`}>
-                        A IA cria. <b>Você ajusta.</b>
+                      <div
+                        className={`editor-caption-preview caption-preview-${editorClip.captionPreset.toLowerCase().replace(/\s+/g, '-')}`}
+                        style={{
+                          color: editorClip.captionOverrides.primaryColor,
+                          fontSize: `calc(clamp(20px,2.5vw,34px) * ${editorClip.captionOverrides.scale})`,
+                          textTransform: editorClip.captionOverrides.uppercase ? 'uppercase' : 'none',
+                          top: editorClip.captionOverrides.position === 'top' ? '8%' : editorClip.captionOverrides.position === 'center' ? '50%' : 'auto',
+                          bottom: editorClip.captionOverrides.position === 'bottom' ? '44px' : 'auto',
+                          transform: editorClip.captionOverrides.position === 'center' ? 'translate(-50%, -50%)' : 'translateX(-50%)',
+                        }}
+                      >
+                        A IA cria. <b style={{color: editorClip.captionOverrides.highlightColor}}>Você ajusta.</b>
                       </div>
                     )}
                   </div>
@@ -937,7 +1013,12 @@ export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
                     <label>Título<input value={editorClip.title} maxLength={200} onChange={event => patchClip(editorClip.id, {title: event.target.value})} /></label>
                     <label>Escolha<select value={editorClip.selection} onChange={event => patchClip(editorClip.id, {selection: event.target.value})}><option value="SUGGESTED">Sugestão</option><option value="SELECTED">Selecionado</option><option value="REJECTED">Descartado</option></select></label>
                     <label>Legenda<select value={editorClip.style} onChange={event => patchClip(editorClip.id, {style: event.target.value})}><option value="simple">Ativada</option><option value="none">Desativada</option></select></label>
-                    <label>Formato<select value={exportFormat} onChange={event => {setExportFormat(event.target.value);patchClip(editorClip.id, {aspect: event.target.value});}}>{aspects.map(format => <option key={format}>{format}</option>)}</select></label>
+                    <label>Formato<select value={exportFormat} onChange={event => {
+                      const next = event.target.value;
+                      setExportFormat(next);
+                      if (cropAspectLocked) fitCropToFormat(editorClip, next);
+                      else patchClip(editorClip.id, {aspect: next});
+                    }}>{aspects.map(format => <option key={format}>{format}</option>)}</select></label>
 
                     <fieldset className="crop-fields">
                       <legend>Enquadramento manual</legend>
@@ -948,13 +1029,27 @@ export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
                           disabled={!editorMeta?.masterUrl}
                           onClick={() => setReframeMode(value => !value)}
                         >
-                          {reframeMode ? '✓ Reposicionando no vídeo' : 'Reposicionar no vídeo'}
+                          {reframeMode ? '✓ Editando no vídeo' : 'Editar enquadramento'}
+                        </button>
+                        <button type="button" className="secondary" onClick={() => fitCropToFormat(editorClip)}>
+                          Ajustar ao formato
+                        </button>
+                        <button type="button" className="secondary" onClick={() => centerCrop(editorClip)}>
+                          Centralizar
                         </button>
                         <button type="button" className="secondary" onClick={() => resetCrop(editorClip)}>
-                          Usar quadro inteiro
+                          Quadro inteiro
                         </button>
                       </div>
-                      {reframeMode && <small>Arraste a área no master. Use o ponto no canto inferior direito para redimensionar.</small>}
+                      <label className="crop-lock">
+                        <input type="checkbox" checked={cropAspectLocked} onChange={event => setCropAspectLocked(event.target.checked)} />
+                        Manter proporção do formato ao redimensionar
+                      </label>
+                      <div className={`tracking-status ${editorMeta?.capabilities.intelligentReframe ? 'available' : ''}`}>
+                        <strong>Tracking de rosto/pessoa</strong>
+                        <span>{editorMeta?.capabilities.intelligentReframe ? 'Motor disponível neste ambiente. Quando o recurso Tracking estiver no processamento, o render acompanha o sujeito automaticamente.' : 'Tracking automático indisponível neste ambiente; o enquadramento manual continua funcionando.'}</span>
+                      </div>
+                      {reframeMode && <small>Arraste a área para reposicionar. O ponto no canto redimensiona; com a trava ativa, a proporção do formato é preservada.</small>}
                       <details className="crop-advanced">
                         <summary>Valores avançados</summary>
                         <div className="crop-fields-grid">
@@ -1052,7 +1147,66 @@ export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
                         </button>
                       ))}
                     </div>
-                    <small>O preset escolhido é salvo na revisão e usado pelo render final.</small>
+
+                    <div className="caption-customizer">
+                      <label>
+                        Tamanho <span>{Math.round(editorClip.captionOverrides.scale * 100)}%</span>
+                        <input
+                          type="range"
+                          min=".65"
+                          max="1.6"
+                          step=".05"
+                          value={editorClip.captionOverrides.scale}
+                          onChange={event => patchClip(editorClip.id, {captionOverrides: {...editorClip.captionOverrides, scale: Number(event.target.value)}})}
+                        />
+                      </label>
+                      <label>
+                        Posição
+                        <select
+                          value={editorClip.captionOverrides.position}
+                          onChange={event => patchClip(editorClip.id, {captionOverrides: {...editorClip.captionOverrides, position: event.target.value as CaptionOverrides['position']}})}
+                        >
+                          <option value="top">Topo</option>
+                          <option value="center">Centro</option>
+                          <option value="bottom">Rodapé</option>
+                        </select>
+                      </label>
+                      <label>
+                        Palavras por bloco
+                        <input
+                          type="number"
+                          min={1}
+                          max={8}
+                          value={editorClip.captionOverrides.wordsPerLine}
+                          onChange={event => patchClip(editorClip.id, {captionOverrides: {...editorClip.captionOverrides, wordsPerLine: clamp(Number(event.target.value), 1, 8)}})}
+                        />
+                      </label>
+                      <label className="caption-color">
+                        Cor principal
+                        <input
+                          type="color"
+                          value={editorClip.captionOverrides.primaryColor}
+                          onChange={event => patchClip(editorClip.id, {captionOverrides: {...editorClip.captionOverrides, primaryColor: event.target.value}})}
+                        />
+                      </label>
+                      <label className="caption-color">
+                        Destaque
+                        <input
+                          type="color"
+                          value={editorClip.captionOverrides.highlightColor}
+                          onChange={event => patchClip(editorClip.id, {captionOverrides: {...editorClip.captionOverrides, highlightColor: event.target.value}})}
+                        />
+                      </label>
+                      <label className="check caption-uppercase">
+                        <input
+                          type="checkbox"
+                          checked={editorClip.captionOverrides.uppercase}
+                          onChange={event => patchClip(editorClip.id, {captionOverrides: {...editorClip.captionOverrides, uppercase: event.target.checked}})}
+                        />
+                        Caixa alta
+                      </label>
+                    </div>
+                    <small>Preset, tamanho, posição, cores e agrupamento ficam salvos na revisão e são usados no render final. Em legenda dinâmica, o destaque acompanha palavra por palavra.</small>
                   </section>
 
                   <section>
@@ -1124,6 +1278,24 @@ export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
                           />
                         </label>
 
+                        <div className="cover-fine-controls" aria-label="Ajuste fino do frame da capa">
+                          <button type="button" className="secondary" onClick={() => nudgeCover(-1)}>-1s</button>
+                          <button type="button" className="secondary" onClick={() => nudgeCover(-.1)}>-0,1s</button>
+                          <button type="button" className="secondary" onClick={() => nudgeCover(.1)}>+0,1s</button>
+                          <button type="button" className="secondary" onClick={() => nudgeCover(1)}>+1s</button>
+                          <button
+                            type="button"
+                            className="secondary"
+                            onClick={() => {
+                              const next = Math.max(0, editorClip.startMs / 1000);
+                              setCoverAt(next);
+                              if (coverVideoRef.current) coverVideoRef.current.currentTime = next;
+                            }}
+                          >
+                            Início do corte
+                          </button>
+                        </div>
+
                         <div className="cover-actions">
                           <label>
                             Segundo exato
@@ -1148,7 +1320,7 @@ export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
                             {covering === editorClip.id ? 'Gerando capa…' : 'Usar este frame como capa'}
                           </button>
                         </div>
-                        <small>A capa é extraída do vídeo master e salva como uma nova revisão. Não há nova análise de IA.</small>
+                        <small>A capa usa o mesmo enquadramento, formato e estilo visual da revisão atual. O ajuste fino funciona em décimos de segundo e não dispara nova análise de IA.</small>
                       </>
                     ) : (
                       <p>O master não está mais disponível para escolher outra capa.</p>

@@ -259,7 +259,7 @@ def _word_items(segment):
     return result
 
 
-def _dynamic_dialogues(segment, words_per_line=4):
+def _dynamic_dialogues(segment, words_per_line=4, uppercase=False):
     words = _word_items(segment)
     if not words:
         return []
@@ -271,17 +271,57 @@ def _dynamic_dialogues(segment, words_per_line=4):
         parts = []
         for word in group:
             duration_cs = max(1, int(round((word["endMs"] - word["startMs"]) / 10)))
-            safe = ass_escape(word["word"]).replace("\\N", " ").strip()
+            token = str(word["word"]).upper() if uppercase else str(word["word"])
+            safe = ass_escape(token).replace("\\N", " ").strip()
             parts.append(f"{{\\kf{duration_cs}}}{safe}")
         lines.append((start, end, " ".join(parts)))
     return lines
 
 
-def subtitles(path, segments, width, height, preset="Clean", dynamic=False):
+def _hex_to_ass(value, fallback):
+    value = str(value or "").strip()
+    if len(value) != 7 or not value.startswith("#"):
+        return fallback
+    try:
+        r = int(value[1:3], 16)
+        g = int(value[3:5], 16)
+        b = int(value[5:7], 16)
+    except ValueError:
+        return fallback
+    return f"&H00{b:02X}{g:02X}{r:02X}"
+
+
+def subtitles(path, segments, width, height, preset="Clean", dynamic=False, overrides=None):
     style = CAPTION_STYLES.get(preset)
     if style is None:
         raise ProcessingError("INVALID_CAPTION_PRESET")
-    font_size = max(18, int(height * style["size"]))
+
+    overrides = overrides or {}
+    try:
+        scale = max(.65, min(1.6, float(overrides.get("scale", 1))))
+        words_per_line = max(
+            1,
+            min(8, int(overrides.get("wordsPerLine", overrides.get("words_per_line", 4)))),
+        )
+    except (TypeError, ValueError):
+        raise ProcessingError("INVALID_CAPTION_OVERRIDES")
+
+    position = str(overrides.get("position", "bottom")).lower()
+    if position not in {"top", "center", "bottom"}:
+        raise ProcessingError("INVALID_CAPTION_OVERRIDES")
+    uppercase = bool(overrides.get("uppercase", False))
+    primary = _hex_to_ass(
+        overrides.get("primaryColor", overrides.get("primary_color")),
+        style["primary"],
+    )
+    secondary = _hex_to_ass(
+        overrides.get("highlightColor", overrides.get("highlight_color")),
+        style["secondary"],
+    )
+    alignment = {"bottom": 2, "center": 5, "top": 8}[position]
+    margin_v = 0 if position == "center" else int(height * .10)
+    font_size = max(18, int(height * style["size"] * scale))
+
     header = f"""[Script Info]
 ScriptType: v4.00+
 PlayResX: {width}
@@ -289,27 +329,34 @@ PlayResY: {height}
 WrapStyle: 0
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Default,DejaVu Sans,{font_size},{style["primary"]},{style["secondary"]},{style["outline"]},{style["back"]},{style["bold"]},0,0,0,100,100,0,0,{style["border"]},{style["outline_w"]},{style["shadow"]},2,{int(width*.08)},{int(width*.08)},{int(height*.13)},1
+Style: Default,DejaVu Sans,{font_size},{primary},{secondary},{style["outline"]},{style["back"]},{style["bold"]},0,0,0,100,100,0,0,{style["border"]},{style["outline_w"]},{style["shadow"]},{alignment},{int(width*.08)},{int(width*.08)},{margin_v},1
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 """
     lines = []
     for segment in segments:
-        start = segment.get("startMs", segment.get("start_ms"))
-        end = segment.get("endMs", segment.get("end_ms"))
-        if start is None or end is None or end <= start:
+        start_ms = segment.get("startMs", segment.get("start_ms"))
+        end_ms = segment.get("endMs", segment.get("end_ms"))
+        if start_ms is None or end_ms is None or end_ms <= start_ms:
             raise ProcessingError("INVALID_SUBTITLE")
         if dynamic:
-            for line_start, line_end, text in _dynamic_dialogues(segment):
+            for line_start, line_end, text in _dynamic_dialogues(
+                segment,
+                words_per_line=words_per_line,
+                uppercase=uppercase,
+            ):
                 lines.append(
                     f"Dialogue: 0,{ass_time(line_start)},{ass_time(line_end)},Default,,0,0,0,,{text}"
                 )
         else:
+            text = str(segment["text"]).upper() if uppercase else str(segment["text"])
             lines.append(
-                f'Dialogue: 0,{ass_time(start)},{ass_time(end)},Default,,0,0,0,,{ass_escape(segment["text"])}'
+                f'Dialogue: 0,{ass_time(start_ms)},{ass_time(end_ms)},Default,,0,0,0,,{ass_escape(text)}'
             )
-    pathlib.Path(path).write_text(header + "\n".join(lines) + "\n", encoding="utf-8")
-
+    pathlib.Path(path).write_text(
+        header + "\n".join(lines) + "\n",
+        encoding="utf-8",
+    )
 
 def _source_segments(source_segments, start_ms, end_ms, duration_ms):
     items = source_segments or [{"startMs": start_ms, "endMs": end_ms}]
@@ -411,6 +458,7 @@ def render(
     visual_style="Cinema",
     crop=None,
     tracking_plan=None,
+    caption_overrides=None,
 ):
     meta = probe(source, max_bytes=40_000_000_000)
     source_ranges, output_duration_ms = _source_segments(
@@ -442,7 +490,7 @@ def render(
 
     work = pathlib.Path(target).parent
     ass = work / "captions.ass"
-    subtitles(ass, segments, w, h, caption_preset, dynamic="dynamic_captions" in features)
+    subtitles(ass, segments, w, h, caption_preset, dynamic="dynamic_captions" in features, overrides=caption_overrides)
     safe_ass = (
         str(ass).replace("\\", "/").replace(":", r"\:").replace("'", r"\'")
     )
@@ -562,25 +610,48 @@ def render(
     return {"width": w, "height": h, "duration_ms": output_duration_ms}
 
 
-def cover(source, target, at_ms=0):
-    command(
-        [
-            "ffmpeg",
-            "-nostdin",
-            "-v",
-            "error",
-            "-y",
-            "-protocol_whitelist",
-            "file,pipe",
-            "-ss",
-            str(at_ms / 1000),
-            "-i",
-            str(source),
-            "-frames:v",
-            "1",
-            "-q:v",
-            "2",
-            str(target),
-        ],
-        120,
-    )
+def cover(source, target, at_ms=0, aspect="original", crop=None, visual_style="Cinema"):
+    meta = probe(source, max_bytes=40_000_000_000)
+    if visual_style not in VISUAL_FILTERS:
+        raise ProcessingError("INVALID_VISUAL_STYLE")
+
+    sizes = {
+        "9:16": (1080, 1920),
+        "4:5": (1080, 1350),
+        "1:1": (1080, 1080),
+        "16:9": (1920, 1080),
+        "original": (meta["width"], meta["height"]),
+    }
+    if aspect not in sizes:
+        raise ProcessingError("INVALID_ASPECT")
+
+    filters = []
+    crop_filter = _crop_filter(crop)
+    if crop_filter:
+        filters.append(crop_filter)
+
+    w, h = sizes[aspect]
+    if aspect != "original":
+        filters.append(f"scale={w}:{h}:force_original_aspect_ratio=increase")
+        filters.append(f"crop={w}:{h}")
+    filters.append(VISUAL_FILTERS[visual_style])
+
+    args = [
+        "ffmpeg",
+        "-nostdin",
+        "-v",
+        "error",
+        "-y",
+        "-protocol_whitelist",
+        "file,pipe",
+        "-ss",
+        str(at_ms / 1000),
+        "-i",
+        str(source),
+        "-frames:v",
+        "1",
+    ]
+    if filters:
+        args += ["-vf", ",".join(filters)]
+    args += ["-q:v", "2", str(target)]
+    command(args, 120)

@@ -12,7 +12,8 @@ public record EditDto(string Title,long StartMs,long EndMs,string Selection,Subt
 public record WordDto(long StartMs,long EndMs,string Word);
 public record SubtitleDto(long StartMs,long EndMs,string Text,WordDto[]? Words=null);
 public record ManualClipDto(string Title,RevisionSegment[] Segments,string Aspect="9:16",string CaptionPreset="Clean",string VisualStyle="Cinema");
-public record ClipRevisionDto(string Title,string Selection,RevisionSegment[] Segments,SubtitleDto[] Subtitles,bool CaptionsEnabled=true,string CaptionPreset="Clean",string VisualStyle="Cinema",string Aspect="9:16",CropSpec? Crop=null);
+public record CaptionOverridesDto(double Scale=1.0,string Position="bottom",string PrimaryColor="#ffffff",string HighlightColor="#ffff00",bool Uppercase=false,int WordsPerLine=4);
+public record ClipRevisionDto(string Title,string Selection,RevisionSegment[] Segments,SubtitleDto[] Subtitles,bool CaptionsEnabled=true,string CaptionPreset="Clean",string VisualStyle="Cinema",string Aspect="9:16",CropSpec? Crop=null,CaptionOverridesDto? CaptionOverrides=null);
 public record CoverDto(long AtMs);
 public record ExportDto(Guid ClipId,string Format);
 public record TicketDto(string Subject,string Message,Guid? ProjectId);
@@ -82,19 +83,19 @@ public static class ProjectEndpoints {
     captionPresets=CaptionPresets.OrderBy(x=>x),
     visualStyles=VisualStyles.OrderBy(x=>x),
     aspects=Aspects.OrderBy(x=>x),
-    capabilities=new{manualCuts=true,nonDestructiveRevisions=true,segments=true,captionSync=true,manualCrop=true,intelligentReframe=trackingEnabled,dynamicCaptions=true}
+    capabilities=new{manualCuts=true,nonDestructiveRevisions=true,segments=true,captionSync=true,manualCrop=true,intelligentReframe=trackingEnabled,dynamicCaptions=true,captionCustomization=true,coverStyling=true}
    };
   });
   g.MapGet("/projects/{id:guid}/clips",async(Guid id,HttpContext h,Database d,Cloud cloud)=>{
    await Api.Own(d,h,id);var clips=await d.Clips.Where(x=>x.ProjectId==id).OrderBy(x=>x.StartMs).ToListAsync();
    return clips.Select(x=>new{x.Id,x.Title,x.Reason,x.StartMs,x.EndMs,x.Selection,x.Revision,x.Style,
-    segments=ReadSegments(x),subtitles=Json.Read<SubtitleDto[]>(x.Subtitles),x.CaptionPreset,x.VisualStyle,x.Aspect,crop=Json.Read<CropSpec>(x.Crop),x.PreviewRevision,
+    segments=ReadSegments(x),subtitles=Json.Read<SubtitleDto[]>(x.Subtitles),x.CaptionPreset,captionOverrides=ReadCaptionOverrides(x.CaptionOverrides),x.VisualStyle,x.Aspect,crop=Json.Read<CropSpec>(x.Crop),x.PreviewRevision,
     preview=x.PreviewKey==null?null:cloud.Download(x.PreviewKey),cover=x.CoverKey==null?null:cloud.Download(x.CoverKey)});
   });
   g.MapGet("/clips/{id:guid}/revisions",async(Guid id,HttpContext h,Database d)=>{
    var clip=await d.Clips.FindAsync(id)??throw new DomainError("NOT_FOUND",404);await Api.Own(d,h,clip.ProjectId);
    var revisions=await d.ClipRevisions.Where(x=>x.ClipId==id).OrderByDescending(x=>x.Number).ToListAsync();
-   return revisions.Select(x=>new{x.Id,x.Number,x.Title,x.Selection,x.StartMs,x.EndMs,segments=Json.Read<RevisionSegment[]>(x.Segments),subtitles=Json.Read<SubtitleDto[]>(x.Subtitles),x.Style,x.CaptionPreset,x.VisualStyle,x.Aspect,crop=Json.Read<CropSpec>(x.Crop),x.CreatedAt});
+   return revisions.Select(x=>new{x.Id,x.Number,x.Title,x.Selection,x.StartMs,x.EndMs,segments=Json.Read<RevisionSegment[]>(x.Segments),subtitles=Json.Read<SubtitleDto[]>(x.Subtitles),x.Style,x.CaptionPreset,captionOverrides=ReadCaptionOverrides(x.CaptionOverrides),x.VisualStyle,x.Aspect,crop=Json.Read<CropSpec>(x.Crop),x.CreatedAt});
   });
   g.MapPost("/clips/{id:guid}/revisions/{number:int}/restore",async(Guid id,int number,HttpContext h,Database d)=>{
    var clip=await d.Clips.FindAsync(id)??throw new DomainError("NOT_FOUND",404);
@@ -124,9 +125,9 @@ public static class ProjectEndpoints {
   g.MapPost("/clips/{id:guid}/revisions",async(Guid id,ClipRevisionDto r,HttpContext h,Database d)=>{
    var clip=await d.Clips.FindAsync(id)??throw new DomainError("NOT_FOUND",404);await using var tx=await d.Database.BeginTransactionAsync();await d.LockProject(clip.ProjectId);var p=await Api.Own(d,h,clip.ProjectId);await d.Entry(clip).ReloadAsync();Api.Version(h,clip.Revision);
    if(string.IsNullOrWhiteSpace(r.Title)||r.Title.Length>200||!Selections.Contains(r.Selection))throw new DomainError("INVALID_EDIT");
-   var segments=ValidateSegments(r.Segments,p.DurationMs);var total=segments.Sum(x=>x.EndMs-x.StartMs);ValidateSubtitles(r.Subtitles,total);var crop=r.Crop??new CropSpec();ValidateEditorStyle(r.CaptionPreset,r.VisualStyle,r.Aspect,crop);
+   var segments=ValidateSegments(r.Segments,p.DurationMs);var total=segments.Sum(x=>x.EndMs-x.StartMs);ValidateSubtitles(r.Subtitles,total);var crop=r.Crop??new CropSpec();var captionOverrides=r.CaptionOverrides??new CaptionOverridesDto();ValidateEditorStyle(r.CaptionPreset,r.VisualStyle,r.Aspect,crop);ValidateCaptionOverrides(captionOverrides);
    await EnsureCurrentRevision(d,clip);
-   clip.Title=r.Title.Trim();clip.StartMs=segments.Min(x=>x.StartMs);clip.EndMs=segments.Max(x=>x.EndMs);clip.Selection=r.Selection;clip.Segments=Json.Write(segments);clip.Subtitles=Json.Write(r.Subtitles);clip.Style=r.CaptionsEnabled?"simple":"none";clip.CaptionPreset=r.CaptionPreset;clip.VisualStyle=r.VisualStyle;clip.Aspect=r.Aspect;clip.Crop=Json.Write(crop);clip.Revision++;
+   clip.Title=r.Title.Trim();clip.StartMs=segments.Min(x=>x.StartMs);clip.EndMs=segments.Max(x=>x.EndMs);clip.Selection=r.Selection;clip.Segments=Json.Write(segments);clip.Subtitles=Json.Write(r.Subtitles);clip.Style=r.CaptionsEnabled?"simple":"none";clip.CaptionPreset=r.CaptionPreset;clip.CaptionOverrides=Json.Write(captionOverrides);clip.VisualStyle=r.VisualStyle;clip.Aspect=r.Aspect;clip.Crop=Json.Write(crop);clip.Revision++;
    d.ClipRevisions.Add(Snapshot(clip));Api.Audit(d,Api.User(h),"CLIP_REVISION_CREATED",clip.Id.ToString(),"Revision "+clip.Revision);
    await d.SaveChangesAsync();await tx.CommitAsync();return Results.Ok(new{clip.Revision});
   });
@@ -143,7 +144,7 @@ public static class ProjectEndpoints {
    if(p.MasterAssetKey==null)throw new DomainError("MASTER_EXPIRED",410);
    if(await d.Jobs.AnyAsync(x=>x.ProjectId==p.Id&&(x.State=="QUEUED"||x.State=="RUNNING")))throw new DomainError("PROJECT_BUSY",409);
    var run=await d.Runs.FindAsync(found.RunId)??throw new DomainError("NO_ANALYSIS_AVAILABLE",409);
-   var job=Api.Enqueue(d,p,"PREVIEW",run.Id,new{sourceKey=p.MasterAssetKey,clip=new{found.Id,found.StartMs,found.EndMs,found.Title,segments=ReadSegments(found),subtitles=Json.Read<SubtitleDto[]>(found.Subtitles),found.Style,found.CaptionPreset,found.VisualStyle,found.Aspect,crop=Json.Read<CropSpec>(found.Crop),found.Revision},format=found.Aspect,features=Json.Read<QuoteItem[]>(run.Items).Where(x=>x.Feature!=null).Select(x=>x.Feature).ToArray()});
+   var job=Api.Enqueue(d,p,"PREVIEW",run.Id,new{sourceKey=p.MasterAssetKey,clip=new{found.Id,found.StartMs,found.EndMs,found.Title,segments=ReadSegments(found),subtitles=Json.Read<SubtitleDto[]>(found.Subtitles),found.Style,found.CaptionPreset,captionOverrides=ReadCaptionOverrides(found.CaptionOverrides),found.VisualStyle,found.Aspect,crop=Json.Read<CropSpec>(found.Crop),found.Revision},format=found.Aspect,features=Json.Read<QuoteItem[]>(run.Items).Where(x=>x.Feature!=null).Select(x=>x.Feature).ToArray()});
    await d.SaveChangesAsync();await tx.CommitAsync();return Results.Accepted(value:new{jobId=job.Id,revision=found.Revision});
   });
   g.MapPost("/clips/{id:guid}/cover",async(Guid id,CoverDto r,HttpContext h,Database d)=>{
@@ -153,7 +154,7 @@ public static class ProjectEndpoints {
    if(r.AtMs<0||r.AtMs>p.DurationMs)throw new DomainError("INVALID_COVER_TIME");
    if(await d.Jobs.AnyAsync(x=>x.ProjectId==p.Id&&(x.State=="QUEUED"||x.State=="RUNNING")))throw new DomainError("PROJECT_BUSY",409);
    var run=await d.Runs.FindAsync(clip.RunId)??throw new DomainError("NO_ANALYSIS_AVAILABLE",409);
-   var job=Api.Enqueue(d,p,"COVER",run.Id,new{sourceKey=p.MasterAssetKey,clip=new{clip.Id,clip.Revision},atMs=r.AtMs});
+   var job=Api.Enqueue(d,p,"COVER",run.Id,new{sourceKey=p.MasterAssetKey,clip=new{clip.Id,clip.Revision,clip.Aspect,crop=Json.Read<CropSpec>(clip.Crop),clip.VisualStyle},atMs=r.AtMs});
    Api.Audit(d,Api.User(h),"CLIP_COVER_REQUESTED",clip.Id.ToString(),$"Revision {clip.Revision}; atMs={r.AtMs}");
    await d.SaveChangesAsync();await tx.CommitAsync();
    return Results.Accepted(value:new{jobId=job.Id,revision=clip.Revision,atMs=r.AtMs});
@@ -164,7 +165,7 @@ public static class ProjectEndpoints {
    var clip=await d.Clips.SingleOrDefaultAsync(x=>x.Id==r.ClipId&&x.ProjectId==id)??throw new DomainError("NOT_FOUND",404);if(clip.Selection!="SELECTED")throw new DomainError("SELECT_CLIP_FIRST",409);
    var run=await d.Runs.FindAsync(clip.RunId);var config=Json.Read<VideoConfig>(run!.Configuration);if(!(config.Formats??["9:16"]).Contains(r.Format))throw new DomainError("ADDITIONAL_FORMAT_QUOTE_REQUIRED",409);
    var old=await d.Exports.SingleOrDefaultAsync(x=>x.ClipId==clip.Id&&x.Revision==clip.Revision&&x.Format==r.Format);if(old!=null){if(old.State=="FAILED"){var prior=await d.Jobs.FindAsync(old.JobId);prior!.State="QUEUED";prior.LeaseUntil=null;prior.Attempts=0;old.State="QUEUED";d.Outbox.Add(new Outbox{JobId=prior.Id});await d.SaveChangesAsync();await tx.CommitAsync();}return Results.Accepted(value:new{exportId=old.Id});}
-   var job=Api.Enqueue(d,p,"RENDER",run.Id,new{sourceKey=p.MasterAssetKey,clip=new{clip.Id,clip.StartMs,clip.EndMs,clip.Title,segments=ReadSegments(clip),subtitles=Json.Read<SubtitleDto[]>(clip.Subtitles),clip.Style,clip.CaptionPreset,clip.VisualStyle,clip.Aspect,crop=Json.Read<CropSpec>(clip.Crop),clip.Revision},format=r.Format,features=Json.Read<QuoteItem[]>(run.Items).Where(x=>x.Feature!=null).Select(x=>x.Feature).ToArray()});
+   var job=Api.Enqueue(d,p,"RENDER",run.Id,new{sourceKey=p.MasterAssetKey,clip=new{clip.Id,clip.StartMs,clip.EndMs,clip.Title,segments=ReadSegments(clip),subtitles=Json.Read<SubtitleDto[]>(clip.Subtitles),clip.Style,clip.CaptionPreset,captionOverrides=ReadCaptionOverrides(clip.CaptionOverrides),clip.VisualStyle,clip.Aspect,crop=Json.Read<CropSpec>(clip.Crop),clip.Revision},format=r.Format,features=Json.Read<QuoteItem[]>(run.Items).Where(x=>x.Feature!=null).Select(x=>x.Feature).ToArray()});
    var export=new Export{ClipId=clip.Id,ProjectId=id,JobId=job.Id,Revision=clip.Revision,Format=r.Format};d.Exports.Add(export);p.Status="RENDERIZANDO";await d.SaveChangesAsync();await tx.CommitAsync();return Results.Accepted(value:new{exportId=export.Id});
   });
   g.MapGet("/projects/{id:guid}/exports",async(Guid id,HttpContext h,Database d,Cloud c)=>{await Api.Own(d,h,id);var list=await d.Exports.Where(x=>x.ProjectId==id).ToListAsync();return list.Select(x=>new{x.Id,x.ClipId,x.Format,x.Revision,x.State,url=x.Key==null?null:c.Download(x.Key)});});
@@ -221,6 +222,19 @@ public static class ProjectEndpoints {
  static void ValidateEditorStyle(string captionPreset,string visualStyle,string aspect,CropSpec crop){
   if(!CaptionPresets.Contains(captionPreset)||!VisualStyles.Contains(visualStyle)||!Aspects.Contains(aspect))throw new DomainError("INVALID_EDITOR_PRESET");
   if(crop.X<0||crop.Y<0||crop.Width<=0||crop.Height<=0||crop.X+crop.Width>1.000001||crop.Y+crop.Height>1.000001)throw new DomainError("INVALID_CROP");
+ }
+ static CaptionOverridesDto ReadCaptionOverrides(string json){
+  try{
+   var value=Json.Read<CaptionOverridesDto>(string.IsNullOrWhiteSpace(json)?"{}":json);
+   var position=new[]{"top","center","bottom"}.Contains(value.Position,StringComparer.OrdinalIgnoreCase)?value.Position:"bottom";
+   var primary=System.Text.RegularExpressions.Regex.IsMatch(value.PrimaryColor??"", "^#[0-9a-fA-F]{6}$")?value.PrimaryColor:"#ffffff";
+   var highlight=System.Text.RegularExpressions.Regex.IsMatch(value.HighlightColor??"", "^#[0-9a-fA-F]{6}$")?value.HighlightColor:"#ffff00";
+   return new CaptionOverridesDto(value.Scale is >=0.65 and <=1.6?value.Scale:1.0,position,primary,highlight,value.Uppercase,value.WordsPerLine is >=1 and <=8?value.WordsPerLine:4);
+  }catch{return new CaptionOverridesDto();}
+ }
+ static void ValidateCaptionOverrides(CaptionOverridesDto value){
+  if(value.Scale<0.65||value.Scale>1.6||value.WordsPerLine<1||value.WordsPerLine>8||!new[]{"top","center","bottom"}.Contains(value.Position,StringComparer.OrdinalIgnoreCase))throw new DomainError("INVALID_CAPTION_OVERRIDES");
+  if(!System.Text.RegularExpressions.Regex.IsMatch(value.PrimaryColor??"", "^#[0-9a-fA-F]{6}$")||!System.Text.RegularExpressions.Regex.IsMatch(value.HighlightColor??"", "^#[0-9a-fA-F]{6}$"))throw new DomainError("INVALID_CAPTION_OVERRIDES");
  }
  static ClipRevision Snapshot(Clip clip)=>new(){
   ClipId=clip.Id,ProjectId=clip.ProjectId,Number=clip.Revision,Title=clip.Title,Selection=clip.Selection,StartMs=clip.StartMs,EndMs=clip.EndMs,
