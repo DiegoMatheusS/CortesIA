@@ -52,46 +52,38 @@ jobs:
       - run: terraform init -backend=false && terraform validate
         working-directory: cortes-ia-infra/terraform
 
-  migration-baseline-generator:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/feat/ef-migrations-baseline'
+  migrations:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
+    services:
+      postgres:
+        image: postgres:17.6
+        env: {POSTGRES_USER: test, POSTGRES_PASSWORD: test, POSTGRES_DB: cortes_test}
+        ports: ["5432:5432"]
+        options: --health-cmd "pg_isready -U test -d cortes_test" --health-interval 5s --health-retries 10
     steps:
       - uses: actions/checkout@v4
-        with: {fetch-depth: 0}
       - uses: actions/setup-dotnet@v4
         with: {dotnet-version: '10.0.x'}
       - run: dotnet tool restore
       - run: dotnet build cortes-ia-api/Cortes.Api.csproj --configuration Release
-      - name: Generate baseline once
-        shell: bash
-        run: |
-          if ls cortes-ia-api/Migrations/*_SliceFlowBaseline.cs >/dev/null 2>&1; then
-            echo "Baseline already exists."
-          else
-            dotnet ef migrations add SliceFlowBaseline \
-              --project cortes-ia-api/Cortes.Api.csproj \
-              --output-dir Migrations \
-              --no-build \
-              --configuration Release
-            python scripts/finalize_ef_baseline.py
-          fi
+      - name: Apply EF migrations to fresh PostgreSQL
+        run: dotnet ef database update --project cortes-ia-api/Cortes.Api.csproj --no-build --configuration Release
         env:
           ASPNETCORE_ENVIRONMENT: Development
           ConnectionStrings__Database: Host=localhost;Database=cortes_test;Username=test;Password=test
           CPF_HMAC_KEY: 0123456789012345678901234567890123456789
           WORKER_TOKEN: 0123456789012345678901234567890123456789
-      - name: Commit generated baseline
-        shell: bash
-        run: |
-          if git status --porcelain -- cortes-ia-api/Migrations | grep -q .; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add cortes-ia-api/Migrations
-            git diff --cached --check
-            git commit -m "build(db): add generated SliceFlow EF baseline"
-            git push origin HEAD:feat/ef-migrations-baseline
-          else
-            echo "No migration changes to commit."
-          fi
+      - name: Roll back EF migrations to zero
+        run: dotnet ef database update 0 --project cortes-ia-api/Cortes.Api.csproj --no-build --configuration Release
+        env:
+          ASPNETCORE_ENVIRONMENT: Development
+          ConnectionStrings__Database: Host=localhost;Database=cortes_test;Username=test;Password=test
+          CPF_HMAC_KEY: 0123456789012345678901234567890123456789
+          WORKER_TOKEN: 0123456789012345678901234567890123456789
+      - name: Fail on model/migration drift
+        run: dotnet ef migrations has-pending-model-changes --project cortes-ia-api/Cortes.Api.csproj --no-build --configuration Release
+        env:
+          ASPNETCORE_ENVIRONMENT: Development
+          ConnectionStrings__Database: Host=localhost;Database=cortes_test;Username=test;Password=test
+          CPF_HMAC_KEY: 0123456789012345678901234567890123456789
+          WORKER_TOKEN: 0123456789012345678901234567890123456789
