@@ -68,6 +68,19 @@ type Project = {
   durationMs: number;
 };
 
+type ProjectProgress = {
+  active: boolean;
+  job?: {
+    id: string;
+    stage: string;
+    state: string;
+    progressPhase: string;
+    progressPercent: number;
+    error?: string;
+    createdAt: string;
+  } | null;
+};
+
 type Quote = {
   id: string;
   total: number;
@@ -97,6 +110,34 @@ const fallbackCaptionPresets = ['Clean','Bold','Viral','Podcast','Karaoke','Pop'
 const fallbackVisualStyles = ['Cinema','Divertido','Animado','Sombrio','Quente','Frio','Clean','Podcast','Impactante','Viral'];
 const fallbackAspects = ['9:16','4:5','1:1','16:9','original'];
 
+const progressLabels: Record<string,string> = {
+  QUEUED: 'Na fila',
+  STARTING: 'Iniciando',
+  READING_LINK: 'Lendo link',
+  DOWNLOADING_SOURCE: 'Baixando arquivo',
+  DOWNLOADING_LINK: 'Baixando vídeo',
+  SCANNING_SOURCE: 'Verificando arquivo',
+  VALIDATING_SOURCE: 'Validando fonte',
+  VALIDATING_MEDIA: 'Validando vídeo',
+  SOURCE_READY: 'Fonte pronta',
+  PREPARING_AI: 'Preparando IA',
+  NORMALIZING_MEDIA: 'Preparando vídeo',
+  SAVING_MASTER: 'Salvando master',
+  EXTRACTING_AUDIO: 'Extraindo áudio',
+  TRANSCRIBING: 'Transcrevendo',
+  TRANSCRIPT_READY: 'Transcrição pronta',
+  LOADING_TRANSCRIPT: 'Carregando transcrição',
+  SELECTING_CLIPS: 'Buscando melhores momentos',
+  REVIEWING_CLIPS: 'Revisando candidatos',
+  GENERATING_PREVIEWS: 'Gerando prévias',
+  RENDERING_PREVIEW: 'Renderizando prévia',
+  RENDERING_EXPORT: 'Renderizando exportação',
+  BUILDING_BUNDLE: 'Preparando ZIP',
+  UPLOADING_OUTPUT: 'Salvando resultado',
+  FINALIZING: 'Finalizando',
+  DONE: 'Concluído',
+};
+
 function outputDuration(clip: Clip) {
   return clip.segments.reduce((total, segment) => total + segment.endMs - segment.startMs, 0);
 }
@@ -116,6 +157,7 @@ function normalizeClip(clip: Clip): Clip {
 export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
   const {id} = use(params);
   const [project, setProject] = useState<Project>();
+  const [progress, setProgress] = useState<ProjectProgress>();
   const [editorMeta, setEditorMeta] = useState<EditorMeta>();
   const [clips, setClips] = useState<Clip[]>([]);
   const [revisions, setRevisions] = useState<Revision[]>([]);
@@ -160,8 +202,9 @@ export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
 
   async function refresh() {
     try {
-      const [p, meta, rawClips, e, b] = await Promise.all([
+      const [p, jobProgress, meta, rawClips, e, b] = await Promise.all([
         api<Project>('/projects/' + id),
+        api<ProjectProgress>(`/projects/${id}/progress`),
         api<EditorMeta>(`/projects/${id}/editor`),
         api<Clip[]>(`/projects/${id}/clips`),
         api<Export[]>(`/projects/${id}/exports`),
@@ -169,6 +212,7 @@ export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
       ]);
       const normalized = rawClips.map(normalizeClip);
       setProject(p);
+      setProgress(jobProgress);
       setEditorMeta(meta);
       setClips(normalized);
       setExports(e);
@@ -188,6 +232,7 @@ export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
     void refresh();
     const timer = setInterval(() => {
       void api<Project>('/projects/' + id).then(setProject);
+      void api<ProjectProgress>(`/projects/${id}/progress`).then(setProgress);
       void api<Export[]>(`/projects/${id}/exports`).then(setExports);
     }, 5000);
     return () => clearInterval(timer);
@@ -440,6 +485,20 @@ export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
             <button className="secondary" onClick={refresh}>Atualizar</button>
           </div>
         </section>
+
+        {progress?.active && progress.job && (
+          <section className="job-progress-card" aria-live="polite">
+            <div className="job-progress-copy">
+              <div>
+                <p className="eyebrow">PROCESSAMENTO EM ANDAMENTO</p>
+                <strong>{progressLabels[progress.job.progressPhase] ?? progress.job.progressPhase}</strong>
+              </div>
+              <span>{progress.job.progressPercent}%</span>
+            </div>
+            <progress max={100} value={progress.job.progressPercent} />
+            <small>{progress.job.stage} · você pode sair desta página; o processamento continua no servidor.</small>
+          </section>
+        )}
 
         {project?.outcome === 'NO_SUITABLE_CLIPS' && (
           <p className="notice">{friendly('NO_SUITABLE_CLIPS')}</p>
