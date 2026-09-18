@@ -94,6 +94,21 @@ public static class ProjectEndpoints {
    var revisions=await d.ClipRevisions.Where(x=>x.ClipId==id).OrderByDescending(x=>x.Number).ToListAsync();
    return revisions.Select(x=>new{x.Id,x.Number,x.Title,x.Selection,x.StartMs,x.EndMs,segments=Json.Read<RevisionSegment[]>(x.Segments),subtitles=Json.Read<SubtitleDto[]>(x.Subtitles),x.Style,x.CaptionPreset,x.VisualStyle,x.Aspect,crop=Json.Read<CropSpec>(x.Crop),x.CreatedAt});
   });
+  g.MapPost("/clips/{id:guid}/revisions/{number:int}/restore",async(Guid id,int number,HttpContext h,Database d)=>{
+   var clip=await d.Clips.FindAsync(id)??throw new DomainError("NOT_FOUND",404);
+   await using var tx=await d.Database.BeginTransactionAsync();await d.LockProject(clip.ProjectId);await Api.Own(d,h,clip.ProjectId);await d.Entry(clip).ReloadAsync();Api.Version(h,clip.Revision);
+   var source=await d.ClipRevisions.SingleOrDefaultAsync(x=>x.ClipId==id&&x.Number==number)??throw new DomainError("REVISION_NOT_FOUND",404);
+   if(source.Number==clip.Revision)throw new DomainError("REVISION_ALREADY_CURRENT",409);
+   await EnsureCurrentRevision(d,clip);
+   clip.Title=source.Title;clip.Selection=source.Selection;clip.StartMs=source.StartMs;clip.EndMs=source.EndMs;
+   clip.Segments=source.Segments;clip.Subtitles=source.Subtitles;clip.Style=source.Style;clip.CaptionPreset=source.CaptionPreset;clip.CaptionOverrides=source.CaptionOverrides;
+   clip.VisualStyle=source.VisualStyle;clip.VisualOverrides=source.VisualOverrides;clip.Aspect=source.Aspect;clip.Crop=source.Crop;clip.CoverKey=source.CoverKey;
+   clip.Revision++;
+   d.ClipRevisions.Add(Snapshot(clip));
+   Api.Audit(d,Api.User(h),"CLIP_REVISION_RESTORED",clip.Id.ToString(),$"Revision {source.Number} restored as {clip.Revision}");
+   await d.SaveChangesAsync();await tx.CommitAsync();
+   return Results.Ok(new{clip.Revision,restoredFrom=source.Number});
+  });
   g.MapPost("/projects/{id:guid}/clips/manual",async(Guid id,ManualClipDto r,HttpContext h,Database d)=>{
    await using var tx=await d.Database.BeginTransactionAsync();await d.LockProject(id);var p=await Api.Own(d,h,id);
    if(p.MasterAssetKey==null)throw new DomainError("MASTER_EXPIRED",410);
