@@ -4,7 +4,7 @@ Este documento descreve o que existe **no código atual**. Itens ainda não homo
 
 | Fase | Implementado atualmente | Principais pendências |
 |---|---|---|
-| 1 Fundação | API .NET 10/Identity/EF, cadastro, confirmação de e-mail, login/logout/reset, CPF/HMAC, trial único, MFA administrativo, ownership, UI responsiva, **baseline EF versionado** e CI com build .NET/Next | RBAC granular, sessões/step-up E2E, política final de telefone e separação da role DDL/runtime em produção |
+| 1 Fundação | API .NET 10/Identity/EF, cadastro, confirmação de e-mail, login/logout/reset, CPF/HMAC, trial único, **RBAC granular Support/Finance/Security/Admin com MFA**, ownership, UI responsiva, baseline EF versionado e CI com build .NET/Next | Sessões/step-up E2E, política final de telefone e separação da role DDL/runtime em produção |
 | 2 Créditos | Carteira por lotes, comprado/bônus separados, quote discriminada, reserve/capture/refund, ledger, idempotência, ajuste admin e estorno de extra não entregue | Testes ampliados de concorrência/replay, catálogo comercial versionado, combos/promoções e regras comerciais finais |
 | 3 Upload | Multipart S3, formatos/tamanho/duração validados, **limite técnico de até 7 horas**, upload/link, jobs/outbox/SQS, master privado, status e progresso granular até a UI | Retomar/cancelar upload pela interface, limite atual de 5 GB, limites de concorrência por conta, homologação real de YouTube/S3/SQS e políticas comerciais de importação |
 | 4 Agente / IA | Pipeline com **slots independentes por etapa**: transcrição, seleção, segunda revisão e visão. Perfil local usa Faster-Whisper + Ollama, com `qwen3:8b` como padrão separado para seleção/revisão, MediaPipe para visão, JSON estruturado, chunking, validação temporal e redaction básica. | Benchmark ≥50 vídeos, avaliação de qualidade/custo/p95, homologação de outros providers/modelos por etapa, tratamento ampliado de dados incidentais e observabilidade de IA |
@@ -88,7 +88,7 @@ Não abrir o serviço ao público apenas porque os containers e o CI passam; pag
 | Legenda dinâmica | **Implementada.** Timestamps por palavra quando disponíveis e fallback proporcional explícito. |
 | Tracking / reenquadramento | **Implementado**, condicionado a provider de visão habilitado. Ainda falta homologação de qualidade/multi-pessoa. |
 | Pagamentos reais | Estrutura Mercado Pago existe, mas homologação real Pix/cartão, conciliação completa e chargeback ainda estão pendentes. |
-| RBAC granular | Ainda há apenas a role administrativa ampla; Finance/Support/Security separados continuam pendentes. |
+| RBAC granular | **Implementado no backend e painel operacional**: Support, Finance, Security e Admin, todos com MFA; escrita exige step-up recente. Falta ampliar testes E2E de autorização/negação. |
 | Testes C# | Existem e rodam no CI com PostgreSQL isolado; o ambiente de teste exige banco `cortes_test` quando executado manualmente. |
 | OpenAPI | Exposto em desenvolvimento; fora de desenvolvimento permanece restrito a Admin. |
 | Notificações | Central interna, preferências e principais eventos transacionais estão implementados. Ainda faltam sinais reais de login suspeito e homologação do provedor de e-mail de produção. |
