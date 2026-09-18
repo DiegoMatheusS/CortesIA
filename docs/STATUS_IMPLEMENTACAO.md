@@ -70,7 +70,7 @@ Os últimos PRs desses recursos passaram o workflow completo antes do merge.
 
 ## Próximos gates recomendados
 
-1. Testes E2E navegador → API → worker → storage.
+1. Validar e estabilizar o novo gate E2E navegador → API → worker → storage no CI.
 2. Benchmark real de qualidade da IA e tracking.
 3. Reposicionamento visual direto no canvas e edição avançada de capa.
 4. Homologação de pagamento e infraestrutura de produção.
