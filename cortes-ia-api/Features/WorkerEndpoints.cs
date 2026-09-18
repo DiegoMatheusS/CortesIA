@@ -19,7 +19,7 @@ public static class WorkerEndpoints {
    if(p!.DeletedAt!=null||p.Generation!=j.Generation||j.State is "SUCCEEDED" or "FAILED" or "CANCELLED")return Results.Ok(new{disposition="DONE"});
    if(j.LeaseUntil>DateTimeOffset.UtcNow&&j.State=="RUNNING")return Results.Ok(new{disposition="BUSY"});
    j.State="RUNNING";j.Attempts++;j.Fence++;j.LeaseUntil=DateTimeOffset.UtcNow.AddSeconds(120);j.ProgressPhase="STARTING";j.ProgressPercent=Math.Max(1,j.ProgressPercent);await d.SaveChangesAsync();await tx.CommitAsync();
-   return Results.Ok(new{disposition="GRANTED",j.Id,j.Stage,j.Fence,j.ProjectId,j.Generation,p.DurationMs,payload=System.Text.Json.JsonSerializer.Deserialize<object>(j.Payload),outputPrefix=$"projects/{j.ProjectId}/jobs/{j.Id}/{j.Fence}/",maxBytes=await policy.Number("maxBytes",5_000_000_000),maxDurationMs=await policy.Number("maxDurationMs",25_200_000)});
+   return Results.Ok(new{disposition="GRANTED",j.Id,j.Stage,j.Fence,j.ProjectId,j.Generation,p.DurationMs,payload=System.Text.Json.JsonSerializer.Deserialize<object>(j.Payload),outputPrefix=$"projects/{j.ProjectId}/jobs/{j.Id}/{j.Fence}/",maxBytes=await policy.UploadLimit(),maxDurationMs=await policy.Number("maxDurationMs",25_200_000)});
   });
   g.MapPost("/jobs/{id:guid}/heartbeat",async(Guid id,HeartbeatDto r,Database d)=>{
    if(r.Phase!=null&&(string.IsNullOrWhiteSpace(r.Phase)||r.Phase.Length>64))throw new DomainError("INVALID_PROGRESS");
