@@ -21,7 +21,7 @@ export default function Home() {
   return (
     <>
       <nav>
-        <Link className="brand" href="/">cortes<span>ia</span></Link>
+        <Link className="brand" href="/">slice<span>flow</span></Link>
         <div>
           <a href="#recursos">Recursos</a>
           <a href="#como-usar">Como usar</a>
@@ -54,7 +54,7 @@ export default function Home() {
 
         <section id="como-usar" className="content-section tutorial-section">
           <div className="section-intro">
-            <p className="eyebrow">COMO USAR O CORTES IA</p>
+            <p className="eyebrow">COMO USAR O SLICEFLOW</p>
             <h2>Como criar seu primeiro corte</h2>
             <p>Do vídeo longo ao conteúdo pronto em poucos passos.</p>
           </div>
@@ -67,7 +67,7 @@ export default function Home() {
                 </li>
               ))}
             </ol>
-            <div className="tutorial-preview" aria-label="Prévia ilustrativa do editor Cortes IA">
+            <div className="tutorial-preview" aria-label="Prévia ilustrativa do editor SliceFlow">
               <div className="tutorial-player">
                 <span className="preview-person" />
                 <strong>VOCÊ DECIDE<br/><em>O CORTE FINAL.</em></strong>
@@ -143,7 +143,7 @@ export default function Home() {
       </main>
 
       <footer>
-        <span>Cortes IA</span>
+        <span>SliceFlow</span>
         <a href="#recursos">Recursos</a>
         <a href="#como-usar">Como usar</a>
         <a href="#creditos">Créditos</a>

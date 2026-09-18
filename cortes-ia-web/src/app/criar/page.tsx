@@ -3,7 +3,7 @@ import Link from 'next/link';
 import CreateStudio from '@/components/CreateStudio';
 
 export const metadata: Metadata = {
-  title: 'Criar cortes — Cortes IA',
+  title: 'Criar cortes — SliceFlow',
   description: 'Envie um vídeo ou importe do YouTube e transforme conteúdo longo em cortes.',
 };
 
@@ -11,7 +11,7 @@ export default function CreatePage() {
   return (
     <>
       <nav>
-        <Link className="brand" href="/">cortes<span>ia</span></Link>
+        <Link className="brand" href="/">slice<span>flow</span></Link>
         <div>
           <Link href="/#como">Como funciona</Link>
           <Link href="/#recursos">Recursos</Link>
