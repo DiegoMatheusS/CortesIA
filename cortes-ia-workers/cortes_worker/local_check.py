@@ -24,6 +24,16 @@ def main():
         errors.append("FASTER_WHISPER_NOT_INSTALLED")
         print("[erro] faster-whisper não está instalado neste worker")
 
+    if os.getenv("VISION_PROVIDER", "none").lower() == "mediapipe":
+        try:
+            import mediapipe  # noqa: F401
+            from .vision import _model_path
+            model = _model_path()
+            print(f"[ok] MediaPipe instalado; modelo de face: {model}")
+        except Exception as exc:
+            errors.append("VISION_NOT_READY")
+            print(f"[erro] visão local: {getattr(exc, 'code', type(exc).__name__)}")
+
     cache = os.path.expanduser("~/.cache")
     print(f"[info] Cache de modelos: {cache}")
 
@@ -31,7 +41,7 @@ def main():
         print("[falha] Ambiente local de IA incompleto: " + ", ".join(errors))
         sys.exit(1)
 
-    print("[ok] Ambiente local pronto para transcrição + seleção semântica")
+    print("[ok] Ambiente local pronto para transcrição + seleção semântica + visão configurada")
 
 
 if __name__ == "__main__":
