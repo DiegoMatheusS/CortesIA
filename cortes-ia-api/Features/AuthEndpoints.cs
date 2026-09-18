@@ -41,7 +41,9 @@ public static class AuthEndpoints {
    if(u.TwoFactorEnabled){if(string.IsNullOrEmpty(r.MfaCode)||!await users.VerifyTwoFactorTokenAsync(u,TokenOptions.DefaultAuthenticatorProvider,r.MfaCode)){await users.AccessFailedAsync(u);throw new DomainError("MFA_REQUIRED",401);}
     await sign.SignInWithClaimsAsync(u,false,[new Claim("amr","mfa"),new Claim("auth_time",DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString())]);
    }else await sign.SignInWithClaimsAsync(u,false,[new Claim("auth_time",DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString())]);
-   u.LastActive=DateTimeOffset.UtcNow;u.ActivityEpoch++;await users.UpdateAsync(u);return Results.Ok(new{mfaEnrollmentRequired=await users.IsInRoleAsync(u,"Admin")&&!u.TwoFactorEnabled});
+   u.LastActive=DateTimeOffset.UtcNow;u.ActivityEpoch++;await users.UpdateAsync(u);
+   var roles=await users.GetRolesAsync(u);
+   return Results.Ok(new{mfaEnrollmentRequired=StaffRoles.IsStaff(roles)&&!u.TwoFactorEnabled});
   }).RequireRateLimiting("auth");
   app.MapPost("/api/v1/auth/logout",async(SignInManager<User> s)=>{await s.SignOutAsync();return Results.NoContent();}).RequireAuthorization();
   app.MapPost("/api/v1/auth/forgot",async(EmailDto r,UserManager<User> users,Database db,IConfiguration c)=>{
@@ -50,6 +52,19 @@ public static class AuthEndpoints {
   app.MapPost("/api/v1/auth/reset",async(TokenDto r,UserManager<User> users,Database db)=>{var u=await users.FindByEmailAsync(r.Email);if(u==null||string.IsNullOrEmpty(r.Password)||!(await users.ResetPasswordAsync(u,r.Token,r.Password)).Succeeded)throw new DomainError("INVALID_TOKEN");await users.UpdateSecurityStampAsync(u);await NotificationEndpoints.Queue(db,u.Id,"password-changed:"+Guid.NewGuid(),"PASSWORD_CHANGED","SECURITY","Sua senha foi alterada","A senha da sua conta SliceFlow foi alterada. Se não foi você, procure o suporte imediatamente.","REQUIRED");await db.SaveChangesAsync();return Results.Ok();}).RequireRateLimiting("auth");
   app.MapPost("/api/v1/auth/mfa/enroll",async(HttpContext h,UserManager<User> users)=>{var u=(await users.FindByIdAsync(Api.User(h).ToString()))!;if(u.TwoFactorEnabled)throw new DomainError("MFA_ALREADY_ENABLED",409);var recent=long.TryParse(h.User.FindFirstValue("auth_time"),out var at)&&DateTimeOffset.UtcNow.ToUnixTimeSeconds()-at<300;if(!recent)throw new DomainError("STEP_UP_REQUIRED",403);await users.ResetAuthenticatorKeyAsync(u);var key=await users.GetAuthenticatorKeyAsync(u);return Results.Ok(new{key,uri=$"otpauth://totp/SliceFlow:{Uri.EscapeDataString(u.Email!)}?secret={key}&issuer=SliceFlow"});}).RequireAuthorization();
   app.MapPost("/api/v1/auth/mfa/confirm",async(MfaDto r,HttpContext h,UserManager<User> users)=>{var u=(await users.FindByIdAsync(Api.User(h).ToString()))!;if(!await users.VerifyTwoFactorTokenAsync(u,TokenOptions.DefaultAuthenticatorProvider,r.Code))throw new DomainError("INVALID_MFA");await users.SetTwoFactorEnabledAsync(u,true);await users.UpdateSecurityStampAsync(u);return Results.Ok(new{loginAgain=true});}).RequireAuthorization().RequireRateLimiting("auth");
-  app.MapGet("/api/v1/me",async(HttpContext h,Database d,UserManager<User> users)=>{var u=await users.FindByIdAsync(Api.User(h).ToString());return Results.Ok(new{u!.Id,u.Name,u.Email,cpfMasked="***.***.***-"+u.CpfLastTwo,admin=await users.IsInRoleAsync(u,"Admin"),u.TwoFactorEnabled});}).RequireAuthorization();
+  app.MapGet("/api/v1/me",async(HttpContext h,Database d,UserManager<User> users)=>{
+   var u=await users.FindByIdAsync(Api.User(h).ToString());
+   var roles=await users.GetRolesAsync(u!);
+   return Results.Ok(new{
+    u!.Id,u.Name,u.Email,cpfMasked="***.***.***-"+u.CpfLastTwo,
+    roles,
+    admin=roles.Contains(StaffRoles.Admin),
+    staff=StaffRoles.IsStaff(roles),
+    support=roles.Contains(StaffRoles.Support),
+    finance=roles.Contains(StaffRoles.Finance),
+    security=roles.Contains(StaffRoles.Security),
+    u.TwoFactorEnabled
+   });
+  }).RequireAuthorization();
  }
 }
