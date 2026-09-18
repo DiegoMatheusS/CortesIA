@@ -42,7 +42,7 @@ public static class WorkerEndpoints {
   if(j.Fence!=e.Fence||j.State!="RUNNING"||p!.Generation!=j.Generation||p.DeletedAt!=null){await d.SaveChangesAsync();await tx.CommitAsync();return;}
   var run=j.RunId.HasValue?await d.Runs.FindAsync(j.RunId.Value):null;
   if(e.Kind=="failed"){
-   if(e.Retryable&&j.Attempts<3){j.State="QUEUED";j.ProgressPhase="RETRYING";j.LeaseUntil=null;d.Outbox.Add(new Outbox{JobId=j.Id});}
+   if(e.Retryable&&j.Attempts<3){j.State="QUEUED";j.ProgressPhase="RETRYING";j.LeaseUntil=null;d.Outbox.Add(new Outbox{JobId=j.Id});await NotificationEndpoints.Queue(d,p.UserId,$"job-retry:{j.Id}","PROCESSING_RETRY","PROCESSING","Problema temporário no processamento","Detectamos um problema temporário e uma nova tentativa será feita automaticamente. Essa tentativa não cria uma nova cobrança.","IN_APP_ONLY");}
    else{
     j.State="FAILED";j.ProgressPhase="FAILED";j.Error=e.Error??"SYSTEM_FAILURE";j.LeaseUntil=null;
     if(j.Stage is "PREVIEW" or "COVER" or "BUNDLE"){
@@ -52,6 +52,8 @@ public static class WorkerEndpoints {
      if(j.Stage=="RENDER"){var ex=await d.Exports.SingleAsync(x=>x.JobId==j.Id);ex.State="FAILED";}
      else if(run!=null&&run.FinancialState=="RESERVED"){await wallet.Refund(run,"ALL",run.Total-run.Refunded,"Falha antes de previews úteis");run.Outcome=p.Outcome;}
     }
+    if(e.Outcome=="SOURCE_RESTRICTED")await NotificationEndpoints.Queue(d,p.UserId,$"source-restricted:{j.Id}","SOURCE_RESTRICTED","PROCESSING","Fonte bloqueada ou indisponível","Não foi possível acessar essa fonte. Nenhuma nova cobrança será feita por esta tentativa.","DEFAULT_ON");
+    else await NotificationEndpoints.Queue(d,p.UserId,$"job-failed:{j.Id}","PROCESSING_FAILED","PROCESSING","Processamento com problema","O processamento não pôde ser concluído após as tentativas automáticas. Repetir o mesmo job não gera cobrança adicional.","DEFAULT_ON");
    }
   }else if(e.Kind=="succeeded"){
    var prefix=$"projects/{j.ProjectId}/jobs/{j.Id}/{j.Fence}/";
@@ -63,13 +65,14 @@ public static class WorkerEndpoints {
    if(j.Stage is "INGEST" or "LINK_METADATA"){
     if(e.DurationMs<=0||e.DurationMs>25_200_000)throw new DomainError("INVALID_DURATION");p.DurationMs=e.DurationMs;p.Status="RECEBIDO";
     var master=(e.Outputs??[]).FirstOrDefault(x=>x.Kind=="WORKING_MASTER");if(master!=null)p.MasterAssetKey=master.Key;
+    if(j.Stage=="INGEST")await NotificationEndpoints.Queue(d,p.UserId,$"video-received:{p.Id}","VIDEO_RECEIVED","PROCESSING","Vídeo recebido",$"Seu vídeo foi validado e entrou no fluxo do SliceFlow. Duração: {TimeSpan.FromMilliseconds(e.DurationMs):hh\:mm\:ss}.",e.DurationMs>=5_400_000?"DEFAULT_ON":"IN_APP_ONLY");
    }else if(j.Stage is "PROCESS" or "ALTERNATIVES"){
     if(run==null)throw new InvalidOperationException("Run missing");
     var clips=e.Clips??[];var config=Json.Read<VideoConfig>(run.Configuration);
     if(clips.Length>config.Quantity||clips.Any(c=>c.StartMs<0||c.EndMs<=c.StartMs||c.EndMs>p.DurationMs||!c.PreviewKey.StartsWith(prefix,StringComparison.Ordinal)||(c.CoverKey!=null&&!c.CoverKey.StartsWith(prefix,StringComparison.Ordinal))||!(e.Outputs??[]).Any(o=>o.Key==c.PreviewKey)||(c.CoverKey!=null&&!(e.Outputs??[]).Any(o=>o.Key==c.CoverKey))))throw new DomainError("INVALID_CANDIDATES");
     var master=(e.Outputs??[]).FirstOrDefault(x=>x.Kind=="WORKING_MASTER");if(master!=null)p.MasterAssetKey=master.Key;
     if(clips.Length==0&&j.Stage=="ALTERNATIVES"){p.Status="AGUARDANDO_REVISAO";}
-    else if(clips.Length==0){p.FirstProcessedAt??=DateTimeOffset.UtcNow;p.Outcome="NO_SUITABLE_CLIPS";p.Status="AGUARDANDO_REVISAO";run.Outcome=p.Outcome;await wallet.Refund(run,"ALL",run.Total-run.Refunded,"Nenhum trecho adequado encontrado");}
+    else if(clips.Length==0){p.FirstProcessedAt??=DateTimeOffset.UtcNow;p.Outcome="NO_SUITABLE_CLIPS";p.Status="AGUARDANDO_REVISAO";run.Outcome=p.Outcome;await wallet.Refund(run,"ALL",run.Total-run.Refunded,"Nenhum trecho adequado encontrado");await NotificationEndpoints.Queue(d,p.UserId,$"no-clips:{run.Id}","NO_SUITABLE_CLIPS","PROCESSING","Nenhum bom trecho encontrado","A análise terminou, mas não encontramos cortes com qualidade suficiente. Os créditos aplicáveis foram devolvidos.","DEFAULT_ON");}
     else{
      foreach(var candidate in clips){
       var aspect=(config.Formats??new[]{"9:16"}).FirstOrDefault()??"9:16";
@@ -78,7 +81,7 @@ public static class WorkerEndpoints {
      }
      await wallet.Capture(run);p.Status="AGUARDANDO_REVISAO";p.Outcome="SUCCESS";run.Outcome="SUCCESS";p.FirstProcessedAt??=DateTimeOffset.UtcNow;
      foreach(var feature in (e.FailedFeatures??[]).Distinct()){var item=Json.Read<QuoteItem[]>(run.Items).SingleOrDefault(x=>x.Feature==feature);if(item!=null)await wallet.Refund(run,item.Code,item.Credits,"Extra não entregue em nenhum output");}
-     if(!await d.Notifications.AnyAsync(x=>x.Dedupe=="ready:"+run.Id))d.Notifications.Add(new Notification{UserId=p.UserId,Dedupe="ready:"+run.Id,Subject="Suas prévias estão prontas",Body="Acesse o projeto para revisar e escolher os cortes finais."});
+     await NotificationEndpoints.Queue(d,p.UserId,"ready:"+run.Id,"PREVIEWS_READY","PROCESSING","Seus cortes estão prontos para revisar","Encontramos seus melhores momentos. Revise os cortes, legendas, estilo e enquadramento antes de finalizar.","DEFAULT_ON");
     }
    }else if(j.Stage=="PREVIEW"){
     var payload=Json.Read<PreviewPayload>(j.Payload);var output=(e.Outputs??[]).Single(x=>x.Kind=="PREVIEW");
@@ -96,6 +99,9 @@ public static class WorkerEndpoints {
    }else if(j.Stage=="RENDER"){
     var ex=await d.Exports.SingleAsync(x=>x.JobId==j.Id);var output=(e.Outputs??[]).Single(x=>x.Kind=="FINAL_EXPORT");ex.Key=output.Key;ex.State="SUCCEEDED";
     p.Status=await d.Exports.AnyAsync(x=>x.ProjectId==p.Id&&x.Id!=ex.Id&&x.State!="SUCCEEDED")?"RENDERIZANDO":"PRONTO";
+    if(p.Status=="PRONTO")await NotificationEndpoints.Queue(d,p.UserId,$"exports-ready:{p.Id}:{p.Version}","FINAL_EXPORTS_READY","PROCESSING","Seus vídeos estão prontos para baixar","As renderizações finais concluíram. Abra o projeto para baixar seus vídeos.","DEFAULT_ON");
+   }else if(j.Stage=="BUNDLE"){
+    await NotificationEndpoints.Queue(d,p.UserId,$"bundle-ready:{j.Id}","ZIP_READY","PROCESSING","Seu ZIP está pronto","O pacote com suas exportações terminou de ser gerado e já pode ser baixado.","DEFAULT_ON");
    }
    j.State="SUCCEEDED";j.LeaseUntil=null;j.ProgressPhase="DONE";j.ProgressPercent=100;
   }else throw new DomainError("INVALID_EVENT_KIND");
