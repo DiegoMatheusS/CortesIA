@@ -10,7 +10,7 @@ def execute(task):
     if op=='normalize':meta=media.probe(source,plan['max_bytes'],plan['max_duration_ms']);media.normalize(source,out,meta);return meta
     if op=='audio':media.audio(source,task/'output.wav');return {}
     if op=='render':return media.render(source,out,**plan['settings'])
-    if op=='cover':media.cover(source,task/'output.jpg',plan.get('at_ms',0));return {}
+    if op=='cover':media.cover(source,task/'output.jpg',plan.get('at_ms',0),aspect=plan.get('aspect','original'),crop=plan.get('crop'),visual_style=plan.get('visual_style','Cinema'));return {}
     raise ProcessingError('UNKNOWN_MEDIA_OPERATION')
 def main():
     ROOT.mkdir(parents=True,exist_ok=True)
