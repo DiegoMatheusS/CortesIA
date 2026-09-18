@@ -190,6 +190,17 @@ export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
   const [covering, setCovering] = useState<string | null>(null);
   const [coverAt, setCoverAt] = useState(0);
   const coverVideoRef = useRef<HTMLVideoElement>(null);
+  const [reframeMode, setReframeMode] = useState(false);
+  const [reframeAspect, setReframeAspect] = useState(16 / 9);
+  const reframeFrameRef = useRef<HTMLDivElement>(null);
+  const reframeVideoRef = useRef<HTMLVideoElement>(null);
+  const cropGesture = useRef<{
+    mode: 'move' | 'resize';
+    startX: number;
+    startY: number;
+    crop: Crop;
+    clipId: string;
+  } | null>(null);
 
   const editorClip = useMemo(
     () => clips.find(clip => clip.id === editorClipId),
@@ -258,8 +269,82 @@ export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
   }, [editorClipId]);
 
   useEffect(() => {
+    if (!reframeMode || !editorClip || !reframeVideoRef.current) return;
+    const target = Math.max(0, editorClip.startMs / 1000);
+    const video = reframeVideoRef.current;
+    const seek = () => {
+      if (Number.isFinite(target)) video.currentTime = target;
+    };
+    if (video.readyState >= 1) seek();
+    else video.addEventListener('loadedmetadata', seek, {once: true});
+    return () => video.removeEventListener('loadedmetadata', seek);
+  }, [reframeMode, editorClipId]);
+
+  useEffect(() => {
     setQuote(undefined);
   }, [quantity, durationMode, features, formats, modality]);
+
+  function clamp(value: number, min: number, max: number) {
+    return Math.min(max, Math.max(min, value));
+  }
+
+  function beginCropGesture(event: React.PointerEvent, mode: 'move' | 'resize') {
+    if (!editorClip || !reframeFrameRef.current) return;
+    event.preventDefault();
+    event.stopPropagation();
+
+    const current = structuredClone(editorClip);
+    setHistory(old => ({
+      ...old,
+      [editorClip.id]: [...(old[editorClip.id] ?? []), current].slice(-30),
+    }));
+    setRedo(old => ({...old, [editorClip.id]: []}));
+
+    cropGesture.current = {
+      mode,
+      startX: event.clientX,
+      startY: event.clientY,
+      crop: {...editorClip.crop},
+      clipId: editorClip.id,
+    };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  }
+
+  function moveCropGesture(event: React.PointerEvent) {
+    const gesture = cropGesture.current;
+    const frame = reframeFrameRef.current;
+    if (!gesture || !frame) return;
+
+    const rect = frame.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+
+    const dx = (event.clientX - gesture.startX) / rect.width;
+    const dy = (event.clientY - gesture.startY) / rect.height;
+    const minSize = .08;
+
+    let crop = {...gesture.crop};
+    if (gesture.mode === 'move') {
+      crop.x = clamp(gesture.crop.x + dx, 0, 1 - gesture.crop.width);
+      crop.y = clamp(gesture.crop.y + dy, 0, 1 - gesture.crop.height);
+    } else {
+      crop.width = clamp(gesture.crop.width + dx, minSize, 1 - gesture.crop.x);
+      crop.height = clamp(gesture.crop.height + dy, minSize, 1 - gesture.crop.y);
+    }
+
+    setClips(old => old.map(clip => clip.id === gesture.clipId ? {...clip, crop} : clip));
+  }
+
+  function endCropGesture(event: React.PointerEvent) {
+    if (!cropGesture.current) return;
+    cropGesture.current = null;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+  }
+
+  function resetCrop(clip: Clip) {
+    patchClip(clip.id, {crop: {x: 0, y: 0, width: 1, height: 1}});
+  }
 
   async function calculate() {
     setBusy(true);
@@ -795,11 +880,53 @@ export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
                 </div>
 
                 <div className="editor-stage-grid">
-                  <div className={`editor-video mood-${editorClip.visualStyle.toLowerCase()}`}>
-                    {editorClip.preview
+                  <div className={`editor-video mood-${editorClip.visualStyle.toLowerCase()} ${reframeMode ? 'reframe-active' : ''}`}>
+                    {reframeMode && editorMeta?.masterUrl ? (
+                      <div
+                        className="reframe-source"
+                        ref={reframeFrameRef}
+                        style={{aspectRatio: String(reframeAspect)}}
+                        onPointerMove={moveCropGesture}
+                        onPointerUp={endCropGesture}
+                        onPointerCancel={endCropGesture}
+                      >
+                        <video
+                          ref={reframeVideoRef}
+                          preload="metadata"
+                          muted
+                          playsInline
+                          src={editorMeta.masterUrl}
+                          onLoadedMetadata={event => {
+                            const {videoWidth, videoHeight} = event.currentTarget;
+                            if (videoWidth > 0 && videoHeight > 0) setReframeAspect(videoWidth / videoHeight);
+                          }}
+                        />
+                        <div className="reframe-shade" aria-hidden="true" />
+                        <div
+                          className="reframe-selection"
+                          role="img"
+                          aria-label="Área de enquadramento. Arraste para reposicionar."
+                          style={{
+                            left: `${editorClip.crop.x * 100}%`,
+                            top: `${editorClip.crop.y * 100}%`,
+                            width: `${editorClip.crop.width * 100}%`,
+                            height: `${editorClip.crop.height * 100}%`,
+                          }}
+                          onPointerDown={event => beginCropGesture(event, 'move')}
+                        >
+                          <span>Arraste para reposicionar</span>
+                          <button
+                            type="button"
+                            className="reframe-resize-handle"
+                            aria-label="Redimensionar área de enquadramento"
+                            onPointerDown={event => beginCropGesture(event, 'resize')}
+                          />
+                        </div>
+                      </div>
+                    ) : editorClip.preview
                       ? <video controls preload="metadata" src={editorClip.preview} poster={editorClip.cover} />
                       : <div className="editor-placeholder"><span className="preview-person" /><strong>Prévia do corte</strong></div>}
-                    {editorClip.style !== 'none' && (
+                    {!reframeMode && editorClip.style !== 'none' && (
                       <div className={`editor-caption-preview caption-preview-${editorClip.captionPreset.toLowerCase().replace(/\s+/g, '-')}`}>
                         A IA cria. <b>Você ajusta.</b>
                       </div>
@@ -813,22 +940,47 @@ export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
                     <label>Formato<select value={exportFormat} onChange={event => {setExportFormat(event.target.value);patchClip(editorClip.id, {aspect: event.target.value});}}>{aspects.map(format => <option key={format}>{format}</option>)}</select></label>
 
                     <fieldset className="crop-fields">
-                      <legend>Crop manual</legend>
-                      {(['x','y','width','height'] as const).map(field => (
-                        <label key={field}>
-                          {field.toUpperCase()}
-                          <input
-                            type="number"
-                            min={field === 'width' || field === 'height' ? 0.01 : 0}
-                            max={1}
-                            step=".01"
-                            value={editorClip.crop[field]}
-                            onChange={event => patchClip(editorClip.id, {
-                              crop: {...editorClip.crop, [field]: Number(event.target.value)},
-                            })}
-                          />
-                        </label>
-                      ))}
+                      <legend>Enquadramento manual</legend>
+                      <div className="reframe-actions">
+                        <button
+                          type="button"
+                          className={reframeMode ? 'active' : 'secondary'}
+                          disabled={!editorMeta?.masterUrl}
+                          onClick={() => setReframeMode(value => !value)}
+                        >
+                          {reframeMode ? '✓ Reposicionando no vídeo' : 'Reposicionar no vídeo'}
+                        </button>
+                        <button type="button" className="secondary" onClick={() => resetCrop(editorClip)}>
+                          Usar quadro inteiro
+                        </button>
+                      </div>
+                      {reframeMode && <small>Arraste a área no master. Use o ponto no canto inferior direito para redimensionar.</small>}
+                      <details className="crop-advanced">
+                        <summary>Valores avançados</summary>
+                        <div className="crop-fields-grid">
+                          {(['x','y','width','height'] as const).map(field => (
+                            <label key={field}>
+                              {field.toUpperCase()}
+                              <input
+                                type="number"
+                                min={field === 'width' || field === 'height' ? 0.08 : 0}
+                                max={1}
+                                step=".01"
+                                value={editorClip.crop[field]}
+                                onChange={event => {
+                                  const raw = Number(event.target.value);
+                                  const next = {...editorClip.crop};
+                                  if (field === 'width') next.width = clamp(raw, .08, 1 - next.x);
+                                  else if (field === 'height') next.height = clamp(raw, .08, 1 - next.y);
+                                  else if (field === 'x') next.x = clamp(raw, 0, 1 - next.width);
+                                  else next.y = clamp(raw, 0, 1 - next.height);
+                                  patchClip(editorClip.id, {crop: next});
+                                }}
+                              />
+                            </label>
+                          ))}
+                        </div>
+                      </details>
                     </fieldset>
                   </aside>
                 </div>
