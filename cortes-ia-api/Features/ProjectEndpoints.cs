@@ -113,6 +113,15 @@ public static class ProjectEndpoints {
    clip.Title=r.Title.Trim();clip.StartMs=r.StartMs;clip.EndMs=r.EndMs;clip.Selection=r.Selection;clip.Segments=Json.Write(new[]{new RevisionSegment(r.StartMs,r.EndMs)});clip.Subtitles=Json.Write(r.Subtitles);clip.Style=r.Style;clip.Revision++;d.ClipRevisions.Add(Snapshot(clip));
    await d.SaveChangesAsync();await tx.CommitAsync();return Results.Ok(new{clip.Revision});
   });
+  g.MapPost("/clips/{id:guid}/preview",async(Guid id,HttpContext h,Database d)=>{
+   var found=await d.Clips.FindAsync(id)??throw new DomainError("NOT_FOUND",404);
+   await using var tx=await d.Database.BeginTransactionAsync();await d.LockProject(found.ProjectId);var p=await Api.Own(d,h,found.ProjectId);await d.Entry(found).ReloadAsync();
+   if(p.MasterAssetKey==null)throw new DomainError("MASTER_EXPIRED",410);
+   if(await d.Jobs.AnyAsync(x=>x.ProjectId==p.Id&&(x.State=="QUEUED"||x.State=="RUNNING")))throw new DomainError("PROJECT_BUSY",409);
+   var run=await d.Runs.FindAsync(found.RunId)??throw new DomainError("NO_ANALYSIS_AVAILABLE",409);
+   var job=Api.Enqueue(d,p,"PREVIEW",run.Id,new{sourceKey=p.MasterAssetKey,clip=new{found.Id,found.StartMs,found.EndMs,found.Title,segments=ReadSegments(found),subtitles=Json.Read<SubtitleDto[]>(found.Subtitles),found.Style,found.CaptionPreset,found.VisualStyle,found.Aspect,crop=Json.Read<CropSpec>(found.Crop),found.Revision},format=found.Aspect,features=Json.Read<QuoteItem[]>(run.Items).Where(x=>x.Feature!=null).Select(x=>x.Feature).ToArray()});
+   await d.SaveChangesAsync();await tx.CommitAsync();return Results.Accepted(value:new{jobId=job.Id,revision=found.Revision});
+  });
   g.MapPost("/projects/{id:guid}/exports",async(Guid id,ExportDto r,HttpContext h,Database d)=>{
    await using var tx=await d.Database.BeginTransactionAsync();await d.LockProject(id);var p=await Api.Own(d,h,id);
    if(p.MasterAssetKey==null)throw new DomainError("MASTER_EXPIRED",410);
