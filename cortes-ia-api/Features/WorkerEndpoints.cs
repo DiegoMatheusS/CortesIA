@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
 using System.Text;
 namespace Cortes;
-public record HeartbeatDto(int Fence);
+public record HeartbeatDto(int Fence,string? Phase=null,int? Progress=null);
 public record OutputDto(string Key,string Kind,long Size);
 public record CandidateDto(string Title,string Reason,long StartMs,long EndMs,string PreviewKey,string? CoverKey,SubtitleDto[] Subtitles);
 public record PreviewClipRef(Guid Id,int Revision);
@@ -16,12 +16,17 @@ public static class WorkerEndpoints {
    var p=await d.Projects.FindAsync(j.ProjectId);
    if(p!.DeletedAt!=null||p.Generation!=j.Generation||j.State is "SUCCEEDED" or "FAILED" or "CANCELLED")return Results.Ok(new{disposition="DONE"});
    if(j.LeaseUntil>DateTimeOffset.UtcNow&&j.State=="RUNNING")return Results.Ok(new{disposition="BUSY"});
-   j.State="RUNNING";j.Attempts++;j.Fence++;j.LeaseUntil=DateTimeOffset.UtcNow.AddSeconds(120);await d.SaveChangesAsync();await tx.CommitAsync();
+   j.State="RUNNING";j.Attempts++;j.Fence++;j.LeaseUntil=DateTimeOffset.UtcNow.AddSeconds(120);j.ProgressPhase="STARTING";j.ProgressPercent=Math.Max(1,j.ProgressPercent);await d.SaveChangesAsync();await tx.CommitAsync();
    return Results.Ok(new{disposition="GRANTED",j.Id,j.Stage,j.Fence,j.ProjectId,j.Generation,p.DurationMs,payload=System.Text.Json.JsonSerializer.Deserialize<object>(j.Payload),outputPrefix=$"projects/{j.ProjectId}/jobs/{j.Id}/{j.Fence}/",maxBytes=await policy.Number("maxBytes",5_000_000_000),maxDurationMs=await policy.Number("maxDurationMs",10_800_000)});
   });
   g.MapPost("/jobs/{id:guid}/heartbeat",async(Guid id,HeartbeatDto r,Database d)=>{
-   var n=await d.Jobs.Where(x=>x.Id==id&&x.Fence==r.Fence&&x.State=="RUNNING"&&x.LeaseUntil>DateTimeOffset.UtcNow).ExecuteUpdateAsync(x=>x.SetProperty(y=>y.LeaseUntil,DateTimeOffset.UtcNow.AddSeconds(120)));
-   if(n!=1)throw new DomainError("LEASE_LOST",409);return Results.Ok();
+   if(r.Phase!=null&&(string.IsNullOrWhiteSpace(r.Phase)||r.Phase.Length>64))throw new DomainError("INVALID_PROGRESS");
+   if(r.Progress is <0 or >100)throw new DomainError("INVALID_PROGRESS");
+   var job=await d.Jobs.SingleOrDefaultAsync(x=>x.Id==id&&x.Fence==r.Fence&&x.State=="RUNNING"&&x.LeaseUntil>DateTimeOffset.UtcNow)??throw new DomainError("LEASE_LOST",409);
+   job.LeaseUntil=DateTimeOffset.UtcNow.AddSeconds(120);
+   if(r.Phase!=null)job.ProgressPhase=r.Phase.Trim().ToUpperInvariant();
+   if(r.Progress.HasValue)job.ProgressPercent=r.Progress.Value;
+   await d.SaveChangesAsync();return Results.Ok();
   });
  }
  public static async Task Apply(WorkerEvent e,Database d,WalletService wallet,Cloud cloud){
@@ -77,7 +82,7 @@ public static class WorkerEndpoints {
     var ex=await d.Exports.SingleAsync(x=>x.JobId==j.Id);var output=(e.Outputs??[]).Single(x=>x.Kind=="FINAL_EXPORT");ex.Key=output.Key;ex.State="SUCCEEDED";
     p.Status=await d.Exports.AnyAsync(x=>x.ProjectId==p.Id&&x.Id!=ex.Id&&x.State!="SUCCEEDED")?"RENDERIZANDO":"PRONTO";
    }
-   j.State="SUCCEEDED";j.LeaseUntil=null;
+   j.State="SUCCEEDED";j.LeaseUntil=null;j.ProgressPhase="DONE";j.ProgressPercent=100;
   }else throw new DomainError("INVALID_EVENT_KIND");
   await d.SaveChangesAsync();await tx.CommitAsync();
  }
