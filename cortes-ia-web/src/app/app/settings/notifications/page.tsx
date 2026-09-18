@@ -69,9 +69,9 @@ export default function NotificationSettingsPage() {
             <label><input type="checkbox" checked={prefs?.support ?? true} onChange={() => toggle('support')}/><span><b>Suporte</b><small>Nova resposta e chamado resolvido.</small></span></label>
             <label><input type="checkbox" checked={prefs?.lowBalance ?? false} onChange={() => toggle('lowBalance')}/><span><b>Saldo baixo</b><small>Aviso opcional quando o saldo disponível cair abaixo de 10 créditos.</small></span></label>
             <label><input type="checkbox" checked={prefs?.marketing ?? false} onChange={() => toggle('marketing')}/><span><b>Novidades e promoções</b><small>Desligado por padrão.</small></span></label>
-            <label className="required"><input type="checkbox" checked readOnly/><span><b>Segurança</b><small>Obrigatório: confirmação, recuperação e alterações sensíveis.</small></span></label>
-            <label className="required"><input type="checkbox" checked readOnly/><span><b>Pagamentos e créditos importantes</b><small>Obrigatório: aprovação, recusa, devolução, reembolso e chargeback.</small></span></label>
-            <label className="required"><input type="checkbox" checked readOnly/><span><b>Armazenamento</b><small>Obrigatório: avisos 105/115/119 dias e exclusão dos arquivos.</small></span></label>
+            <label className="required"><input type="checkbox" checked disabled/><span><b>Segurança</b><small>Obrigatório: confirmação, recuperação e alterações sensíveis.</small></span></label>
+            <label className="required"><input type="checkbox" checked disabled/><span><b>Pagamentos e créditos importantes</b><small>Obrigatório: aprovação, recusa, devolução, reembolso e chargeback.</small></span></label>
+            <label className="required"><input type="checkbox" checked disabled/><span><b>Armazenamento</b><small>Obrigatório: avisos 105/115/119 dias e exclusão dos arquivos.</small></span></label>
           </div>
 
           <button disabled={!prefs || busy} onClick={() => void save()}>{busy?'Salvando…':'Salvar preferências'}</button>
