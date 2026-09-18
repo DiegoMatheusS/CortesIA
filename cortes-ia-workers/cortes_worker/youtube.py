@@ -52,7 +52,7 @@ def metadata(url, max_bytes=None, max_duration_ms=None):
         "proxy": "",
         # Prefer one direct HTTPS A/V stream so the secure pinned downloader
         # does not need to merge arbitrary remote streams.
-        "format": "best[protocol^=http][vcodec!=none][acodec!=none][height<=1080]",
+        "format": "best[protocol=https][vcodec!=none][acodec!=none][height<=1080]",
     }
 
     with youtube_dns_guard():
