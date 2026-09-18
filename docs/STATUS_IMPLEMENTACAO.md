@@ -9,7 +9,7 @@ Este documento descreve o que existe **no código atual**. Itens ainda não homo
 | 3 Upload | Multipart S3, formatos/tamanho/duração validados, upload/link, jobs/outbox/SQS, master privado, status e progresso granular até a UI | Retomar/cancelar upload pela interface, limites de concorrência por conta, homologação real de YouTube/S3/SQS e políticas comerciais de importação |
 | 4 Agente / IA | Perfil local real Faster-Whisper → Ollama `qwen3:8b`, JSON estruturado, chunking, segunda revisão, validação temporal, redaction básica e fallback fixture de desenvolvimento. Integração cloud timestamped preparada com `whisper-1` | Benchmark ≥50 vídeos, avaliação de qualidade/custo/p95, homologação dos providers cloud, tratamento ampliado de dados incidentais e observabilidade de IA |
 | 5 Vídeo | Working master, FFmpeg offline, 9:16/4:5/1:1/16:9/original, segmentos concatenáveis, legenda simples, **legenda dinâmica por palavra**, zoom, blur, capa automática, moods visuais, crop manual, **reenquadramento inteligente com MediaPipe**, previews e ZIP | Golden corpus de codecs/qualidade/performance, empacotar/homologar modelo de visão para produção, melhorar tracking multi-pessoa/cortes complexos e edição avançada de capa |
-| 6 Editor | Editor short-form, corte manual, timeline por segmentos, dividir/remover trecho, revisão não destrutiva, desfazer/refazer local, edição de texto/sincronismo, presets de legenda, estilos visuais, crop, histórico, **restauração de revisão como nova revisão**, preview regenerável/versionado e export por revisão | Edição/seleção de capa, reposicionamento visual direto sobre o canvas, quote para operações pesadas adicionais e testes E2E completos |
+| 6 Editor | Editor short-form, corte manual, timeline por segmentos, dividir/remover trecho, revisão não destrutiva, desfazer/refazer local, edição de texto/sincronismo, presets de legenda, estilos visuais, crop, histórico, **restauração de revisão como nova revisão**, **seleção de capa a partir de frame real do master**, preview regenerável/versionado e export por revisão | Reposicionamento visual direto sobre o canvas, edição avançada da capa, quote para operações pesadas adicionais e testes E2E completos |
 | 7 Pagamentos | Estrutura de checkout Mercado Pago, webhook assinado, grants/bônus e modo local fictício | Homologação real Pix/cartão, conciliação sem webhook, estorno monetário/chargeback e aprovação de preços/contrato |
 | 8 Segurança | Ownership, CSRF/MFA, HMAC de CPF, SSRF/DNS, storage privado, audit, adapter antivírus, scans CI, worker token, fencing/leases e validações server-side | Pentest/ASVS, rate limit distribuído, IAM/mTLS, rotação de secrets, ClamAV para arquivos grandes, exclusão completa de conta e testes de retenção/restore |
 | 9 Produção | Dockerfiles/Compose, modo local leve, modo local IA real, Terraform base, CI com backend/web/workers/security/Terraform e runbooks iniciais | ECS/services finais, domínio/TLS/WAF, SES, IAM mínimo, observabilidade completa, migrations/rollback, restore/RPO/RTO e smoke de produção |
@@ -70,10 +70,10 @@ Os últimos PRs desses recursos passaram o workflow completo antes do merge.
 
 ## Próximos gates recomendados
 
-1. Seleção/edição de capa a partir do master.
-2. Migrations EF versionadas e baseline de banco.
-3. Testes E2E navegador → API → worker → storage.
-4. Benchmark real de qualidade da IA e tracking.
+1. Migrations EF versionadas e baseline de banco.
+2. Testes E2E navegador → API → worker → storage.
+3. Benchmark real de qualidade da IA e tracking.
+4. Reposicionamento visual direto no canvas e edição avançada de capa.
 5. Homologação de pagamento e infraestrutura de produção.
 
 Não abrir o serviço ao público apenas porque os containers e o CI passam; pagamentos, migrations, políticas jurídicas e operação de produção ainda exigem homologação.
