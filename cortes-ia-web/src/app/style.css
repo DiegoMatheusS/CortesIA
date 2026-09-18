@@ -176,3 +176,27 @@ html{scroll-behavior:smooth}
  .phone-pin,.drawer-pin{position:relative;min-height:100svh}
  .phone-device,.drawer-story .drawer-scene,.drawer-story .drawer-front{transform:none!important}
 }
+
+
+/* Interactive hero fluid background */
+.hero-fluid{--fluid-x:0px;--fluid-y:0px;--fluid-rx:0deg;--fluid-ry:0deg;position:absolute;inset:-12%;overflow:hidden;pointer-events:none;perspective:900px;z-index:0}
+.fluid-depth{position:absolute;inset:8%;border-radius:50%;background:
+ radial-gradient(circle at 35% 42%,#2d73ff26,transparent 24%),
+ radial-gradient(circle at 68% 54%,#974dff24,transparent 28%),
+ radial-gradient(circle at 50% 72%,#3ce7e11a,transparent 24%);
+ filter:blur(28px);transform:translate3d(var(--fluid-x),var(--fluid-y),0) rotateX(var(--fluid-rx)) rotateY(var(--fluid-ry));transition:transform .22s ease-out}
+.fluid-wave{position:absolute;left:-10%;right:-10%;height:58%;border-radius:48%;transform-origin:center;mix-blend-mode:screen;opacity:.62}
+.fluid-wave-a{top:21%;background:
+ repeating-radial-gradient(ellipse at 50% 70%,#90a9ff12 0 2px,transparent 3px 23px),
+ radial-gradient(ellipse at 54% 62%,#4d5fff2c,transparent 52%);
+ transform:translate3d(calc(var(--fluid-x)*.55),calc(var(--fluid-y)*.5),0) rotateX(calc(54deg + var(--fluid-rx))) rotateZ(-4deg) scale(1.13);animation:fluidDriftA 15s ease-in-out infinite alternate}
+.fluid-wave-b{top:35%;background:
+ repeating-radial-gradient(ellipse at 58% 30%,#77f4ff0e 0 2px,transparent 4px 31px),
+ radial-gradient(ellipse at 42% 54%,#9f63ff20,transparent 48%);
+ transform:translate3d(calc(var(--fluid-x)*-.35),calc(var(--fluid-y)*-.35),0) rotateX(calc(58deg + var(--fluid-rx))) rotateZ(5deg) scale(1.06);animation:fluidDriftB 19s ease-in-out infinite alternate}
+.fluid-shine{position:absolute;width:42%;height:42%;left:29%;top:30%;border-radius:50%;background:radial-gradient(circle,#8bb8ff17,transparent 68%);filter:blur(12px);transform:translate3d(calc(var(--fluid-x)*1.4),calc(var(--fluid-y)*1.2),0);transition:transform .16s ease-out}
+.fluid-grain{position:absolute;inset:0;opacity:.1;background-image:radial-gradient(#ffffff 0.55px,transparent .65px);background-size:11px 11px;mask-image:linear-gradient(180deg,transparent 5%,#000 35%,#000 70%,transparent 96%)}
+@keyframes fluidDriftA{to{margin-top:18px;filter:hue-rotate(12deg)}}
+@keyframes fluidDriftB{to{margin-left:22px;margin-top:-14px;filter:hue-rotate(-9deg)}}
+@media(max-width:700px){.hero-fluid{inset:-4%;opacity:.78}.fluid-grain{display:none}.fluid-wave{opacity:.48}}
+@media(prefers-reduced-motion:reduce){.fluid-depth,.fluid-wave,.fluid-shine{animation:none!important;transition:none!important;transform:none!important}}
