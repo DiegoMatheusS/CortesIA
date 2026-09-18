@@ -162,11 +162,18 @@ class OpenAIProvider:
         return result
 
     def select(self, segments, modality, quantity, duration_mode, review=None):
-        model = (
-            os.getenv("PAID_SELECTION_MODEL", "gpt-5.6-sol")
-            if modality == "paid"
-            else os.getenv("TRIAL_SELECTION_MODEL", "gpt-5.6-terra")
-        )
+        if review is not None:
+            model = (
+                os.getenv("PAID_REVIEW_MODEL", os.getenv("PAID_SELECTION_MODEL", "gpt-5.6-sol"))
+                if modality == "paid"
+                else os.getenv("TRIAL_REVIEW_MODEL", os.getenv("TRIAL_SELECTION_MODEL", "gpt-5.6-terra"))
+            )
+        else:
+            model = (
+                os.getenv("PAID_SELECTION_MODEL", "gpt-5.6-sol")
+                if modality == "paid"
+                else os.getenv("TRIAL_SELECTION_MODEL", "gpt-5.6-terra")
+            )
         payload = {
             "model": model,
             "messages": [
@@ -194,9 +201,9 @@ class OllamaProvider:
     Current local default approved for this project: qwen3:8b.
     """
 
-    def __init__(self):
+    def __init__(self, model=None):
         self.base = os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434").rstrip("/")
-        self.model = os.getenv("OLLAMA_MODEL", "qwen3:8b")
+        self.model = model or os.getenv("OLLAMA_MODEL", "qwen3:8b")
         self.timeout = int(os.getenv("OLLAMA_TIMEOUT_SECONDS", "180"))
         self.calls = 0
         self.max_calls = int(os.getenv("AI_MAX_CALLS", "60"))
@@ -358,15 +365,17 @@ class FixtureSelector:
 
 
 class CompositeProvider:
-    def __init__(self, transcriber, selector):
+    def __init__(self, transcriber, selector, reviewer=None):
         self.transcriber = transcriber
         self.selector = selector
+        self.reviewer = reviewer or selector
 
     def transcribe(self, audio_path, word_timestamps=False):
         return self.transcriber.transcribe(audio_path, word_timestamps=word_timestamps)
 
     def select(self, segments, modality, quantity, duration_mode, review=None):
-        return self.selector.select(
+        target = self.reviewer if review is not None else self.selector
+        return target.select(
             segments, modality, quantity, duration_mode, review=review
         )
 
@@ -392,9 +401,13 @@ def provider():
     explicit = os.getenv("AI_PROVIDER", "").lower()
 
     if profile == "LOCAL":
-        selector = OllamaProvider()
+        default_model = os.getenv("OLLAMA_MODEL", "qwen3:8b")
+        selector = OllamaProvider(os.getenv("OLLAMA_SELECTION_MODEL", default_model))
+        reviewer = OllamaProvider(os.getenv("OLLAMA_REVIEW_MODEL", default_model))
         if os.getenv("OLLAMA_HEALTHCHECK", "true").lower() not in {"0","false","no"}:
             selector.health()
+            if reviewer.model != selector.model:
+                reviewer.health()
         asr = os.getenv("TRANSCRIPTION_PROVIDER", "fixture").lower()
         if asr == "faster-whisper":
             transcriber = FasterWhisperProvider()
@@ -402,10 +415,11 @@ def provider():
             transcriber = OpenAIProvider()
         else:
             transcriber = FixtureTranscriber()
-        return CompositeProvider(transcriber, selector)
+        return CompositeProvider(transcriber, selector, reviewer)
 
     if explicit == "fixture" or (not explicit and os.getenv("APP_ENV") == "development"):
-        return CompositeProvider(FixtureTranscriber(), FixtureSelector())
+        fixture = FixtureSelector()
+        return CompositeProvider(FixtureTranscriber(), fixture, fixture)
 
     cloud = OpenAIProvider()
-    return CompositeProvider(cloud, cloud)
+    return CompositeProvider(cloud, cloud, cloud)
