@@ -50,6 +50,8 @@ Configuração padrão do override:
 AI_RUNTIME_PROFILE=LOCAL
 OLLAMA_BASE_URL=http://host.docker.internal:11434
 OLLAMA_MODEL=qwen3:8b
+OLLAMA_SELECTION_MODEL=qwen3:8b
+OLLAMA_REVIEW_MODEL=qwen3:8b
 TRANSCRIPTION_PROVIDER=faster-whisper
 FASTER_WHISPER_MODEL=medium
 FASTER_WHISPER_DEVICE=cpu
@@ -112,3 +114,18 @@ Quando `dynamic_captions` é selecionado, o Faster-Whisper é chamado com timest
 O render ASS usa os tempos reais para destacar palavras em sequência. Se um trecho chegar sem word timestamps (fixture, conteúdo legado ou texto editado manualmente), o SliceFlow calcula um alinhamento proporcional dentro do intervalo da legenda e trata esse resultado como fallback, não como timestamp ASR.
 
 Na integração cloud, o pipeline timestamped usa `whisper-1` porque o parâmetro de granularidade por palavra/segmento não é suportado por `gpt-transcribe` no contrato atual da API. O modelo de seleção semântica dos cortes continua separado do transcritor.
+
+
+## Roteamento de múltiplas IAs
+
+A arquitetura não assume uma única IA para todo o pipeline. Os papéis são independentes:
+
+- `TRANSCRIPTION_PROVIDER` / `TRANSCRIPTION_MODEL`: fala → texto e timestamps;
+- `OLLAMA_SELECTION_MODEL`: primeira seleção de candidatos;
+- `OLLAMA_REVIEW_MODEL`: segunda revisão/comparação dos candidatos;
+- `VISION_PROVIDER`: detecção/rastreamento para reenquadramento;
+- FFmpeg: processamento determinístico de mídia, sem LLM.
+
+Hoje os slots locais de seleção e revisão usam `qwen3:8b` por padrão, mas são configurações separadas. Isso permite trocar um dos modelos no futuro sem acoplar transcrição, seleção, revisão e visão entre si.
+
+O código também separa seleção e revisão no provider composto; portanto uma etapa pode usar uma IA diferente da outra sem alterar as regras do domínio.

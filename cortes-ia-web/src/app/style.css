@@ -543,3 +543,29 @@ html{scroll-behavior:smooth}
  .cover-current img,.cover-empty{aspect-ratio:16/9;max-height:none}
  .cover-actions{grid-template-columns:1fr}
 }
+
+
+/* Notification center */
+.notification-bell{position:relative}
+.notification-bell-button{position:relative;width:40px;height:40px;padding:0;display:grid;place-items:center;border-radius:50%;font-size:20px}
+.notification-bell-button>b{position:absolute;right:-5px;top:-5px;min-width:19px;height:19px;padding:0 5px;border-radius:10px;background:#8b83ff;color:#fff;font-size:10px;line-height:19px;text-align:center}
+.notification-popover{position:absolute;right:0;top:48px;width:min(390px,calc(100vw - 28px));max-height:560px;overflow:hidden;border:1px solid #33415d;border-radius:16px;background:#0e1728;box-shadow:0 22px 70px #0009;z-index:80}
+.notification-popover header,.notification-popover footer{padding:13px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;border-bottom:1px solid #ffffff0d}
+.notification-popover footer{border-bottom:0;border-top:1px solid #ffffff0d}
+.notification-popover header button{padding:0;background:transparent;color:#aebaf0;font-size:10px}
+.notification-items{display:grid;max-height:430px;overflow:auto}
+.notification-item{display:block;width:100%;padding:13px 14px;border:0;border-bottom:1px solid #ffffff0a;border-radius:0;background:transparent;text-align:left}
+.notification-item.unread{background:#7b82ff0d;box-shadow:inset 3px 0 #858aff}
+.notification-item span{display:block;font-weight:700;font-size:12px}
+.notification-item p{margin:4px 0;font-size:11px;line-height:1.45}
+.notification-item time{font-size:9px;color:#7887a3}
+.notification-empty{padding:20px;margin:0;text-align:center}
+.notification-settings>section{max-width:900px;margin:0 auto}
+.notification-preference-list{display:grid;gap:10px;margin:28px 0}
+.notification-preference-list label{display:grid;grid-template-columns:auto 1fr;gap:13px;align-items:start;padding:16px;border:1px solid #2c3954;border-radius:14px;background:#0f1829}
+.notification-preference-list input{margin-top:4px}
+.notification-preference-list span{display:grid;gap:4px}
+.notification-preference-list b{font-size:13px}
+.notification-preference-list small{color:#8391aa;line-height:1.5}
+.notification-preference-list .required{opacity:.82}
+@media(max-width:620px){.notification-popover{position:fixed;left:14px;right:14px;top:78px;width:auto}.nav-user{display:none}}

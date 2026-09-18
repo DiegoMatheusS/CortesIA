@@ -18,7 +18,7 @@ public record ExportDto(Guid ClipId,string Format);
 public record TicketDto(string Subject,string Message,Guid? ProjectId);
 public static class ProjectEndpoints {
  public static void Map(WebApplication app){var g=app.MapGroup("/api/v1").RequireAuthorization();
-  g.MapGet("/catalog",async(Policy p)=>new{maxBytes=await p.Number("maxBytes",5_000_000_000),maxDurationMs=await p.Number("maxDurationMs",10_800_000),maxClips=await p.Number("maxClips",20),formats=new[]{"mp4","mov","mkv","webm"},features=new Dictionary<string,int>{{"dynamic_captions",3},{"zoom",2},{"blur",3},{"tracking",2},{"cover",2}},paidPackagesEnabled=await p.Enabled("packagesApproved")});
+  g.MapGet("/catalog",async(Policy p)=>new{maxBytes=await p.Number("maxBytes",5_000_000_000),maxDurationMs=await p.Number("maxDurationMs",25_200_000),maxClips=await p.Number("maxClips",20),formats=new[]{"mp4","mov","mkv","webm"},features=new Dictionary<string,int>{{"dynamic_captions",3},{"zoom",2},{"blur",3},{"tracking",2},{"cover",2}},paidPackagesEnabled=await p.Enabled("packagesApproved")});
   g.MapGet("/wallet",async(HttpContext h,Database d)=>new{wallet=await d.Wallets.SingleAsync(x=>x.Id==Api.User(h)),lots=await d.Lots.Where(x=>x.UserId==Api.User(h)).ToListAsync()});
   g.MapGet("/wallet/transactions",async(HttpContext h,Database d)=>await d.Ledger.Where(x=>x.UserId==Api.User(h)).OrderByDescending(x=>x.CreatedAt).Take(100).ToListAsync());
   g.MapGet("/projects",async(HttpContext h,Database d)=>await d.Projects.Where(x=>x.UserId==Api.User(h)&&x.DeletedAt==null).OrderByDescending(x=>x.CreatedAt).Take(100).Select(x=>new{x.Id,x.Title,x.Status,x.Outcome,x.DurationMs,x.Version,x.CreatedAt,x.FirstProcessedAt}).ToListAsync());
@@ -186,6 +186,7 @@ public static class ProjectEndpoints {
   g.MapDelete("/projects/{id:guid}",async(Guid id,HttpContext h,Database d)=>{await using var tx=await d.Database.BeginTransactionAsync();await d.LockProject(id);var p=await Api.Own(d,h,id);p.DeletedAt=DateTimeOffset.UtcNow;p.Generation++;p.Status="EXCLUIDO";await d.SaveChangesAsync();await tx.CommitAsync();return Results.Accepted();});
   g.MapPost("/tickets",async(TicketDto r,HttpContext h,Database d)=>{if(r.ProjectId.HasValue)await Api.Own(d,h,r.ProjectId.Value);if(r.Subject.Length>200||r.Message.Length>10000)throw new DomainError("INVALID_TICKET");var t=new Ticket{UserId=Api.User(h),ProjectId=r.ProjectId,Subject=r.Subject,Message=r.Message};d.Tickets.Add(t);await d.SaveChangesAsync();return Results.Ok(t);});
   g.MapGet("/tickets",async(HttpContext h,Database d)=>await d.Tickets.Where(x=>x.UserId==Api.User(h)).OrderByDescending(x=>x.CreatedAt).Take(100).ToListAsync());
+  g.MapPost("/tickets/{id:guid}/reopen",async(Guid id,HttpContext h,Database d)=>{var uid=Api.User(h);var t=await d.Tickets.SingleOrDefaultAsync(x=>x.Id==id&&x.UserId==uid)??throw new DomainError("NOT_FOUND",404);if(t.Status!="RESOLVED")throw new DomainError("TICKET_NOT_RESOLVED",409);t.Status="OPEN";Api.Audit(d,uid,"TICKET_REOPENED",t.Id.ToString(),"Usuário reabriu o chamado");await d.SaveChangesAsync();return Results.Ok();});
  }
 
  static readonly HashSet<string> Selections=new(StringComparer.Ordinal){"SELECTED","REJECTED","SUGGESTED"};

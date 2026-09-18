@@ -30,12 +30,18 @@ public class Background(IServiceScopeFactory scopes,Cloud cloud,ILogger<Backgrou
   }
  }
  async Task Notify(IServiceScope scope,Database d,CancellationToken ct){
-  foreach(var n in await d.Notifications.Where(x=>x.SentAt==null).Take(10).ToListAsync(ct)){var u=await d.Users.FindAsync([n.UserId],ct);if(u?.Email==null)continue;await scope.ServiceProvider.GetRequiredService<Mailer>().Send(u.Email,n.Subject,n.Body);n.SentAt=DateTimeOffset.UtcNow;await d.SaveChangesAsync(ct);}
+  foreach(var n in await d.Notifications.Where(x=>x.EmailStatus=="PENDING").OrderBy(x=>x.CreatedAt).Take(20).ToListAsync(ct)){
+   var u=await d.Users.FindAsync([n.UserId],ct);
+   var pref=await d.NotificationPreferences.FindAsync([n.UserId],ct);
+   if(u?.Email==null||!NotificationEndpoints.WantsEmail(n,pref)){n.EmailStatus="SKIPPED";await d.SaveChangesAsync(ct);continue;}
+   await scope.ServiceProvider.GetRequiredService<Mailer>().Send(u.Email,n.Subject,n.Body);
+   n.SentAt=DateTimeOffset.UtcNow;n.EmailStatus="SENT";await d.SaveChangesAsync(ct);
+  }
  }
  async Task Retain(Database d,WalletService wallet,CancellationToken ct){
   var now=DateTimeOffset.UtcNow;
   foreach(var u in await d.Users.Where(x=>x.LastActive<now.AddDays(-105)).Take(100).ToListAsync(ct)){
-   var days=(now-u.LastActive).TotalDays;foreach(var milestone in new[]{105,115,119})if(days>=milestone&&days<120){var dedupe=$"retention:{u.Id}:{u.ActivityEpoch}:{milestone}";if(!await d.Notifications.AnyAsync(x=>x.Dedupe==dedupe,ct))d.Notifications.Add(new Notification{UserId=u.Id,Dedupe=dedupe,Subject="Aviso de inatividade",Body=$"Seus arquivos serão removidos ao completar 120 dias sem acesso. Acesse para manter os arquivos. Sua carteira não será alterada."});}
+   var days=(now-u.LastActive).TotalDays;foreach(var milestone in new[]{105,115,119})if(days>=milestone&&days<120){var dedupe=$"retention:{u.Id}:{u.ActivityEpoch}:{milestone}";await NotificationEndpoints.Queue(d,u.Id,dedupe,"STORAGE_RETENTION_WARNING","STORAGE","Aviso de inatividade",$"Seus arquivos serão removidos ao completar 120 dias sem acesso. Acesse para manter os arquivos. Sua carteira não será alterada.","REQUIRED");}
   }await d.SaveChangesAsync(ct);
   var projectIds=await d.Projects.AsNoTracking().Where(p=>
    (p.DeletedAt!=null||p.FirstProcessedAt<now.AddHours(-48)||d.Users.Any(u=>u.Id==p.UserId&&u.LastActive<now.AddDays(-120)))
@@ -63,6 +69,7 @@ public class Background(IServiceScopeFactory scopes,Cloud cloud,ILogger<Backgrou
      continuation=page.IsTruncated==true?page.NextContinuationToken:null;
     }while(continuation!=null);
     project.MasterAssetKey=null;project.SourceAssetKey=null;project.Status=project.DeletedAt==null?"ARQUIVOS_EXPIRADOS":"EXCLUIDO";project.Generation++;
+    if(project.DeletedAt==null)await NotificationEndpoints.Queue(store,owner,$"storage-deleted:{id}:{user.ActivityEpoch}","STORAGE_FILES_DELETED","STORAGE","Arquivos removidos por inatividade","Os arquivos deste projeto foram removidos após 120 dias de inatividade. Seu saldo de créditos permanece intacto.","REQUIRED");
     foreach(var job in await store.Jobs.Where(x=>x.ProjectId==id&&(x.State=="QUEUED"||x.State=="RUNNING")).ToListAsync(ct)){job.State="CANCELLED";job.Fence++;job.LeaseUntil=null;}
     foreach(var run in await store.Runs.Where(x=>x.ProjectId==id&&x.FinancialState=="RESERVED").ToListAsync(ct)){await credits.Refund(run,"ALL",run.Total-run.Refunded,"Execução encerrada antes de previews");run.Outcome="USER_CANCELLED";}
    }

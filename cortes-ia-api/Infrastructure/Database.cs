@@ -11,11 +11,11 @@ public class Database(DbContextOptions<Database> options):IdentityDbContext<User
  public DbSet<Idempotency> Idempotency=>Set<Idempotency>(); public DbSet<Media> Media=>Set<Media>();
  public DbSet<Upload> Uploads=>Set<Upload>(); public DbSet<Clip> Clips=>Set<Clip>(); public DbSet<ClipRevision> ClipRevisions=>Set<ClipRevision>(); public DbSet<Export> Exports=>Set<Export>();
  public DbSet<Purchase> Purchases=>Set<Purchase>(); public DbSet<PaymentEvent> PaymentEvents=>Set<PaymentEvent>();
- public DbSet<Audit> Audit=>Set<Audit>(); public DbSet<Notification> Notifications=>Set<Notification>();
+ public DbSet<Audit> Audit=>Set<Audit>(); public DbSet<Notification> Notifications=>Set<Notification>(); public DbSet<NotificationPreference> NotificationPreferences=>Set<NotificationPreference>();
  public DbSet<Setting> Settings=>Set<Setting>(); public DbSet<Ticket> Tickets=>Set<Ticket>();
  protected override void OnModelCreating(ModelBuilder b) {
   base.OnModelCreating(b);
-  b.Entity<TrialClaim>().HasKey(x=>x.CpfHmac); b.Entity<Setting>().HasKey(x=>x.Key);
+  b.Entity<TrialClaim>().HasKey(x=>x.CpfHmac); b.Entity<Setting>().HasKey(x=>x.Key); b.Entity<NotificationPreference>().HasKey(x=>x.UserId);
   b.Entity<Idempotency>().HasIndex(x=>new{x.UserId,x.Scope,x.Key}).IsUnique();
   b.Entity<Ledger>().HasIndex(x=>new{x.Operation,x.LotId}).IsUnique();
   b.Entity<Media>().HasIndex(x=>x.Key).IsUnique(); b.Entity<Run>().HasIndex(x=>x.QuoteId).IsUnique();
@@ -29,6 +29,8 @@ public class Database(DbContextOptions<Database> options):IdentityDbContext<User
   b.Entity<Run>().ToTable(t=>t.HasCheckConstraint("refund_cap", "\"Refunded\">=0 AND \"Refunded\"<=\"Total\""));
   b.Entity<CreditLot>().HasOne<Wallet>().WithMany().HasForeignKey(x=>x.UserId).OnDelete(DeleteBehavior.Restrict);
   b.Entity<Project>().HasOne<User>().WithMany().HasForeignKey(x=>x.UserId).OnDelete(DeleteBehavior.Restrict);
+  b.Entity<Notification>().HasOne<User>().WithMany().HasForeignKey(x=>x.UserId).OnDelete(DeleteBehavior.Restrict);
+  b.Entity<NotificationPreference>().HasOne<User>().WithOne().HasForeignKey<NotificationPreference>(x=>x.UserId).OnDelete(DeleteBehavior.Cascade);
   b.Entity<Quote>().HasOne<Project>().WithMany().HasForeignKey(x=>x.ProjectId).OnDelete(DeleteBehavior.Restrict);
   b.Entity<Run>().HasOne<Quote>().WithMany().HasForeignKey(x=>x.QuoteId).OnDelete(DeleteBehavior.Restrict);
   b.Entity<Job>().HasOne<Project>().WithMany().HasForeignKey(x=>x.ProjectId).OnDelete(DeleteBehavior.Restrict);

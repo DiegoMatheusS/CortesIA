@@ -84,6 +84,11 @@ Antes da primeira evolução de banco de homologação, gerar/revisar migration 
 - Antivírus vem desativado somente no modo de desenvolvimento e identificado em Compose. Ative o perfil e `SCAN_MODE=required` para homologação; arquivos acima do limite suportado pelo ClamAV devem falhar fechados, nunca passar sem scan.
 - YouTube fica desligado até habilitação e teste. Restrições retornam bloqueio sem consumo; não se promete acesso a qualquer vídeo.
 - Legenda dinâmica está implementada com timestamps por palavra quando o transcritor fornece esse dado e alinhamento proporcional como fallback explícito. O tracking inteligente está disponível somente em ambientes com provider de visão habilitado; recursos indisponíveis não são cobrados.
-- A faixa acima de 90 minutos e os preços comerciais permanecem sob as decisões pendentes do plano, sem transformar sugestões em valores aprovados.
+- O limite técnico de duração é 7 horas (25.200.000 ms), ainda sujeito ao limite de 5 GB por arquivo. Em desenvolvimento essa faixa pode ser testada; em produção, acima de 90 minutos exige aprovação explícita da política comercial para não inventar preço.
 
 Comece por `docs/STATUS_IMPLEMENTACAO.md` e `docs/BACKLOG_MVP.md` para decidir o próximo incremento sem confundir código presente com fase homologada.
+
+
+## Notificações
+
+O SliceFlow possui central interna de notificações e preferências de e-mail. Segurança, pagamentos/créditos críticos e armazenamento são obrigatórios; processamento e suporte ficam ligados por padrão; saldo baixo e marketing são opcionais. Ver `docs/NOTIFICACOES_TRANSACIONAIS.md`.

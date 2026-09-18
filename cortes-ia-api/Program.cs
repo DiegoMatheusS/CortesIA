@@ -37,7 +37,7 @@ app.Use(async(ctx,next)=>{
 app.MapGet("/health",()=>Results.Ok(new{status="ok"}));
 if(app.Environment.IsDevelopment())app.MapOpenApi("/api/openapi/{documentName}.json");else app.MapOpenApi("/api/openapi/{documentName}.json").RequireAuthorization("Admin");
 app.MapGet("/api/v1/auth/csrf",(HttpContext h,IAntiforgery a)=>new{token=a.GetAndStoreTokens(h).RequestToken});
-AuthEndpoints.Map(app);ProjectEndpoints.Map(app);AdminEndpoints.Map(app);WorkerEndpoints.Map(app);Payments.Map(app);
+AuthEndpoints.Map(app);ProjectEndpoints.Map(app);AdminEndpoints.Map(app);WorkerEndpoints.Map(app);Payments.Map(app);NotificationEndpoints.Map(app);
 if(args.Contains("--init-db")){
  using var scope=app.Services.CreateScope();var db=scope.ServiceProvider.GetRequiredService<Database>();
  // Explicit bootstrap, never automatic per API startup. Existing schema must use migrations.
@@ -46,6 +46,27 @@ if(args.Contains("--init-db")){
  // Production continues to require reviewed/versioned EF migrations.
  await db.Database.ExecuteSqlRawAsync("""
  ALTER TABLE "Jobs" ADD COLUMN IF NOT EXISTS "ProgressPhase" text NOT NULL DEFAULT 'QUEUED';
+ ALTER TABLE "Notifications" ADD COLUMN IF NOT EXISTS "Event" text NOT NULL DEFAULT 'LEGACY';
+ ALTER TABLE "Notifications" ADD COLUMN IF NOT EXISTS "Category" text NOT NULL DEFAULT 'PROCESSING';
+ ALTER TABLE "Notifications" ADD COLUMN IF NOT EXISTS "EmailPolicy" text NOT NULL DEFAULT 'DEFAULT_ON';
+ ALTER TABLE "Notifications" ADD COLUMN IF NOT EXISTS "EmailStatus" text NOT NULL DEFAULT 'PENDING';
+ ALTER TABLE "Notifications" ADD COLUMN IF NOT EXISTS "InApp" boolean NOT NULL DEFAULT true;
+ ALTER TABLE "Notifications" ADD COLUMN IF NOT EXISTS "CreatedAt" timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP;
+ ALTER TABLE "Notifications" ADD COLUMN IF NOT EXISTS "ReadAt" timestamptz NULL;
+ UPDATE "Notifications" SET "EmailStatus"='SENT' WHERE "SentAt" IS NOT NULL AND "EmailStatus"='PENDING';
+ UPDATE "Notifications" SET "InApp"=false,"Category"='SECURITY',"EmailPolicy"='REQUIRED',"Event"='EMAIL_CONFIRMATION' WHERE "Dedupe" LIKE 'verify:%';
+ UPDATE "Notifications" SET "InApp"=false,"Category"='SECURITY',"EmailPolicy"='REQUIRED',"Event"='PASSWORD_RESET_REQUESTED' WHERE "Dedupe" LIKE 'reset:%';
+ UPDATE "Notifications" SET "Category"='PAYMENTS',"EmailPolicy"='REQUIRED',"Event"='PURCHASE_APPROVED' WHERE "Dedupe" LIKE 'purchase:%';
+ UPDATE "Notifications" SET "Category"='PROCESSING',"Event"='PREVIEWS_READY' WHERE "Dedupe" LIKE 'ready:%';
+ UPDATE "Notifications" SET "Category"='STORAGE',"EmailPolicy"='REQUIRED',"Event"='STORAGE_RETENTION_WARNING' WHERE "Dedupe" LIKE 'retention:%';
+ CREATE TABLE IF NOT EXISTS "NotificationPreferences" (
+  "UserId" uuid PRIMARY KEY,
+  "ProcessingEmail" boolean NOT NULL DEFAULT true,
+  "SupportEmail" boolean NOT NULL DEFAULT true,
+  "LowBalanceEmail" boolean NOT NULL DEFAULT false,
+  "MarketingEmail" boolean NOT NULL DEFAULT false,
+  CONSTRAINT "FK_NotificationPreferences_AspNetUsers_UserId" FOREIGN KEY ("UserId") REFERENCES "AspNetUsers" ("Id") ON DELETE CASCADE
+ );
  ALTER TABLE "Jobs" ADD COLUMN IF NOT EXISTS "ProgressPercent" integer NOT NULL DEFAULT 0;
   ALTER TABLE "Clips" ADD COLUMN IF NOT EXISTS "Segments" jsonb NOT NULL DEFAULT '[]'::jsonb;
  ALTER TABLE "Clips" ADD COLUMN IF NOT EXISTS "PreviewRevision" integer NOT NULL DEFAULT 0;

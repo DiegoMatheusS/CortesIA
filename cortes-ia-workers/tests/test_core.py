@@ -2,7 +2,7 @@ import unittest,os,tempfile,pathlib,subprocess,json,io
 from unittest.mock import patch
 from cortes_worker.models import validate_candidates,ProcessingError,Segment
 from cortes_worker.security import validate_url,public_addresses
-from cortes_worker.provider import redact,OllamaProvider
+from cortes_worker.provider import redact,OllamaProvider,CompositeProvider
 from cortes_worker import media,vision
 class SecurityTests(unittest.TestCase):
  def test_url_restrictions(self):
@@ -41,6 +41,17 @@ class SecurityTests(unittest.TestCase):
  def test_dynamic_caption_fallback_alignment(self):
   words=media._word_items({'startMs':0,'endMs':1000,'text':'um teste simples'})
   self.assertEqual(words[0]['startMs'],0);self.assertEqual(words[-1]['endMs'],1000);self.assertEqual(len(words),3)
+ def test_composite_routes_selection_and_review_independently(self):
+  class FakeTranscriber:
+   def transcribe(self,*args,**kwargs):return []
+  class FakeSelector:
+   def __init__(self,name):self.name=name;self.calls=0
+   def select(self,*args,**kwargs):self.calls+=1;return [{'start_ms':0,'end_ms':1000,'title':self.name,'reason':'ok','score':1}]
+  selector=FakeSelector('selector');reviewer=FakeSelector('reviewer')
+  composite=CompositeProvider(FakeTranscriber(),selector,reviewer)
+  self.assertEqual(composite.select([], 'trial',1,'AUTO')[0]['title'],'selector')
+  self.assertEqual(composite.select([], 'trial',1,'AUTO',review=[])[0]['title'],'reviewer')
+  self.assertEqual(selector.calls,1);self.assertEqual(reviewer.calls,1)
  def test_ollama_structured_candidates(self):
   payload={'message':{'content':json.dumps({'candidates':[{'start_ms':100,'end_ms':2000,'title':'Gancho','reason':'Autocontido','score':88}]})}}
   with patch.dict(os.environ,{'OLLAMA_MODEL':'qwen3:8b','OLLAMA_BASE_URL':'http://127.0.0.1:11434'}):

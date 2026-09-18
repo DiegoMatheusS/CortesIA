@@ -92,6 +92,8 @@ services:
       AI_PROVIDER: ${AI_PROVIDER:-fixture}
       OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
       OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen3:8b}
+      OLLAMA_SELECTION_MODEL: ${OLLAMA_SELECTION_MODEL:-qwen3:8b}
+      OLLAMA_REVIEW_MODEL: ${OLLAMA_REVIEW_MODEL:-qwen3:8b}
       OLLAMA_TIMEOUT_SECONDS: ${OLLAMA_TIMEOUT_SECONDS:-180}
       TRANSCRIPTION_PROVIDER: ${TRANSCRIPTION_PROVIDER:-fixture}
       FASTER_WHISPER_MODEL: ${FASTER_WHISPER_MODEL:-medium}
@@ -101,6 +103,8 @@ services:
       TRANSCRIPTION_MODEL: whisper-1
       TRIAL_SELECTION_MODEL: gpt-5.6-terra
       PAID_SELECTION_MODEL: gpt-5.6-sol
+      TRIAL_REVIEW_MODEL: ${TRIAL_REVIEW_MODEL:-gpt-5.6-terra}
+      PAID_REVIEW_MODEL: ${PAID_REVIEW_MODEL:-gpt-5.6-sol}
       WORKER_TOKEN: ${WORKER_TOKEN:?run bootstrap first}
       INTERNAL_API: http://api:8080
       SCAN_MODE: disabled-development

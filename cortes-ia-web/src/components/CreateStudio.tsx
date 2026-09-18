@@ -218,7 +218,7 @@ export default function CreateStudio() {
             <div className="dropzone-icon" aria-hidden="true">↑</div>
             <h2>Envie seu vídeo</h2>
             <p>Arraste para cá ou escolha no computador.</p>
-            <p className="source-meta">MP4, MOV, MKV ou WebM · até 5 GB · até 180 minutos</p>
+            <p className="source-meta">MP4, MOV, MKV ou WebM · até 5 GB · até 7 horas</p>
             <button
               type="button"
               className="button primary"
