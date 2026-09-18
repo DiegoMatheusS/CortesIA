@@ -7,6 +7,8 @@ public record OutputDto(string Key,string Kind,long Size);
 public record CandidateDto(string Title,string Reason,long StartMs,long EndMs,string PreviewKey,string? CoverKey,SubtitleDto[] Subtitles);
 public record PreviewClipRef(Guid Id,int Revision);
 public record PreviewPayload(PreviewClipRef Clip);
+public record CoverClipRef(Guid Id,int Revision);
+public record CoverPayload(CoverClipRef Clip,long AtMs);
 public record WorkerEvent(Guid EventId,Guid JobId,int Fence,string Kind,string? Error,bool Retryable,long DurationMs,OutputDto[]? Outputs,CandidateDto[]? Clips,string[]? FailedFeatures,string? Outcome);
 public static class WorkerEndpoints {
  public static void Map(WebApplication app){var g=app.MapGroup("/internal/v1");
@@ -40,12 +42,16 @@ public static class WorkerEndpoints {
   if(j.Fence!=e.Fence||j.State!="RUNNING"||p!.Generation!=j.Generation||p.DeletedAt!=null){await d.SaveChangesAsync();await tx.CommitAsync();return;}
   var run=j.RunId.HasValue?await d.Runs.FindAsync(j.RunId.Value):null;
   if(e.Kind=="failed"){
-   if(e.Retryable&&j.Attempts<3){j.State="QUEUED";j.LeaseUntil=null;d.Outbox.Add(new Outbox{JobId=j.Id});}
+   if(e.Retryable&&j.Attempts<3){j.State="QUEUED";j.ProgressPhase="RETRYING";j.LeaseUntil=null;d.Outbox.Add(new Outbox{JobId=j.Id});}
    else{
-    j.State="FAILED";j.Error=e.Error??"SYSTEM_FAILURE";j.LeaseUntil=null;
-    p.Outcome=e.Outcome??"SYSTEM_FAILURE";p.Status=e.Outcome=="SOURCE_RESTRICTED"?"BLOQUEADO_RESTRICAO":"ERRO";
-    if(j.Stage=="RENDER"){var ex=await d.Exports.SingleAsync(x=>x.JobId==j.Id);ex.State="FAILED";}
-    else if(run!=null&&run.FinancialState=="RESERVED"){await wallet.Refund(run,"ALL",run.Total-run.Refunded,"Falha antes de previews úteis");run.Outcome=p.Outcome;}
+    j.State="FAILED";j.ProgressPhase="FAILED";j.Error=e.Error??"SYSTEM_FAILURE";j.LeaseUntil=null;
+    if(j.Stage is "PREVIEW" or "COVER" or "BUNDLE"){
+     p.Status=p.Status=="RENDERIZANDO"?"RENDERIZANDO":"AGUARDANDO_REVISAO";
+    }else{
+     p.Outcome=e.Outcome??"SYSTEM_FAILURE";p.Status=e.Outcome=="SOURCE_RESTRICTED"?"BLOQUEADO_RESTRICAO":"ERRO";
+     if(j.Stage=="RENDER"){var ex=await d.Exports.SingleAsync(x=>x.JobId==j.Id);ex.State="FAILED";}
+     else if(run!=null&&run.FinancialState=="RESERVED"){await wallet.Refund(run,"ALL",run.Total-run.Refunded,"Falha antes de previews úteis");run.Outcome=p.Outcome;}
+    }
    }
   }else if(e.Kind=="succeeded"){
    var prefix=$"projects/{j.ProjectId}/jobs/{j.Id}/{j.Fence}/";
@@ -78,6 +84,15 @@ public static class WorkerEndpoints {
     var payload=Json.Read<PreviewPayload>(j.Payload);var output=(e.Outputs??[]).Single(x=>x.Kind=="PREVIEW");
     var clip=await d.Clips.SingleOrDefaultAsync(x=>x.Id==payload.Clip.Id&&x.ProjectId==p.Id)??throw new DomainError("INVALID_PREVIEW_TARGET");
     if(clip.Revision==payload.Clip.Revision){clip.PreviewKey=output.Key;clip.PreviewRevision=payload.Clip.Revision;}
+   }else if(j.Stage=="COVER"){
+    var payload=Json.Read<CoverPayload>(j.Payload);var output=(e.Outputs??[]).Single(x=>x.Kind=="COVER");
+    var clip=await d.Clips.SingleOrDefaultAsync(x=>x.Id==payload.Clip.Id&&x.ProjectId==p.Id)??throw new DomainError("INVALID_COVER_TARGET");
+    if(clip.Revision==payload.Clip.Revision){
+     if(!await d.ClipRevisions.AnyAsync(x=>x.ClipId==clip.Id&&x.Number==clip.Revision))d.ClipRevisions.Add(Snapshot(clip));
+     clip.CoverKey=output.Key;clip.Revision++;
+     d.ClipRevisions.Add(Snapshot(clip));
+     Api.Audit(d,p.UserId,"CLIP_COVER_UPDATED",clip.Id.ToString(),$"Frame {payload.AtMs}ms saved as revision {clip.Revision}");
+    }
    }else if(j.Stage=="RENDER"){
     var ex=await d.Exports.SingleAsync(x=>x.JobId==j.Id);var output=(e.Outputs??[]).Single(x=>x.Kind=="FINAL_EXPORT");ex.Key=output.Key;ex.State="SUCCEEDED";
     p.Status=await d.Exports.AnyAsync(x=>x.ProjectId==p.Id&&x.Id!=ex.Id&&x.State!="SUCCEEDED")?"RENDERIZANDO":"PRONTO";
@@ -86,4 +101,10 @@ public static class WorkerEndpoints {
   }else throw new DomainError("INVALID_EVENT_KIND");
   await d.SaveChangesAsync();await tx.CommitAsync();
  }
+
+ static ClipRevision Snapshot(Clip clip)=>new(){
+  ClipId=clip.Id,ProjectId=clip.ProjectId,Number=clip.Revision,Title=clip.Title,Selection=clip.Selection,StartMs=clip.StartMs,EndMs=clip.EndMs,
+  Segments=clip.Segments,Subtitles=clip.Subtitles,Style=clip.Style,CaptionPreset=clip.CaptionPreset,CaptionOverrides=clip.CaptionOverrides,
+  VisualStyle=clip.VisualStyle,VisualOverrides=clip.VisualOverrides,Aspect=clip.Aspect,Crop=clip.Crop,CoverKey=clip.CoverKey
+ };
 }
