@@ -58,7 +58,11 @@ public static class WorkerEndpoints {
     if(clips.Length==0&&j.Stage=="ALTERNATIVES"){p.Status="AGUARDANDO_REVISAO";}
     else if(clips.Length==0){p.FirstProcessedAt??=DateTimeOffset.UtcNow;p.Outcome="NO_SUITABLE_CLIPS";p.Status="AGUARDANDO_REVISAO";run.Outcome=p.Outcome;await wallet.Refund(run,"ALL",run.Total-run.Refunded,"Nenhum trecho adequado encontrado");}
     else{
-     foreach(var c in clips)d.Clips.Add(new Clip{ProjectId=p.Id,RunId=run.Id,Title=c.Title,Reason=c.Reason,StartMs=c.StartMs,EndMs=c.EndMs,PreviewKey=c.PreviewKey,CoverKey=c.CoverKey,Subtitles=Json.Write(c.Subtitles)});
+     foreach(var candidate in clips){
+      var aspect=(config.Formats??new[]{"9:16"}).FirstOrDefault()??"9:16";
+      var clip=new Clip{ProjectId=p.Id,RunId=run.Id,Title=candidate.Title,Reason=candidate.Reason,StartMs=candidate.StartMs,EndMs=candidate.EndMs,Segments=Json.Write(new[]{new RevisionSegment(candidate.StartMs,candidate.EndMs)}),PreviewKey=candidate.PreviewKey,CoverKey=candidate.CoverKey,Subtitles=Json.Write(candidate.Subtitles),CaptionPreset="Clean",VisualStyle="Cinema",Aspect=aspect};
+      d.Clips.Add(clip);d.ClipRevisions.Add(new ClipRevision{ClipId=clip.Id,ProjectId=p.Id,Number=1,Title=clip.Title,Selection=clip.Selection,StartMs=clip.StartMs,EndMs=clip.EndMs,Segments=clip.Segments,Subtitles=clip.Subtitles,Style=clip.Style,CaptionPreset=clip.CaptionPreset,VisualStyle=clip.VisualStyle,Aspect=clip.Aspect,Crop=clip.Crop,CoverKey=clip.CoverKey});
+     }
      await wallet.Capture(run);p.Status="AGUARDANDO_REVISAO";p.Outcome="SUCCESS";run.Outcome="SUCCESS";p.FirstProcessedAt??=DateTimeOffset.UtcNow;
      foreach(var feature in (e.FailedFeatures??[]).Distinct()){var item=Json.Read<QuoteItem[]>(run.Items).SingleOrDefault(x=>x.Feature==feature);if(item!=null)await wallet.Refund(run,item.Code,item.Credits,"Extra não entregue em nenhum output");}
      if(!await d.Notifications.AnyAsync(x=>x.Dedupe=="ready:"+run.Id))d.Notifications.Add(new Notification{UserId=p.UserId,Dedupe="ready:"+run.Id,Subject="Suas prévias estão prontas",Body="Acesse o projeto para revisar e escolher os cortes finais."});

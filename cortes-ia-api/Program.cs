@@ -42,6 +42,40 @@ if(args.Contains("--init-db")){
  using var scope=app.Services.CreateScope();var db=scope.ServiceProvider.GetRequiredService<Database>();
  // Explicit bootstrap, never automatic per API startup. Existing schema must use migrations.
  await db.Database.EnsureCreatedAsync();
+ // Development bootstrap upgrade for databases created by the pre-v0.5 prototype.
+ // Production continues to require reviewed/versioned EF migrations.
+ await db.Database.ExecuteSqlRawAsync("""
+ ALTER TABLE "Clips" ADD COLUMN IF NOT EXISTS "Segments" jsonb NOT NULL DEFAULT '[]'::jsonb;
+ ALTER TABLE "Clips" ADD COLUMN IF NOT EXISTS "CaptionPreset" text NOT NULL DEFAULT 'Clean';
+ ALTER TABLE "Clips" ADD COLUMN IF NOT EXISTS "CaptionOverrides" jsonb NOT NULL DEFAULT '{}'::jsonb;
+ ALTER TABLE "Clips" ADD COLUMN IF NOT EXISTS "VisualStyle" text NOT NULL DEFAULT 'Cinema';
+ ALTER TABLE "Clips" ADD COLUMN IF NOT EXISTS "VisualOverrides" jsonb NOT NULL DEFAULT '{}'::jsonb;
+ ALTER TABLE "Clips" ADD COLUMN IF NOT EXISTS "Aspect" text NOT NULL DEFAULT '9:16';
+ ALTER TABLE "Clips" ADD COLUMN IF NOT EXISTS "Crop" jsonb NOT NULL DEFAULT '{"x":0,"y":0,"width":1,"height":1}'::jsonb;
+ CREATE TABLE IF NOT EXISTS "ClipRevisions" (
+  "Id" uuid PRIMARY KEY,
+  "ClipId" uuid NOT NULL,
+  "ProjectId" uuid NOT NULL,
+  "Number" integer NOT NULL,
+  "Title" text NOT NULL,
+  "Selection" text NOT NULL,
+  "StartMs" bigint NOT NULL,
+  "EndMs" bigint NOT NULL,
+  "Segments" jsonb NOT NULL DEFAULT '[]'::jsonb,
+  "Subtitles" jsonb NOT NULL DEFAULT '[]'::jsonb,
+  "Style" text NOT NULL DEFAULT 'simple',
+  "CaptionPreset" text NOT NULL DEFAULT 'Clean',
+  "CaptionOverrides" jsonb NOT NULL DEFAULT '{}'::jsonb,
+  "VisualStyle" text NOT NULL DEFAULT 'Cinema',
+  "VisualOverrides" jsonb NOT NULL DEFAULT '{}'::jsonb,
+  "Aspect" text NOT NULL DEFAULT '9:16',
+  "Crop" jsonb NOT NULL DEFAULT '{"x":0,"y":0,"width":1,"height":1}'::jsonb,
+  "CoverKey" text NULL,
+  "CreatedAt" timestamptz NOT NULL,
+  CONSTRAINT "FK_ClipRevisions_Clips_ClipId" FOREIGN KEY ("ClipId") REFERENCES "Clips" ("Id") ON DELETE RESTRICT
+ );
+ CREATE UNIQUE INDEX IF NOT EXISTS "IX_ClipRevisions_ClipId_Number" ON "ClipRevisions" ("ClipId","Number");
+ """);
  await db.Database.ExecuteSqlRawAsync("""
  CREATE OR REPLACE FUNCTION deny_ledger_mutation() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'append only'; END; $$;
  DROP TRIGGER IF EXISTS ledger_immutable ON "Ledger";

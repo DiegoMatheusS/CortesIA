@@ -9,7 +9,7 @@ public class Database(DbContextOptions<Database> options):IdentityDbContext<User
  public DbSet<Quote> Quotes=>Set<Quote>(); public DbSet<Run> Runs=>Set<Run>(); public DbSet<Job> Jobs=>Set<Job>();
  public DbSet<Outbox> Outbox=>Set<Outbox>(); public DbSet<Inbox> Inbox=>Set<Inbox>();
  public DbSet<Idempotency> Idempotency=>Set<Idempotency>(); public DbSet<Media> Media=>Set<Media>();
- public DbSet<Upload> Uploads=>Set<Upload>(); public DbSet<Clip> Clips=>Set<Clip>(); public DbSet<Export> Exports=>Set<Export>();
+ public DbSet<Upload> Uploads=>Set<Upload>(); public DbSet<Clip> Clips=>Set<Clip>(); public DbSet<ClipRevision> ClipRevisions=>Set<ClipRevision>(); public DbSet<Export> Exports=>Set<Export>();
  public DbSet<Purchase> Purchases=>Set<Purchase>(); public DbSet<PaymentEvent> PaymentEvents=>Set<PaymentEvent>();
  public DbSet<Audit> Audit=>Set<Audit>(); public DbSet<Notification> Notifications=>Set<Notification>();
  public DbSet<Setting> Settings=>Set<Setting>(); public DbSet<Ticket> Tickets=>Set<Ticket>();
@@ -21,6 +21,7 @@ public class Database(DbContextOptions<Database> options):IdentityDbContext<User
   b.Entity<Media>().HasIndex(x=>x.Key).IsUnique(); b.Entity<Run>().HasIndex(x=>x.QuoteId).IsUnique();
   b.Entity<Notification>().HasIndex(x=>x.Dedupe).IsUnique();
   b.Entity<Export>().HasIndex(x=>new{x.ClipId,x.Revision,x.Format}).IsUnique();
+  b.Entity<ClipRevision>().HasIndex(x=>new{x.ClipId,x.Number}).IsUnique();
   b.Entity<Project>().HasIndex(x=>new{x.UserId,x.CreatedAt}); b.Entity<Job>().HasIndex(x=>new{x.State,x.LeaseUntil});
   b.Entity<CreditLot>().ToTable(t=>t.HasCheckConstraint("lots_no_expiry", "\"Kind\" NOT IN ('PURCHASED','PURCHASE_BONUS') OR \"ExpiresAt\" IS NULL"));
   b.Entity<CreditLot>().ToTable(t=>t.HasCheckConstraint("lots_nonnegative", "\"Available\">=0 AND \"Reserved\">=0"));
@@ -33,10 +34,11 @@ public class Database(DbContextOptions<Database> options):IdentityDbContext<User
   b.Entity<Job>().HasOne<Project>().WithMany().HasForeignKey(x=>x.ProjectId).OnDelete(DeleteBehavior.Restrict);
   b.Entity<Media>().HasOne<Project>().WithMany().HasForeignKey(x=>x.ProjectId).OnDelete(DeleteBehavior.Restrict);
   b.Entity<Clip>().HasOne<Run>().WithMany().HasForeignKey(x=>x.RunId).OnDelete(DeleteBehavior.Restrict);
+  b.Entity<ClipRevision>().HasOne<Clip>().WithMany().HasForeignKey(x=>x.ClipId).OnDelete(DeleteBehavior.Restrict);
   b.Entity<Ledger>().HasOne<CreditLot>().WithMany().HasForeignKey(x=>x.LotId).OnDelete(DeleteBehavior.Restrict);
   foreach(var entity in b.Model.GetEntityTypes())
    foreach(var p in entity.GetProperties().Where(p=>p.ClrType==typeof(string)))
-    if(p.Name is "Payload" or "Configuration" or "Items" or "Subtitles")p.SetColumnType("jsonb");
+    if(p.Name is "Payload" or "Configuration" or "Items" or "Subtitles" or "Segments" or "CaptionOverrides" or "VisualOverrides" or "Crop")p.SetColumnType("jsonb");
  }
  public async Task LockWallet(Guid id,CancellationToken ct=default) {
   await Wallets.FromSqlInterpolated($"SELECT * FROM \"Wallets\" WHERE \"Id\"={id} FOR UPDATE").LoadAsync(ct);

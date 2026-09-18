@@ -48,7 +48,15 @@ class Processor:
             meta=media_client.call(source,'probe',**limits);return {'durationMs':meta['duration_ms'],'outputs':[],'clips':[]}
         if stage=='RENDER':
             c=payload['clip'];features=payload.get('features',[]);output=self.work/'final.mp4'
-            media_client.call(source,'render',output,settings={'start_ms':c['startMs'],'end_ms':c['endMs'],'segments':c['subtitles'],'features':features,'aspect':payload['format'],'style':c['style']})
+            media_client.call(source,'render',output,settings={
+                'start_ms':c['startMs'],'end_ms':c['endMs'],
+                'source_segments':c.get('segments'),
+                'segments':c['subtitles'],'features':features,
+                'aspect':payload['format'],'style':c['style'],
+                'caption_preset':c.get('captionPreset','Clean'),
+                'visual_style':c.get('visualStyle','Cinema'),
+                'crop':c.get('crop')
+            })
             self.upload(output,'FINAL_EXPORT',lease);return {'outputs':self.outputs,'clips':[]}
         if stage not in {'PROCESS','ALTERNATIVES'}:raise ProcessingError('UNKNOWN_STAGE')
         ai=provider()
