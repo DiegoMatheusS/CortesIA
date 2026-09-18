@@ -12,6 +12,20 @@ def internal(path,body):
             content=r.read();return json.loads(content) if content else {}
     except urllib.error.HTTPError as e:raise ProcessingError('INTERNAL_API_'+str(e.code),e.code==429 or e.code>=500)
 
+def _relative_subtitle(segment, clip_start, clip_end):
+    start=max(0,segment.start_ms-clip_start)
+    end=min(clip_end,segment.end_ms)-clip_start
+    words=[]
+    for word in getattr(segment,'words',[]) or []:
+        if word.end_ms<=clip_start or word.start_ms>=clip_end:
+            continue
+        word_start=max(clip_start,word.start_ms)-clip_start
+        word_end=min(clip_end,word.end_ms)-clip_start
+        if word_end>word_start:
+            words.append({'startMs':word_start,'endMs':word_end,'word':word.word})
+    return {'startMs':start,'endMs':end,'text':segment.text,'words':words}
+
+
 class Processor:
     def __init__(self,s3,bucket,work,report=None):
         self.s3=s3;self.bucket=bucket;self.work=pathlib.Path(work);self.outputs=[]
@@ -107,6 +121,8 @@ class Processor:
 
         if stage not in {'PROCESS','ALTERNATIVES'}:raise ProcessingError('UNKNOWN_STAGE')
 
+        config=payload['config']
+        features=config.get('features') or []
         self.progress('PREPARING_AI',15)
         ai=provider()
 
@@ -127,7 +143,7 @@ class Processor:
             self.progress('EXTRACTING_AUDIO',28)
             audio=self.work/'audio.wav';media_client.call(master,'audio',audio)
             self.progress('TRANSCRIBING',32)
-            segments=ai.transcribe(audio)
+            segments=ai.transcribe(audio,word_timestamps='dynamic_captions' in features)
             self.progress('TRANSCRIPT_READY',52)
 
         for s in segments:s.validate(meta['duration_ms'])
@@ -135,7 +151,7 @@ class Processor:
         transcript.write_text(json.dumps([dataclasses.asdict(s) for s in segments],ensure_ascii=False))
         self.upload(transcript,'TRANSCRIPT',lease)
 
-        config=payload['config'];quantity=config.get('quantity',5);mode=config.get('durationMode','UP_TO_1_MIN')
+        quantity=config.get('quantity',5);mode=config.get('durationMode','UP_TO_1_MIN')
         ranges={'UP_TO_1_MIN':(0,60000),'ONE_TO_TWO_MIN':(60000,120000),'TWO_TO_THREE_MIN':(120000,180000),'AUTO':(0,180000)}
         low,high=ranges[mode];raw=[]
         offsets=list(range(0,meta['duration_ms'],600000))
@@ -150,13 +166,13 @@ class Processor:
         reviewed=ai.select(context,payload['modality'],quantity,mode,review=[dataclasses.asdict(c) for c in candidates]) if candidates else []
         selected=validate_candidates(reviewed,meta['duration_ms'],quantity,low,high,[(x['startMs'],x['endMs']) for x in payload.get('rejected',[])])
 
-        clips=[];features=config.get('features') or []
-        failed=[f for f in features if f == 'dynamic_captions']
+        clips=[]
+        failed=[]
         tracking_requested='tracking' in features
         tracking_delivered=False
         for index,candidate in enumerate(selected):
             self.progress('GENERATING_PREVIEWS',78+int(18*(index)/max(1,len(selected))))
-            relative=[{'startMs':max(0,s.start_ms-candidate.start_ms),'endMs':min(candidate.end_ms,s.end_ms)-candidate.start_ms,'text':s.text} for s in segments if s.end_ms>candidate.start_ms and s.start_ms<candidate.end_ms]
+            relative=[_relative_subtitle(s,candidate.start_ms,candidate.end_ms) for s in segments if s.end_ms>candidate.start_ms and s.start_ms<candidate.end_ms]
             tracking_plan=[]
             if tracking_requested:
                 self.progress('TRACKING_SUBJECT',78+int(12*(index+1)/max(1,len(selected))))
