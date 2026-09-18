@@ -458,6 +458,7 @@ def render(
     visual_style="Cinema",
     crop=None,
     tracking_plan=None,
+    caption_overrides=None,
 ):
     meta = probe(source, max_bytes=40_000_000_000)
     source_ranges, output_duration_ms = _source_segments(
@@ -489,7 +490,7 @@ def render(
 
     work = pathlib.Path(target).parent
     ass = work / "captions.ass"
-    subtitles(ass, segments, w, h, caption_preset, dynamic="dynamic_captions" in features)
+    subtitles(ass, segments, w, h, caption_preset, dynamic="dynamic_captions" in features, overrides=caption_overrides)
     safe_ass = (
         str(ass).replace("\\", "/").replace(":", r"\:").replace("'", r"\'")
     )
@@ -609,25 +610,48 @@ def render(
     return {"width": w, "height": h, "duration_ms": output_duration_ms}
 
 
-def cover(source, target, at_ms=0):
-    command(
-        [
-            "ffmpeg",
-            "-nostdin",
-            "-v",
-            "error",
-            "-y",
-            "-protocol_whitelist",
-            "file,pipe",
-            "-ss",
-            str(at_ms / 1000),
-            "-i",
-            str(source),
-            "-frames:v",
-            "1",
-            "-q:v",
-            "2",
-            str(target),
-        ],
-        120,
-    )
+def cover(source, target, at_ms=0, aspect="original", crop=None, visual_style="Cinema"):
+    meta = probe(source, max_bytes=40_000_000_000)
+    if visual_style not in VISUAL_FILTERS:
+        raise ProcessingError("INVALID_VISUAL_STYLE")
+
+    sizes = {
+        "9:16": (1080, 1920),
+        "4:5": (1080, 1350),
+        "1:1": (1080, 1080),
+        "16:9": (1920, 1080),
+        "original": (meta["width"], meta["height"]),
+    }
+    if aspect not in sizes:
+        raise ProcessingError("INVALID_ASPECT")
+
+    filters = []
+    crop_filter = _crop_filter(crop)
+    if crop_filter:
+        filters.append(crop_filter)
+
+    w, h = sizes[aspect]
+    if aspect != "original":
+        filters.append(f"scale={w}:{h}:force_original_aspect_ratio=increase")
+        filters.append(f"crop={w}:{h}")
+    filters.append(VISUAL_FILTERS[visual_style])
+
+    args = [
+        "ffmpeg",
+        "-nostdin",
+        "-v",
+        "error",
+        "-y",
+        "-protocol_whitelist",
+        "file,pipe",
+        "-ss",
+        str(at_ms / 1000),
+        "-i",
+        str(source),
+        "-frames:v",
+        "1",
+    ]
+    if filters:
+        args += ["-vf", ",".join(filters)]
+    args += ["-q:v", "2", str(target)]
+    command(args, 120)
