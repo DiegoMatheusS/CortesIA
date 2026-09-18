@@ -84,7 +84,7 @@ O CI aplica o baseline em PostgreSQL limpo, faz rollback até zero e falha se o 
 - Antivírus vem desativado somente no modo de desenvolvimento e identificado em Compose. Ative o perfil e `SCAN_MODE=required` para homologação; arquivos acima do limite suportado pelo ClamAV devem falhar fechados, nunca passar sem scan.
 - YouTube está habilitado por padrão no ambiente local/homologação via feature flag. Restrições retornam bloqueio sem consumo; produção só deve habilitar após smoke test real.
 - Legenda dinâmica está implementada com timestamps por palavra quando o transcritor fornece esse dado e alinhamento proporcional como fallback explícito. O tracking inteligente está disponível somente em ambientes com provider de visão habilitado; recursos indisponíveis não são cobrados.
-- O limite técnico de duração é 7 horas (25.200.000 ms), ainda sujeito a 5 GB. Podcasts compatíveis podem usar remux do vídeo em vez de transcode integral; a seleção de IA ranqueia candidatos entre várias janelas long-form antes da revisão final. Em produção, acima de 90 minutos continua exigindo aprovação comercial explícita.
+- O limite técnico de duração é 7 horas (25.200.000 ms), com limite máximo de 30 GB por arquivo. Podcasts compatíveis podem usar remux do vídeo em vez de transcode integral; a seleção de IA ranqueia candidatos entre várias janelas long-form antes da revisão final. Em produção, acima de 90 minutos continua exigindo aprovação comercial explícita.
 
 Comece por `docs/STATUS_IMPLEMENTACAO.md` e `docs/BACKLOG_MVP.md` para decidir o próximo incremento sem confundir código presente com fase homologada.
 
