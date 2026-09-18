@@ -6,7 +6,7 @@ Projeto integrado com frontend Next.js/React, API .NET 10, workers Python/FFmpeg
 
 ## Começar no Windows
 
-Requisitos: Docker Desktop com containers Linux/WSL2 e Compose, Python 3.12+, acesso a Docker Hub/MCR/NuGet/npm/PyPI para baixar dependências. Reserve memória e disco compatíveis com FFmpeg; vídeos grandes usam múltiplas cópias temporárias.
+Requisitos: Docker Desktop com containers Linux/WSL2 e Compose, Python 3.12+, acesso a Docker Hub/MCR/NuGet/npm/PyPI para baixar dependências. Reserve memória e principalmente disco compatíveis com FFmpeg; vídeos grandes usam múltiplas cópias temporárias. Para fontes próximas de 30 GB, planeje ao menos 80 GB de espaço livre para source, working master e temporários.
 
 Na pasta descompactada:
 
@@ -84,7 +84,7 @@ O CI aplica o baseline em PostgreSQL limpo, faz rollback até zero e falha se o 
 - Antivírus vem desativado somente no modo de desenvolvimento e identificado em Compose. Ative o perfil e `SCAN_MODE=required` para homologação; arquivos acima do limite suportado pelo ClamAV devem falhar fechados, nunca passar sem scan.
 - YouTube fica desligado até habilitação e teste. Restrições retornam bloqueio sem consumo; não se promete acesso a qualquer vídeo.
 - Legenda dinâmica está implementada com timestamps por palavra quando o transcritor fornece esse dado e alinhamento proporcional como fallback explícito. O tracking inteligente está disponível somente em ambientes com provider de visão habilitado; recursos indisponíveis não são cobrados.
-- O limite técnico de duração é 7 horas (25.200.000 ms), ainda sujeito ao limite de 5 GB por arquivo. Em desenvolvimento essa faixa pode ser testada; em produção, acima de 90 minutos exige aprovação explícita da política comercial para não inventar preço.
+- O limite técnico de duração é 7 horas (25.200.000 ms), com limite máximo de 30 GB por arquivo. Em desenvolvimento essa faixa pode ser testada; em produção, acima de 90 minutos exige aprovação explícita da política comercial para não inventar preço.
 
 Comece por `docs/STATUS_IMPLEMENTACAO.md` e `docs/BACKLOG_MVP.md` para decidir o próximo incremento sem confundir código presente com fase homologada.
 
