@@ -85,8 +85,8 @@ test('cadastro até exportação final usa browser, API, worker e storage reais'
   await page.getByRole('button', {name: 'Entrar'}).click();
   await page.waitForURL('**/app');
 
-  await expect(page.getByText(/créditos disponíveis/i)).toBeVisible();
-  await expect(page.getByText('10', {exact: true}).first()).toBeVisible();
+  const benefitsCard = page.locator('article').filter({hasText: 'Benefícios'});
+  await expect(benefitsCard.locator('strong')).toHaveText('10');
 
   const fileInput = page.locator('input[type="file"]').first();
   await fileInput.setInputFiles(video);
