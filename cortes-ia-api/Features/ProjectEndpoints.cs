@@ -79,7 +79,7 @@ public static class ProjectEndpoints {
   g.MapGet("/projects/{id:guid}/clips",async(Guid id,HttpContext h,Database d,Cloud cloud)=>{
    await Api.Own(d,h,id);var clips=await d.Clips.Where(x=>x.ProjectId==id).OrderBy(x=>x.StartMs).ToListAsync();
    return clips.Select(x=>new{x.Id,x.Title,x.Reason,x.StartMs,x.EndMs,x.Selection,x.Revision,x.Style,
-    segments=ReadSegments(x),subtitles=Json.Read<SubtitleDto[]>(x.Subtitles),x.CaptionPreset,x.VisualStyle,x.Aspect,crop=Json.Read<CropSpec>(x.Crop),
+    segments=ReadSegments(x),subtitles=Json.Read<SubtitleDto[]>(x.Subtitles),x.CaptionPreset,x.VisualStyle,x.Aspect,crop=Json.Read<CropSpec>(x.Crop),x.PreviewRevision,
     preview=x.PreviewKey==null?null:cloud.Download(x.PreviewKey),cover=x.CoverKey==null?null:cloud.Download(x.CoverKey)});
   });
   g.MapGet("/clips/{id:guid}/revisions",async(Guid id,HttpContext h,Database d)=>{
