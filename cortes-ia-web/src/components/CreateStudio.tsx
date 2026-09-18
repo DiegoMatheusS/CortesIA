@@ -6,7 +6,7 @@ import {api, friendly, key} from '@/lib/api';
 
 type PendingAction = 'file' | 'youtube' | null;
 
-const MAX_FILE_SIZE = 5_000_000_000;
+const MAX_FILE_SIZE = 30_000_000_000;
 
 function supportedFile(file: File) {
   return /\.(mp4|mov|mkv|webm)$/i.test(file.name);
@@ -135,7 +135,7 @@ export default function CreateStudio() {
     }
 
     if (file.size > MAX_FILE_SIZE) {
-      setMessage('O limite inicial é 5 GB por vídeo.');
+      setMessage('O limite é 30 GB por vídeo.');
       return;
     }
 
@@ -218,7 +218,7 @@ export default function CreateStudio() {
             <div className="dropzone-icon" aria-hidden="true">↑</div>
             <h2>Envie seu vídeo</h2>
             <p>Arraste para cá ou escolha no computador.</p>
-            <p className="source-meta">MP4, MOV, MKV ou WebM · até 5 GB · até 7 horas</p>
+            <p className="source-meta">MP4, MOV, MKV ou WebM · até 30 GB · até 7 horas</p>
             <button
               type="button"
               className="button primary"
@@ -245,7 +245,7 @@ export default function CreateStudio() {
           <article className="link-source">
             <span className="source-badge">LINK</span>
             <h2>Importe do YouTube</h2>
-            <p>O link é validado antes de qualquer processamento ou consumo de créditos.</p>
+            <p>Vídeos públicos ou não listados, com até 7 horas. O link é validado antes de qualquer processamento ou consumo de créditos.</p>
             <form onSubmit={submitYoutube}>
               <label htmlFor="youtube-url">Link do vídeo</label>
               <input
@@ -289,7 +289,9 @@ export default function CreateStudio() {
             <p className="eyebrow">CONTINUE DE ONDE PAROU</p>
             <h2 id="login-gate-title">Entre para iniciar.</h2>
             <p>
-              Seu arquivo ainda está selecionado nesta tela. Depois do login, o envio continua automaticamente.
+              {pending === 'youtube'
+                ? 'Seu link do YouTube continua pronto nesta tela. Depois do login, a verificação continua automaticamente.'
+                : 'Seu arquivo ainda está selecionado nesta tela. Depois do login, o envio continua automaticamente.'}
             </p>
 
             <form onSubmit={login}>
