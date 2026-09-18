@@ -507,6 +507,7 @@ export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
         subtitles: clip.subtitles,
         captionsEnabled: clip.style !== 'none',
         captionPreset: clip.captionPreset,
+        captionOverrides: clip.captionOverrides,
         visualStyle: clip.visualStyle,
         aspect: clip.aspect,
         crop: clip.crop,
