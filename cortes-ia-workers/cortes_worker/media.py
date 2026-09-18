@@ -11,7 +11,7 @@ from .models import ProcessingError
 def _limits():
     resource.setrlimit(resource.RLIMIT_NOFILE, (256, 256))
     resource.setrlimit(resource.RLIMIT_CORE, (0, 0))
-    resource.setrlimit(resource.RLIMIT_FSIZE, (12_000_000_000, 12_000_000_000))
+    resource.setrlimit(resource.RLIMIT_FSIZE, (40_000_000_000, 40_000_000_000))
 
 
 def command(args, timeout=7200):
@@ -32,7 +32,7 @@ def command(args, timeout=7200):
     return process.stdout
 
 
-def probe(source, max_bytes=5_000_000_000, max_duration_ms=25_200_000):
+def probe(source, max_bytes=30_000_000_000, max_duration_ms=25_200_000):
     source = pathlib.Path(source)
     if source.stat().st_size > max_bytes:
         raise ProcessingError("FILE_TOO_LARGE")
@@ -78,49 +78,68 @@ def probe(source, max_bytes=5_000_000_000, max_duration_ms=25_200_000):
     if max(width, height) > 4096 or min(width, height) > 2160:
         raise ProcessingError("RESOLUTION_LIMIT")
 
+    audio_stream = next((s for s in data["streams"] if s["codec_type"] == "audio"), None)
     return {
         "duration_ms": duration,
         "width": width,
         "height": height,
-        "audio": any(s["codec_type"] == "audio" for s in data["streams"]),
+        "audio": audio_stream is not None,
+        "video_codec": video.get("codec_name"),
+        "audio_codec": audio_stream.get("codec_name") if audio_stream else None,
     }
 
 
 def normalize(source, target, meta):
-    command(
-        [
-            "ffmpeg",
-            "-nostdin",
-            "-v",
-            "error",
-            "-y",
-            "-protocol_whitelist",
-            "file,pipe",
-            "-i",
-            str(source),
-            "-map",
-            "0:v:0",
-            "-map",
-            "0:a:0?",
+    timeout = int(os.getenv("MEDIA_NORMALIZE_TIMEOUT_SECONDS", "28800"))
+    can_remux_video = (
+        meta.get("video_codec") in {"h264", "hevc", "mpeg4"}
+        and int(meta.get("width", 0)) <= 1920
+        and int(meta.get("height", 0)) <= 1080
+    )
+
+    args = [
+        "ffmpeg",
+        "-nostdin",
+        "-v",
+        "error",
+        "-y",
+        "-protocol_whitelist",
+        "file,pipe",
+        "-i",
+        str(source),
+        "-map",
+        "0:v:0",
+        "-map",
+        "0:a:0?",
+    ]
+
+    if can_remux_video:
+        # Most podcast uploads are already H.264/HEVC. Reusing the video stream
+        # avoids hours of unnecessary encoding for 4-7h sources.
+        args += ["-c:v", "copy"]
+    else:
+        args += [
             "-vf",
             "scale=w='min(1920,iw)':h='min(1080,ih)':force_original_aspect_ratio=decrease:force_divisible_by=2",
             "-c:v",
             "libx264",
             "-preset",
-            "fast",
+            os.getenv("MEDIA_LONGFORM_PRESET", "veryfast"),
             "-crf",
-            "20",
-            "-c:a",
-            "aac",
-            "-b:a",
-            "160k",
-            "-movflags",
-            "+faststart",
+            os.getenv("MEDIA_LONGFORM_CRF", "21"),
             "-threads",
-            "2",
-            str(target),
+            os.getenv("MEDIA_FFMPEG_THREADS", "2"),
         ]
-    )
+
+    if meta.get("audio"):
+        if meta.get("audio_codec") == "aac":
+            args += ["-c:a", "copy"]
+        else:
+            args += ["-c:a", "aac", "-b:a", "160k"]
+
+    args += ["-movflags", "+faststart", str(target)]
+    command(args, timeout)
+
 
 
 def audio(source, target):
@@ -143,7 +162,8 @@ def audio(source, target):
             "-c:a",
             "pcm_s16le",
             str(target),
-        ]
+        ],
+        int(os.getenv("MEDIA_AUDIO_TIMEOUT_SECONDS", "14400")),
     )
 
 
@@ -392,7 +412,7 @@ def render(
     crop=None,
     tracking_plan=None,
 ):
-    meta = probe(source, max_bytes=12_000_000_000)
+    meta = probe(source, max_bytes=40_000_000_000)
     source_ranges, output_duration_ms = _source_segments(
         source_segments, start_ms, end_ms, meta["duration_ms"]
     )
