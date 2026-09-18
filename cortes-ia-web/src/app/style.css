@@ -678,3 +678,88 @@ html{scroll-behavior:smooth}
  .segment-editor-row{padding:9px}
  .editor-preset-grid,.editor-mood-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
+
+
+/* Account, credits and support */
+.account-hero{display:flex;align-items:flex-end;justify-content:space-between;gap:28px;padding:34px 0 26px!important;border-bottom:1px solid #ffffff0c}
+.account-hero h1{margin:8px 0 10px;font-size:clamp(2.3rem,4vw,4rem)}
+.account-hero p{margin:0}
+.account-status,.wallet-total,.support-summary{min-width:220px;padding:18px;border:1px solid #33405b;border-radius:16px;background:linear-gradient(180deg,#111b2e,#0b1323)}
+.account-status{display:grid;gap:7px}
+.account-status span{font-weight:800}
+.account-status small{color:#8997b1}
+.account-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-top:28px}
+.account-card,.account-section{border:1px solid #2b3852;border-radius:18px;background:#0f1829;padding:22px}
+.account-card h2,.account-section h2{margin:7px 0 18px}
+.account-card form button{margin-top:4px}
+.account-card input[readonly]{opacity:.7;cursor:not-allowed}
+.security-ok{padding:16px;border:1px solid #2c675d;border-radius:13px;background:#102922}
+.security-ok strong{color:#9ee4d5}
+.security-ok p{margin-bottom:0}
+.mfa-enroll{display:grid;gap:10px}
+.mfa-enroll code{margin:0;padding:12px;border:1px solid #34425f;border-radius:10px;background:#08111e;font-size:12px}
+.mfa-enroll details{color:#95a2bc}
+.account-links{display:flex;flex-direction:column}
+.account-link-row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid #ffffff0d}
+.account-link-row:last-child{border-bottom:0}
+.account-link-row:hover{text-decoration:none;color:#cbd4ff}
+.wallet-total{display:grid;gap:4px;text-align:right}
+.wallet-total strong{font-size:48px;line-height:1}
+.wallet-total small,.wallet-total span{color:#8e9bb4}
+.wallet-breakdown{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:24px 0}
+.wallet-breakdown article{padding:18px}
+.wallet-breakdown strong{display:block;font-size:34px;margin-top:7px}
+.wallet-breakdown small{color:#91a0bb}
+.account-section{margin-top:18px}
+.packages-pro{grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
+.packages-pro article{display:grid;gap:10px;padding:20px}
+.packages-pro article>div{display:grid}
+.packages-pro article>div strong{font-size:42px;line-height:1;margin:5px 0 2px}
+.packages-pro article>div span,.packages-pro article>div small{color:#8f9db7}
+.packages-pro article>b{font-size:18px}
+.packages-pro article button{margin-top:5px}
+.data-table-wrap{overflow:auto;border:1px solid #27344c;border-radius:14px}
+.account-table{width:100%;border-collapse:collapse;min-width:720px}
+.account-table th,.account-table td{padding:13px 14px;text-align:left;border-bottom:1px solid #ffffff0c;font-size:12px}
+.account-table th{color:#8f9cb5;font-size:10px;letter-spacing:.08em;text-transform:uppercase;background:#0b1423}
+.account-table tr:last-child td{border-bottom:0}
+.status-pill{display:inline-flex;align-items:center;padding:5px 8px;border-radius:999px;border:1px solid #3b4760;background:#111b2d;font-size:10px;white-space:nowrap}
+.status-approved,.status-resolved{border-color:#31695d;background:#102a23;color:#9ce5d5}
+.status-pending,.status-open,.status-in_review{border-color:#6b6030;background:#2a2512;color:#eedf94}
+.status-rejected,.status-cancelled,.status-chargeback{border-color:#744053;background:#301720;color:#f0a4b8}
+.status-answered{border-color:#415f88;background:#14243a;color:#a9caf3}
+.ledger-list{display:grid;gap:8px}
+.ledger-list article{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:14px 0;border-bottom:1px solid #ffffff0c;background:transparent;border-radius:0;border-left:0;border-right:0;border-top:0}
+.ledger-list article:last-child{border-bottom:0}
+.ledger-list strong,.ledger-list small{display:block}
+.ledger-list small{color:#8795ae;margin-top:4px}
+.ledger-list>article>span{font-weight:800;font-size:17px}
+.credit-positive{color:#85e3c9}.credit-negative{color:#ee96aa}
+.support-summary{display:grid;text-align:right}
+.support-summary strong{font-size:46px;line-height:1}
+.support-summary span{color:#8d9ab2;margin-top:5px}
+.support-layout{display:grid;grid-template-columns:minmax(300px,.7fr) minmax(0,1.3fr);gap:18px;margin-top:28px;align-items:start}
+.support-layout>.account-card{position:sticky;top:20px}
+.support-history{margin-top:0}
+.ticket-list{display:grid;gap:12px}
+.ticket-card{padding:18px;border:1px solid #2d3a54;background:#0b1424}
+.ticket-card header{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
+.ticket-card header strong,.ticket-card header small{display:block}
+.ticket-card header small{margin-top:5px;color:#8593ad}
+.ticket-card>p{white-space:pre-wrap}
+.ticket-reply{margin:14px 0;padding:14px;border-left:3px solid #6e79d9;background:#121d31;border-radius:0 10px 10px 0}
+.ticket-reply small{font-size:9px;letter-spacing:.1em;color:#9fa9ff}
+.ticket-reply p{margin:6px 0 0;white-space:pre-wrap;color:#c6d1e5}
+@media(max-width:850px){
+ .account-grid,.support-layout{grid-template-columns:1fr}
+ .support-layout>.account-card{position:static}
+ .account-hero{align-items:stretch;flex-direction:column}
+ .account-status,.wallet-total,.support-summary{width:100%;text-align:left}
+ .wallet-breakdown{grid-template-columns:1fr 1fr 1fr}
+}
+@media(max-width:560px){
+ .account-grid{gap:12px}
+ .account-card,.account-section{padding:16px}
+ .wallet-breakdown{grid-template-columns:1fr}
+ .ticket-card header{flex-direction:column}
+}

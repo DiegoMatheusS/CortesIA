@@ -134,6 +134,9 @@ export default function Dashboard() {
         <div>
           <span className="nav-user">{me?.name}</span>
           <NotificationBell />
+          <Link href="/app/credits">Créditos</Link>
+          <Link href="/app/support">Suporte</Link>
+          <Link href="/app/account">Conta</Link>
           <Link href="/app/settings/notifications">Notificações</Link>
           {me?.staff && <Link href="/admin">Operação</Link>}
           <button
@@ -260,6 +263,7 @@ export default function Dashboard() {
         <section className="dashboard-section">
           <div className="section-heading">
             <div><p className="eyebrow">CRÉDITOS</p><h2>Compre somente quando precisar.</h2></div>
+            <Link href="/app/credits">Carteira e histórico ↗</Link>
           </div>
 
           <div className="packages">

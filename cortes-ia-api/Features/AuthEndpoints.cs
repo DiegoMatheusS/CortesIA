@@ -16,6 +16,8 @@ public record LoginDto(string Email,string Password,string? MfaCode);
 public record TokenDto(string Email,string Token,string? Password);
 public record EmailDto(string Email);
 public record MfaDto(string Code);
+public record ProfileDto(string Name,string Phone);
+public record ChangePasswordDto(string CurrentPassword,string NewPassword);
 public static class AuthEndpoints {
  public static void Map(WebApplication app){
   app.MapPost("/api/v1/auth/register",async(RegisterDto r,Database db,UserManager<User> users,WalletService wallet,IConfiguration c)=>{
@@ -52,11 +54,30 @@ public static class AuthEndpoints {
   app.MapPost("/api/v1/auth/reset",async(TokenDto r,UserManager<User> users,Database db)=>{var u=await users.FindByEmailAsync(r.Email);if(u==null||string.IsNullOrEmpty(r.Password)||!(await users.ResetPasswordAsync(u,r.Token,r.Password)).Succeeded)throw new DomainError("INVALID_TOKEN");await users.UpdateSecurityStampAsync(u);await NotificationEndpoints.Queue(db,u.Id,"password-changed:"+Guid.NewGuid(),"PASSWORD_CHANGED","SECURITY","Sua senha foi alterada","A senha da sua conta SliceFlow foi alterada. Se não foi você, procure o suporte imediatamente.","REQUIRED");await db.SaveChangesAsync();return Results.Ok();}).RequireRateLimiting("auth");
   app.MapPost("/api/v1/auth/mfa/enroll",async(HttpContext h,UserManager<User> users)=>{var u=(await users.FindByIdAsync(Api.User(h).ToString()))!;if(u.TwoFactorEnabled)throw new DomainError("MFA_ALREADY_ENABLED",409);var recent=long.TryParse(h.User.FindFirstValue("auth_time"),out var at)&&DateTimeOffset.UtcNow.ToUnixTimeSeconds()-at<300;if(!recent)throw new DomainError("STEP_UP_REQUIRED",403);await users.ResetAuthenticatorKeyAsync(u);var key=await users.GetAuthenticatorKeyAsync(u);return Results.Ok(new{key,uri=$"otpauth://totp/SliceFlow:{Uri.EscapeDataString(u.Email!)}?secret={key}&issuer=SliceFlow"});}).RequireAuthorization();
   app.MapPost("/api/v1/auth/mfa/confirm",async(MfaDto r,HttpContext h,UserManager<User> users)=>{var u=(await users.FindByIdAsync(Api.User(h).ToString()))!;if(!await users.VerifyTwoFactorTokenAsync(u,TokenOptions.DefaultAuthenticatorProvider,r.Code))throw new DomainError("INVALID_MFA");await users.SetTwoFactorEnabledAsync(u,true);await users.UpdateSecurityStampAsync(u);return Results.Ok(new{loginAgain=true});}).RequireAuthorization().RequireRateLimiting("auth");
+  app.MapPut("/api/v1/me",async(ProfileDto r,HttpContext h,UserManager<User> users,Database db)=>{
+   var u=await users.FindByIdAsync(Api.User(h).ToString())??throw new DomainError("NOT_FOUND",404);
+   var name=(r.Name??"").Trim();var phone=(r.Phone??"").Trim();
+   if(name.Length is <2 or >120||phone.Length is <8 or >20)throw new DomainError("INVALID_PROFILE");
+   u.Name=name;u.PhoneNumber=phone;
+   var result=await users.UpdateAsync(u);if(!result.Succeeded)throw new DomainError("INVALID_PROFILE");
+   Api.Audit(db,u.Id,"PROFILE_UPDATED",u.Id.ToString(),"Nome e telefone atualizados");await db.SaveChangesAsync();
+   return Results.Ok(new{u.Name,phone=u.PhoneNumber});
+  }).RequireAuthorization().RequireRateLimiting("auth");
+  app.MapPost("/api/v1/auth/change-password",async(ChangePasswordDto r,HttpContext h,UserManager<User> users,SignInManager<User> sign,Database db)=>{
+   var u=await users.FindByIdAsync(Api.User(h).ToString())??throw new DomainError("NOT_FOUND",404);
+   if(string.IsNullOrWhiteSpace(r.CurrentPassword)||string.IsNullOrWhiteSpace(r.NewPassword))throw new DomainError("INVALID_PASSWORD_CHANGE");
+   var result=await users.ChangePasswordAsync(u,r.CurrentPassword,r.NewPassword);
+   if(!result.Succeeded)throw new DomainError("INVALID_PASSWORD_CHANGE");
+   await sign.RefreshSignInAsync(u);
+   Api.Audit(db,u.Id,"PASSWORD_CHANGED",u.Id.ToString(),"Senha alterada pela área Minha conta");
+   await NotificationEndpoints.Queue(db,u.Id,"password-changed:"+Guid.NewGuid(),"PASSWORD_CHANGED","SECURITY","Sua senha foi alterada","A senha da sua conta SliceFlow foi alterada pela área Minha conta. Se não foi você, procure o suporte imediatamente.","REQUIRED");
+   await db.SaveChangesAsync();return Results.Ok();
+  }).RequireAuthorization().RequireRateLimiting("auth");
   app.MapGet("/api/v1/me",async(HttpContext h,Database d,UserManager<User> users)=>{
    var u=await users.FindByIdAsync(Api.User(h).ToString());
    var roles=await users.GetRolesAsync(u!);
    return Results.Ok(new{
-    u!.Id,u.Name,u.Email,cpfMasked="***.***.***-"+u.CpfLastTwo,
+    u!.Id,u.Name,u.Email,phone=u.PhoneNumber??"",cpfMasked="***.***.***-"+u.CpfLastTwo,
     roles,
     admin=roles.Contains(StaffRoles.Admin),
     staff=StaffRoles.IsStaff(roles),
