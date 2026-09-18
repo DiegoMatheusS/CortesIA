@@ -5,6 +5,9 @@ import Link from 'next/link';
 import {api, friendly, key} from '@/lib/api';
 
 type Subtitle = {startMs: number; endMs: number; text: string};
+type Segment = {startMs: number; endMs: number};
+type Crop = {x: number; y: number; width: number; height: number};
+
 type Clip = {
   id: string;
   title: string;
@@ -14,11 +17,56 @@ type Clip = {
   selection: string;
   revision: number;
   style: string;
+  segments: Segment[];
   subtitles: Subtitle[];
+  captionPreset: string;
+  visualStyle: string;
+  aspect: string;
+  crop: Crop;
   preview?: string;
   cover?: string;
 };
-type Project = {id: string; title: string; status: string; outcome?: string; durationMs: number};
+
+type Revision = {
+  id: string;
+  number: number;
+  title: string;
+  selection: string;
+  startMs: number;
+  endMs: number;
+  segments: Segment[];
+  subtitles: Subtitle[];
+  style: string;
+  captionPreset: string;
+  visualStyle: string;
+  aspect: string;
+  crop: Crop;
+  createdAt: string;
+};
+
+type EditorMeta = {
+  durationMs: number;
+  masterAvailable: boolean;
+  captionPresets: string[];
+  visualStyles: string[];
+  aspects: string[];
+  capabilities: {
+    manualCuts: boolean;
+    nonDestructiveRevisions: boolean;
+    segments: boolean;
+    captionSync: boolean;
+    manualCrop: boolean;
+  };
+};
+
+type Project = {
+  id: string;
+  title: string;
+  status: string;
+  outcome?: string;
+  durationMs: number;
+};
+
 type Quote = {
   id: string;
   total: number;
@@ -26,7 +74,15 @@ type Quote = {
   balanceAfter: number;
   items: {code: string; description: string; credits: number}[];
 };
-type Export = {id: string; clipId: string; format: string; state: string; url?: string};
+
+type Export = {
+  id: string;
+  clipId: string;
+  format: string;
+  revision: number;
+  state: string;
+  url?: string;
+};
 
 const extras = [
   ['dynamic_captions', 'Legenda dinâmica', 3],
@@ -36,13 +92,31 @@ const extras = [
   ['cover', 'Capa automática', 2],
 ] as const;
 
-const captionPresets = ['Clean','Bold','Viral','Podcast','Karaoke','Pop','Minimal','Box','News','Dark','Neon','Impacto','Emoji','Classic','Creator'];
-const visualMoods = ['Cinema','Divertido','Animado','Sombrio','Quente','Frio'];
+const fallbackCaptionPresets = ['Clean','Bold','Viral','Podcast','Karaoke','Pop','Minimal','Box','News','Dark','Neon','Impacto','Emoji','Subtitle Classic','Creator','Custom'];
+const fallbackVisualStyles = ['Cinema','Divertido','Animado','Sombrio','Quente','Frio','Clean','Podcast','Impactante','Viral'];
+const fallbackAspects = ['9:16','4:5','1:1','16:9','original'];
+
+function outputDuration(clip: Clip) {
+  return clip.segments.reduce((total, segment) => total + segment.endMs - segment.startMs, 0);
+}
+
+function normalizeClip(clip: Clip): Clip {
+  return {
+    ...clip,
+    segments: clip.segments?.length ? clip.segments : [{startMs: clip.startMs, endMs: clip.endMs}],
+    captionPreset: clip.captionPreset || 'Clean',
+    visualStyle: clip.visualStyle || 'Cinema',
+    aspect: clip.aspect || '9:16',
+    crop: clip.crop || {x: 0, y: 0, width: 1, height: 1},
+  };
+}
 
 export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
   const {id} = use(params);
   const [project, setProject] = useState<Project>();
+  const [editorMeta, setEditorMeta] = useState<EditorMeta>();
   const [clips, setClips] = useState<Clip[]>([]);
+  const [revisions, setRevisions] = useState<Revision[]>([]);
   const [exports, setExports] = useState<Export[]>([]);
   const [bundles, setBundles] = useState<{id: string; url: string}[]>([]);
   const [quantity, setQuantity] = useState(5);
@@ -56,8 +130,6 @@ export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
   const [busy, setBusy] = useState(false);
   const [rights, setRights] = useState(false);
   const [editorClipId, setEditorClipId] = useState<string | null>(null);
-  const [captionPreset, setCaptionPreset] = useState<Record<string,string>>({});
-  const [visualMood, setVisualMood] = useState<Record<string,string>>({});
   const [history, setHistory] = useState<Record<string, Clip[]>>({});
   const [redo, setRedo] = useState<Record<string, Clip[]>>({});
   const [manualOpen, setManualOpen] = useState(false);
@@ -70,19 +142,40 @@ export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
     [clips, editorClipId],
   );
 
+  const captionPresets = editorMeta?.captionPresets?.length ? editorMeta.captionPresets : fallbackCaptionPresets;
+  const visualStyles = editorMeta?.visualStyles?.length ? editorMeta.visualStyles : fallbackVisualStyles;
+  const aspects = editorMeta?.aspects?.length ? editorMeta.aspects : fallbackAspects;
+  const maxSeconds = Math.max(1, Math.floor((project?.durationMs ?? 0) / 1000));
+
+  async function loadRevisions(clipId: string) {
+    try {
+      setRevisions(await api<Revision[]>(`/clips/${clipId}/revisions`));
+    } catch {
+      setRevisions([]);
+    }
+  }
+
   async function refresh() {
     try {
-      const [p, c, e, b] = await Promise.all([
+      const [p, meta, rawClips, e, b] = await Promise.all([
         api<Project>('/projects/' + id),
+        api<EditorMeta>(`/projects/${id}/editor`),
         api<Clip[]>(`/projects/${id}/clips`),
         api<Export[]>(`/projects/${id}/exports`),
         api<{id:string;url:string}[]>(`/projects/${id}/bundles`),
       ]);
+      const normalized = rawClips.map(normalizeClip);
       setProject(p);
-      setClips(c);
+      setEditorMeta(meta);
+      setClips(normalized);
       setExports(e);
       setBundles(b);
-      if (!editorClipId && c.length) setEditorClipId(c[0].id);
+
+      const selected = editorClipId && normalized.some(clip => clip.id === editorClipId)
+        ? editorClipId
+        : normalized[0]?.id ?? null;
+      setEditorClipId(selected);
+      if (selected) void loadRevisions(selected);
     } catch (error) {
       setMessage(friendly((error as Error).message));
     }
@@ -123,10 +216,43 @@ export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
 
     setHistory(old => ({
       ...old,
-      [clipId]: [...(old[clipId] ?? []), current].slice(-30),
+      [clipId]: [...(old[clipId] ?? []), structuredClone(current)].slice(-30),
     }));
     setRedo(old => ({...old, [clipId]: []}));
     setClips(old => old.map(clip => clip.id === clipId ? {...clip, ...patch} : clip));
+  }
+
+  function patchSegments(clip: Clip, segments: Segment[]) {
+    if (!segments.length) return;
+    const ordered = [...segments].sort((a, b) => a.startMs - b.startMs);
+    patchClip(clip.id, {
+      segments: ordered,
+      startMs: Math.min(...ordered.map(segment => segment.startMs)),
+      endMs: Math.max(...ordered.map(segment => segment.endMs)),
+    });
+  }
+
+  function updateSegment(clip: Clip, index: number, patch: Partial<Segment>) {
+    const next = clip.segments.map((segment, position) => position === index ? {...segment, ...patch} : segment);
+    patchSegments(clip, next);
+  }
+
+  function splitSegment(clip: Clip, index: number) {
+    const segment = clip.segments[index];
+    if (!segment || segment.endMs - segment.startMs < 400) return;
+    const middle = Math.round((segment.startMs + segment.endMs) / 2);
+    const next = [
+      ...clip.segments.slice(0, index),
+      {startMs: segment.startMs, endMs: middle},
+      {startMs: middle, endMs: segment.endMs},
+      ...clip.segments.slice(index + 1),
+    ];
+    patchSegments(clip, next);
+  }
+
+  function removeSegment(clip: Clip, index: number) {
+    if (clip.segments.length <= 1) return;
+    patchSegments(clip, clip.segments.filter((_, position) => position !== index));
   }
 
   function undoClip(clipId: string) {
@@ -137,7 +263,7 @@ export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
     if (!current) return;
 
     setHistory(old => ({...old, [clipId]: stack.slice(0, -1)}));
-    setRedo(old => ({...old, [clipId]: [...(old[clipId] ?? []), current].slice(-30)}));
+    setRedo(old => ({...old, [clipId]: [...(old[clipId] ?? []), structuredClone(current)].slice(-30)}));
     setClips(old => old.map(clip => clip.id === clipId ? previous : clip));
   }
 
@@ -149,32 +275,71 @@ export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
     if (!current) return;
 
     setRedo(old => ({...old, [clipId]: stack.slice(0, -1)}));
-    setHistory(old => ({...old, [clipId]: [...(old[clipId] ?? []), current].slice(-30)}));
+    setHistory(old => ({...old, [clipId]: [...(old[clipId] ?? []), structuredClone(current)].slice(-30)}));
     setClips(old => old.map(clip => clip.id === clipId ? next : clip));
   }
 
-  async function saveClip(clip: Clip) {
-    setBusy(true);
+  async function saveClip(clip: Clip, showMessage = true) {
+    const result = await api<{revision: number}>(
+      `/clips/${clip.id}/revisions`,
+      'POST',
+      {
+        title: clip.title,
+        selection: clip.selection,
+        segments: clip.segments,
+        subtitles: clip.subtitles,
+        captionsEnabled: clip.style !== 'none',
+        captionPreset: clip.captionPreset,
+        visualStyle: clip.visualStyle,
+        aspect: clip.aspect,
+        crop: clip.crop,
+      },
+      {version: clip.revision},
+    );
+
+    setClips(old => old.map(item => item.id === clip.id ? {...item, revision: result.revision} : item));
+    setHistory(old => ({...old, [clip.id]: []}));
+    setRedo(old => ({...old, [clip.id]: []}));
+    await loadRevisions(clip.id);
+    if (showMessage) setMessage(`Revisão ${result.revision} salva sem nova cobrança.`);
+    return result.revision;
+  }
+
+  async function createManualClip() {
+    if (busy) return;
     setMessage('');
+
+    if (!editorMeta?.masterAvailable) {
+      setMessage(friendly('MASTER_EXPIRED'));
+      return;
+    }
+    if (!manualTitle.trim() || manualEnd <= manualStart) {
+      setMessage('Defina um título e um intervalo válido para o corte manual.');
+      return;
+    }
+
+    setBusy(true);
     try {
-      const result = await api<{revision: number}>(
-        '/clips/' + clip.id,
-        'PUT',
+      const result = await api<{id: string; revision: number}>(
+        `/projects/${id}/clips/manual`,
+        'POST',
         {
-          title: clip.title,
-          startMs: clip.startMs,
-          endMs: clip.endMs,
-          selection: clip.selection,
-          subtitles: clip.subtitles,
-          style: clip.style,
+          title: manualTitle.trim(),
+          segments: [{
+            startMs: Math.round(manualStart * 1000),
+            endMs: Math.round(manualEnd * 1000),
+          }],
+          aspect: '9:16',
+          captionPreset: 'Clean',
+          visualStyle: 'Cinema',
         },
-        {version: clip.revision},
       );
 
-      setClips(old => old.map(item => item.id === clip.id ? {...item, revision: result.revision} : item));
-      setHistory(old => ({...old, [clip.id]: []}));
-      setRedo(old => ({...old, [clip.id]: []}));
-      setMessage('Alterações do corte salvas sem nova cobrança.');
+      setManualOpen(false);
+      setMessage('Corte manual criado a partir do master, sem nova análise de IA.');
+      await refresh();
+      setEditorClipId(result.id);
+      await loadRevisions(result.id);
     } catch (error) {
       setMessage(friendly((error as Error).message));
     } finally {
@@ -186,19 +351,9 @@ export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
     setBusy(true);
     setMessage('');
     try {
-      await api(
-        '/clips/' + clip.id,
-        'PUT',
-        {
-          title: clip.title,
-          startMs: clip.startMs,
-          endMs: clip.endMs,
-          selection: clip.selection,
-          subtitles: clip.subtitles,
-          style: clip.style,
-        },
-        {version: clip.revision},
-      );
+      if ((history[clip.id]?.length ?? 0) > 0) {
+        await saveClip(clip, false);
+      }
 
       await api(
         `/projects/${id}/exports`,
@@ -207,7 +362,7 @@ export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
         {key: key()},
       );
 
-      setMessage('Renderização solicitada sem cobrança duplicada.');
+      setMessage(`Renderização ${exportFormat} solicitada para a revisão atual.`);
       await refresh();
     } catch (error) {
       setMessage(friendly((error as Error).message));
@@ -215,8 +370,6 @@ export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
       setBusy(false);
     }
   }
-
-  const maxSeconds = Math.max(1, Math.floor((project?.durationMs ?? 0) / 1000));
 
   return (
     <>
@@ -233,7 +386,13 @@ export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
             <p>{Math.ceil((project?.durationMs || 0) / 60000)} minutos de conteúdo</p>
           </div>
           <div className="project-header-actions">
-            <button className="secondary" onClick={() => setManualOpen(value => !value)}>+ Criar corte manual</button>
+            <button
+              className="secondary"
+              disabled={!editorMeta?.capabilities.manualCuts || !editorMeta?.masterAvailable}
+              onClick={() => setManualOpen(value => !value)}
+            >
+              + Criar corte manual
+            </button>
             <button className="secondary" onClick={refresh}>Atualizar</button>
           </div>
         </section>
@@ -249,12 +408,13 @@ export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
                 <p className="eyebrow">CORTE MANUAL</p>
                 <h2>Escolha qualquer trecho do master.</h2>
               </div>
-              <span>Interface v0.5 preparada</span>
+              <span>Sem nova análise de IA</span>
             </div>
+
             <div className="manual-cut-grid">
               <label>
                 Título
-                <input value={manualTitle} onChange={event => setManualTitle(event.target.value)} />
+                <input value={manualTitle} maxLength={200} onChange={event => setManualTitle(event.target.value)} />
               </label>
               <label>
                 Início (s)
@@ -265,11 +425,16 @@ export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
                 <input type="number" min={0} max={maxSeconds} step=".1" value={manualEnd} onChange={event => setManualEnd(Number(event.target.value))} />
               </label>
             </div>
-            <div className="manual-timeline" aria-label="Prévia da timeline do corte manual">
+
+            <div className="manual-timeline" aria-label="Intervalo do corte manual">
               <span style={{left: `${Math.min(100, manualStart / maxSeconds * 100)}%`}} />
               <span style={{left: `${Math.min(100, manualEnd / maxSeconds * 100)}%`}} />
             </div>
-            <p className="dev-note">A criação manual já está desenhada no frontend. A persistência desse novo corte será conectada quando o endpoint v0.5 do master entrar no backend.</p>
+
+            <div className="manual-cut-actions">
+              <button disabled={busy} onClick={() => void createManualClip()}>Criar corte</button>
+              <button className="secondary" disabled={busy} onClick={() => setManualOpen(false)}>Cancelar</button>
+            </div>
           </section>
         )}
 
@@ -300,7 +465,7 @@ export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
           <p>Extras cobrados uma vez por execução, nunca por corte.</p>
 
           <div className="extras">
-            {['9:16','4:5','1:1','16:9','original'].map(format => (
+            {fallbackAspects.map(format => (
               <label className="check" key={format}>
                 <input
                   type="checkbox"
@@ -353,6 +518,7 @@ export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
             <div className="section-heading">
               <div><p className="eyebrow">CORTES</p><h2>Selecione para editar</h2></div>
             </div>
+
             <button
               className="secondary editor-alt-button"
               onClick={async () => {
@@ -372,21 +538,40 @@ export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
                 <button
                   key={clip.id}
                   className={editorClipId === clip.id ? 'active' : ''}
-                  onClick={() => setEditorClipId(clip.id)}
+                  onClick={() => {
+                    setEditorClipId(clip.id);
+                    setExportFormat(clip.aspect || '9:16');
+                    void loadRevisions(clip.id);
+                  }}
                 >
                   <span>{String(index + 1).padStart(2, '0')}</span>
-                  <div><strong>{clip.title}</strong><small>{Math.round((clip.endMs - clip.startMs) / 1000)}s · {clip.selection}</small></div>
+                  <div>
+                    <strong>{clip.title}</strong>
+                    <small>{Math.round(outputDuration(clip) / 1000)}s · rev. {clip.revision} · {clip.selection}</small>
+                  </div>
                 </button>
               ))}
               {!clips.length && <p>Os cortes sugeridos aparecerão aqui quando a análise terminar.</p>}
             </div>
+
+            {!!revisions.length && (
+              <div className="revision-history">
+                <small>HISTÓRICO</small>
+                {revisions.slice(0, 8).map(revision => (
+                  <div key={revision.id}>
+                    <span>Rev. {revision.number}</span>
+                    <time dateTime={revision.createdAt}>{new Date(revision.createdAt).toLocaleString('pt-BR')}</time>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="editor-main">
             {!editorClip && (
               <div className="editor-empty">
                 <strong>Escolha um corte para abrir o editor.</strong>
-                <p>Você poderá ajustar início, fim, título, legenda e exportação.</p>
+                <p>Você poderá ajustar segmentos, legenda, visual, crop e exportação.</p>
               </div>
             )}
 
@@ -394,7 +579,7 @@ export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
               <>
                 <div className="editor-topbar">
                   <div>
-                    <p className="eyebrow">EDITOR SHORT-FORM</p>
+                    <p className="eyebrow">EDITOR SHORT-FORM · REV. {editorClip.revision}</p>
                     <h2>{editorClip.title}</h2>
                   </div>
                   <div className="editor-history">
@@ -404,54 +589,75 @@ export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
                 </div>
 
                 <div className="editor-stage-grid">
-                  <div className={`editor-video mood-${(visualMood[editorClip.id] || 'Cinema').toLowerCase()}`}>
+                  <div className={`editor-video mood-${editorClip.visualStyle.toLowerCase()}`}>
                     {editorClip.preview
                       ? <video controls preload="metadata" src={editorClip.preview} poster={editorClip.cover} />
                       : <div className="editor-placeholder"><span className="preview-person" /><strong>Prévia do corte</strong></div>}
-                    {editorClip.style !== 'none' && <div className="editor-caption-preview">A IA cria. <b>Você ajusta.</b></div>}
+                    {editorClip.style !== 'none' && (
+                      <div className={`editor-caption-preview caption-preview-${editorClip.captionPreset.toLowerCase().replace(/\s+/g, '-')}`}>
+                        A IA cria. <b>Você ajusta.</b>
+                      </div>
+                    )}
                   </div>
 
                   <aside className="editor-inspector">
-                    <label>Título<input value={editorClip.title} onChange={event => patchClip(editorClip.id, {title: event.target.value})} /></label>
+                    <label>Título<input value={editorClip.title} maxLength={200} onChange={event => patchClip(editorClip.id, {title: event.target.value})} /></label>
                     <label>Escolha<select value={editorClip.selection} onChange={event => patchClip(editorClip.id, {selection: event.target.value})}><option value="SUGGESTED">Sugestão</option><option value="SELECTED">Selecionado</option><option value="REJECTED">Descartado</option></select></label>
                     <label>Legenda<select value={editorClip.style} onChange={event => patchClip(editorClip.id, {style: event.target.value})}><option value="simple">Ativada</option><option value="none">Desativada</option></select></label>
-                    <label>Formato de exportação<select value={exportFormat} onChange={event => setExportFormat(event.target.value)}>{['9:16','4:5','1:1','16:9','original'].map(format => <option key={format}>{format}</option>)}</select></label>
+                    <label>Formato<select value={exportFormat} onChange={event => {setExportFormat(event.target.value);patchClip(editorClip.id, {aspect: event.target.value});}}>{aspects.map(format => <option key={format}>{format}</option>)}</select></label>
+
+                    <fieldset className="crop-fields">
+                      <legend>Crop manual</legend>
+                      {(['x','y','width','height'] as const).map(field => (
+                        <label key={field}>
+                          {field.toUpperCase()}
+                          <input
+                            type="number"
+                            min={field === 'width' || field === 'height' ? 0.01 : 0}
+                            max={1}
+                            step=".01"
+                            value={editorClip.crop[field]}
+                            onChange={event => patchClip(editorClip.id, {
+                              crop: {...editorClip.crop, [field]: Number(event.target.value)},
+                            })}
+                          />
+                        </label>
+                      ))}
+                    </fieldset>
                   </aside>
                 </div>
 
                 <div className="timeline-editor">
-                  <div className="timeline-heading"><strong>Timeline</strong><span>{(editorClip.startMs / 1000).toFixed(1)}s → {(editorClip.endMs / 1000).toFixed(1)}s</span></div>
-                  <div className="timeline-rulers">
-                    <input
-                      aria-label="Início do corte"
-                      type="range"
-                      min={0}
-                      max={maxSeconds}
-                      step=".1"
-                      value={editorClip.startMs / 1000}
-                      onChange={event => {
-                        const next = Number(event.target.value) * 1000;
-                        if (next < editorClip.endMs) patchClip(editorClip.id, {startMs: next});
-                      }}
-                    />
-                    <input
-                      aria-label="Fim do corte"
-                      type="range"
-                      min={0}
-                      max={maxSeconds}
-                      step=".1"
-                      value={editorClip.endMs / 1000}
-                      onChange={event => {
-                        const next = Number(event.target.value) * 1000;
-                        if (next > editorClip.startMs) patchClip(editorClip.id, {endMs: next});
-                      }}
-                    />
+                  <div className="timeline-heading">
+                    <strong>Timeline não destrutiva</strong>
+                    <span>{(outputDuration(editorClip) / 1000).toFixed(1)}s no resultado · {editorClip.segments.length} segmento(s)</span>
                   </div>
-                  <div className="timeline-numbers">
-                    <label>Início<input type="number" step=".1" value={editorClip.startMs / 1000} onChange={event => patchClip(editorClip.id, {startMs: Number(event.target.value) * 1000})} /></label>
-                    <label>Fim<input type="number" step=".1" value={editorClip.endMs / 1000} onChange={event => patchClip(editorClip.id, {endMs: Number(event.target.value) * 1000})} /></label>
+
+                  <div className="segment-editor-list">
+                    {editorClip.segments.map((segment, index) => (
+                      <div className="segment-editor-row" key={index}>
+                        <b>Trecho {index + 1}</b>
+                        <label>Início<input type="number" step=".1" min={0} max={maxSeconds} value={segment.startMs / 1000} onChange={event => updateSegment(editorClip, index, {startMs: Math.round(Number(event.target.value) * 1000)})} /></label>
+                        <label>Fim<input type="number" step=".1" min={0} max={maxSeconds} value={segment.endMs / 1000} onChange={event => updateSegment(editorClip, index, {endMs: Math.round(Number(event.target.value) * 1000)})} /></label>
+                        <button className="secondary" type="button" onClick={() => splitSegment(editorClip, index)}>Dividir</button>
+                        <button className="secondary" type="button" disabled={editorClip.segments.length <= 1} onClick={() => removeSegment(editorClip, index)}>Remover</button>
+                      </div>
+                    ))}
                   </div>
-                  <div className="timeline-tools"><button className="secondary" disabled>Dividir</button><button className="secondary" disabled>Remover trecho</button><small>Essas operações aguardam o endpoint de segmentos da v0.5.</small></div>
+
+                  <div className="timeline-strip">
+                    {editorClip.segments.map((segment, index) => (
+                      <span
+                        key={index}
+                        title={`Trecho ${index + 1}`}
+                        style={{
+                          left: `${segment.startMs / Math.max(1, project?.durationMs ?? 1) * 100}%`,
+                          width: `${Math.max(.5, (segment.endMs - segment.startMs) / Math.max(1, project?.durationMs ?? 1) * 100)}%`,
+                        }}
+                      />
+                    ))}
+                  </div>
+                  <small>Dividir e remover trechos alteram apenas a revisão do corte; o vídeo master permanece intacto.</small>
                 </div>
 
                 <div className="editor-panels">
@@ -469,8 +675,9 @@ export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
                           />
                         </label>
                       ))}
+                      {!editorClip.subtitles.length && <p>Nenhuma legenda disponível neste corte ainda.</p>}
                     </div>
-                    <small>Correções de texto permanecem dentro da revisão atual e não geram nova cobrança.</small>
+                    <small>Correções de texto e sincronismo ficam na revisão e não disparam nova análise de IA.</small>
                   </section>
 
                   <section>
@@ -480,37 +687,52 @@ export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
                         <button
                           type="button"
                           key={preset}
-                          className={(captionPreset[editorClip.id] || 'Clean') === preset ? 'active' : ''}
-                          onClick={() => setCaptionPreset(current => ({...current, [editorClip.id]: preset}))}
+                          className={editorClip.captionPreset === preset ? 'active' : ''}
+                          onClick={() => patchClip(editorClip.id, {captionPreset: preset})}
                         >
                           <small>{preset}</small><b>PALAVRA</b>
                         </button>
                       ))}
                     </div>
-                    <small>Os presets completos já estão no frontend; a persistência será ligada ao contrato v0.5.</small>
+                    <small>O preset escolhido é salvo na revisão e usado pelo render final.</small>
                   </section>
 
                   <section>
                     <div className="section-heading"><div><p className="eyebrow">ESTILO VISUAL</p><h3>Tipo de filme</h3></div></div>
                     <div className="editor-mood-grid">
-                      {visualMoods.map(mood => (
+                      {visualStyles.map(mood => (
                         <button
                           type="button"
                           key={mood}
-                          className={(visualMood[editorClip.id] || 'Cinema') === mood ? 'active' : ''}
-                          onClick={() => setVisualMood(current => ({...current, [editorClip.id]: mood}))}
+                          className={editorClip.visualStyle === mood ? 'active' : ''}
+                          onClick={() => patchClip(editorClip.id, {visualStyle: mood})}
                         >
                           <span className={`mood-swatch mood-${mood.toLowerCase()}`} />
                           <b>{mood}</b>
                         </button>
                       ))}
                     </div>
-                    <small>O preset visual altera apenas a apresentação da prévia; não muda fala nem significado.</small>
+                    <small>Os estilos são allowlisted no backend e renderizados deterministicamente pelo FFmpeg.</small>
                   </section>
                 </div>
 
                 <div className="editor-actions">
-                  <button disabled={busy} onClick={() => void saveClip(editorClip)}>Salvar edição</button>
+                  <button
+                    disabled={busy || !(history[editorClip.id]?.length)}
+                    onClick={async () => {
+                      setBusy(true);
+                      setMessage('');
+                      try {
+                        await saveClip(editorClip);
+                      } catch (error) {
+                        setMessage(friendly((error as Error).message));
+                      } finally {
+                        setBusy(false);
+                      }
+                    }}
+                  >
+                    Salvar nova revisão
+                  </button>
                   <button
                     className="secondary"
                     disabled={busy || editorClip.selection !== 'SELECTED'}
@@ -543,7 +765,7 @@ export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
             {bundles.map(bundle => <a className="button" key={bundle.id} href={bundle.url}>Baixar ZIP</a>)}
             {exports.map(item => (
               <article className="row" key={item.id}>
-                <span>{item.format} · {item.state}</span>
+                <span>{item.format} · rev. {item.revision} · {item.state}</span>
                 {item.url && <a className="button" href={item.url} target="_blank" rel="noreferrer">Baixar vídeo</a>}
               </article>
             ))}
