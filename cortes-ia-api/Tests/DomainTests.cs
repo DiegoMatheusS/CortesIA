@@ -21,4 +21,19 @@ public class DomainTests {
   Assert.True(NotificationEndpoints.WantsEmail(n,null));
   Assert.False(NotificationEndpoints.WantsEmail(n,new NotificationPreference{ProcessingEmail=false}));
  }
+ [Fact] public void StaffRoleMatrixIsExplicit(){
+  Assert.True(StaffRoles.IsStaff(new[]{StaffRoles.Support}));
+  Assert.True(StaffRoles.IsStaff(new[]{StaffRoles.Finance,StaffRoles.Security}));
+  Assert.False(StaffRoles.IsStaff(Array.Empty<string>()));
+  Assert.True(StaffRoles.Valid("Admin"));
+  Assert.False(StaffRoles.Valid("Owner"));
+ }
+ [Fact] public void StaffRoleCapabilitiesStaySeparated(){
+  Assert.Contains(StaffRoles.Support,StaffRoles.SupportAccess);
+  Assert.DoesNotContain(StaffRoles.Finance,StaffRoles.SupportAccess);
+  Assert.Contains(StaffRoles.Finance,StaffRoles.FinanceAccess);
+  Assert.DoesNotContain(StaffRoles.Security,StaffRoles.FinanceAccess);
+  Assert.Contains(StaffRoles.Security,StaffRoles.SecurityAccess);
+  Assert.DoesNotContain(StaffRoles.Support,StaffRoles.SecurityAccess);
+ }
 }
