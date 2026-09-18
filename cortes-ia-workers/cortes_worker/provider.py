@@ -344,6 +344,8 @@ def provider():
 
     if profile == "LOCAL":
         selector = OllamaProvider()
+        if os.getenv("OLLAMA_HEALTHCHECK", "true").lower() not in {"0","false","no"}:
+            selector.health()
         asr = os.getenv("TRANSCRIPTION_PROVIDER", "fixture").lower()
         if asr == "faster-whisper":
             transcriber = FasterWhisperProvider()
