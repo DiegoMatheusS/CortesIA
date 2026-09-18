@@ -7,6 +7,14 @@ COPY --chown=cortes:cortes . .
 ENV PYTHONUNBUFFERED=1
 USER cortes
 CMD ["python","-m","cortes_worker.runner"]
+
+FROM base AS local-ai
+USER root
+COPY requirements-local-ai.txt ./
+RUN pip install --no-cache-dir -r requirements-local-ai.txt
+USER cortes
+CMD ["python","-m","cortes_worker.runner"]
+
 FROM base AS media
 USER root
 RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg fonts-dejavu-core && rm -rf /var/lib/apt/lists/*
