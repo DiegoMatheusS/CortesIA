@@ -4,7 +4,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace Cortes.Api.Migrations
+namespace Cortes.Migrations
 {
     /// <inheritdoc />
     public partial class SliceFlowBaseline : Migration
