@@ -1,6 +1,6 @@
 'use client';
 
-import {use, useEffect, useMemo, useState} from 'react';
+import {use, useEffect, useMemo, useRef, useState} from 'react';
 import Link from 'next/link';
 import {api, friendly, key} from '@/lib/api';
 
@@ -49,6 +49,7 @@ type Revision = {
 type EditorMeta = {
   durationMs: number;
   masterAvailable: boolean;
+  masterUrl?: string | null;
   captionPresets: string[];
   visualStyles: string[];
   aspects: string[];
@@ -137,6 +138,7 @@ const progressLabels: Record<string,string> = {
   RENDERING_EXPORT: 'Renderizando exportação',
   BUILDING_BUNDLE: 'Preparando ZIP',
   UPLOADING_OUTPUT: 'Salvando resultado',
+  GENERATING_COVER: 'Gerando capa',
   FINALIZING: 'Finalizando',
   DONE: 'Concluído',
 };
@@ -184,6 +186,9 @@ export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
   const [manualStart, setManualStart] = useState(0);
   const [manualEnd, setManualEnd] = useState(30);
   const [previewing, setPreviewing] = useState<string | null>(null);
+  const [covering, setCovering] = useState<string | null>(null);
+  const [coverAt, setCoverAt] = useState(0);
+  const coverVideoRef = useRef<HTMLVideoElement>(null);
 
   const editorClip = useMemo(
     () => clips.find(clip => clip.id === editorClipId),
@@ -240,6 +245,16 @@ export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
     }, 5000);
     return () => clearInterval(timer);
   }, [id]);
+
+  useEffect(() => {
+    const selected = clips.find(clip => clip.id === editorClipId);
+    if (!selected) return;
+    const seconds = Math.max(0, selected.startMs / 1000);
+    setCoverAt(seconds);
+    if (coverVideoRef.current && Number.isFinite(seconds)) {
+      coverVideoRef.current.currentTime = seconds;
+    }
+  }, [editorClipId]);
 
   useEffect(() => {
     setQuote(undefined);
@@ -461,6 +476,50 @@ export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
       setMessage(friendly((error as Error).message));
     } finally {
       setPreviewing(null);
+    }
+  }
+
+  async function requestCover(clip: Clip) {
+    if (covering || previewing || busy || !editorMeta?.masterUrl) return;
+    setCovering(clip.id);
+    setMessage('');
+
+    try {
+      let revision = clip.revision;
+      if ((history[clip.id]?.length ?? 0) > 0) {
+        revision = await saveClip(clip, false);
+      }
+
+      await api(
+        `/clips/${clip.id}/cover`,
+        'POST',
+        {atMs: Math.round(coverAt * 1000)},
+        {version: revision},
+      );
+
+      setMessage(`Gerando capa no ponto ${coverAt.toFixed(1)}s…`);
+
+      for (let attempt = 0; attempt < 12; attempt++) {
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        const serverClips = (await api<Clip[]>(`/projects/${id}/clips`)).map(normalizeClip);
+        const updated = serverClips.find(item => item.id === clip.id);
+        if (!updated) break;
+
+        if (updated.revision > revision && updated.cover) {
+          setClips(current => current.map(item => item.id === clip.id ? updated : item));
+          setHistory(old => ({...old, [clip.id]: []}));
+          setRedo(old => ({...old, [clip.id]: []}));
+          await loadRevisions(clip.id);
+          setMessage(`Capa salva como revisão ${updated.revision}.`);
+          return;
+        }
+      }
+
+      setMessage('A capa continua sendo gerada. O processamento segue no servidor.');
+    } catch (error) {
+      setMessage(friendly((error as Error).message));
+    } finally {
+      setCovering(null);
     }
   }
 
@@ -859,6 +918,88 @@ export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
                       ))}
                     </div>
                     <small>Os estilos são allowlisted no backend e renderizados deterministicamente pelo FFmpeg.</small>
+                  </section>
+
+                  <section className="cover-editor-panel">
+                    <div className="section-heading">
+                      <div><p className="eyebrow">CAPA</p><h3>Escolha um frame do master</h3></div>
+                      <span>{coverAt.toFixed(1)}s</span>
+                    </div>
+
+                    {editorMeta?.masterUrl ? (
+                      <>
+                        <div className="cover-master-grid">
+                          <div className="cover-master-video">
+                            <video
+                              ref={coverVideoRef}
+                              src={editorMeta.masterUrl}
+                              controls
+                              preload="metadata"
+                              onLoadedMetadata={event => {
+                                const target = Math.min(coverAt, event.currentTarget.duration || coverAt);
+                                if (Number.isFinite(target)) event.currentTarget.currentTime = target;
+                              }}
+                              onTimeUpdate={event => {
+                                if (!event.currentTarget.seeking && !event.currentTarget.paused) {
+                                  setCoverAt(event.currentTarget.currentTime);
+                                }
+                              }}
+                              onSeeked={event => setCoverAt(event.currentTarget.currentTime)}
+                            />
+                          </div>
+                          <div className="cover-current">
+                            <small>CAPA ATUAL</small>
+                            {editorClip.cover
+                              ? <img src={editorClip.cover} alt="Capa atual do corte" />
+                              : <div className="cover-empty">Nenhuma capa escolhida</div>}
+                          </div>
+                        </div>
+
+                        <label className="cover-scrubber">
+                          Ponto do vídeo
+                          <input
+                            type="range"
+                            min={0}
+                            max={Math.max(.1, (project?.durationMs ?? 0) / 1000)}
+                            step=".1"
+                            value={coverAt}
+                            onChange={event => {
+                              const next = Number(event.target.value);
+                              setCoverAt(next);
+                              if (coverVideoRef.current) coverVideoRef.current.currentTime = next;
+                            }}
+                          />
+                        </label>
+
+                        <div className="cover-actions">
+                          <label>
+                            Segundo exato
+                            <input
+                              type="number"
+                              min={0}
+                              max={maxSeconds}
+                              step=".1"
+                              value={Number(coverAt.toFixed(1))}
+                              onChange={event => {
+                                const next = Math.max(0, Math.min(maxSeconds, Number(event.target.value)));
+                                setCoverAt(next);
+                                if (coverVideoRef.current) coverVideoRef.current.currentTime = next;
+                              }}
+                            />
+                          </label>
+                          <button
+                            type="button"
+                            disabled={busy || previewing === editorClip.id || covering === editorClip.id}
+                            onClick={() => void requestCover(editorClip)}
+                          >
+                            {covering === editorClip.id ? 'Gerando capa…' : 'Usar este frame como capa'}
+                          </button>
+                        </div>
+                        <small>A capa é extraída do vídeo master e salva como uma nova revisão. Não há nova análise de IA.</small>
+                      </>
+                    ) : (
+                      <p>O master não está mais disponível para escolher outra capa.</p>
+                    )}
                   </section>
                 </div>
 
