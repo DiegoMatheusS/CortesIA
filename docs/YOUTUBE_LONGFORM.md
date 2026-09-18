@@ -5,7 +5,7 @@ O SliceFlow aceita importação de vídeos públicos ou não listados do YouTube
 ## Limites atuais
 
 - duração máxima técnica: **7 horas**;
-- tamanho máximo atual: **5 GB**;
+- tamanho máximo atual: **30 GB**;
 - resolução aceita na fonte: até 4K; o working master é normalizado para no máximo 1080p quando recodificação for necessária;
 - links suportados: `youtube.com`, `www.youtube.com`, `m.youtube.com` e `youtu.be`;
 - lives, vídeos privados, restritos por idade/autenticação e fontes indisponíveis são recusados sem consumo de créditos.
@@ -65,7 +65,7 @@ Para validar também o download completo:
 YOUTUBE_ENABLED=true YOUTUBE_SMOKE_DOWNLOAD=true python -m cortes_worker.youtube_check "https://www.youtube.com/watch?v=..."
 ```
 
-O teste deve confirmar metadata, duração e, quando solicitado, download dentro do limite de 5 GB.
+O teste deve confirmar metadata, duração e, quando solicitado, download dentro do limite de 30 GB.
 
 ## Produção
 
