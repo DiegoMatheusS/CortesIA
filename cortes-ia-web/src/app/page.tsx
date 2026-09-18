@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Drawer from '@/components/Drawer';
 import PinnedPhoneStory from '@/components/PinnedPhoneStory';
+import HeroFluidBackground from '@/components/HeroFluidBackground';
 
 export default function Home() {
   return (
