@@ -1,0 +1,12 @@
+services:
+  worker:
+    environment:
+      AI_RUNTIME_PROFILE: FIXTURE
+      AI_PROVIDER: fixture
+      TRANSCRIPTION_PROVIDER: fixture
+      OLLAMA_HEALTHCHECK: "false"
+      YOUTUBE_ENABLED: "false"
+  api:
+    environment:
+      PAYMENTS_MODE: sandbox-local
+      YOUTUBE_ENABLED: "false"

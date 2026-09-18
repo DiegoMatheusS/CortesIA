@@ -6,5 +6,6 @@ FROM mcr.microsoft.com/dotnet/aspnet:10.0
 WORKDIR /app
 COPY --from=build /out .
 ENV ASPNETCORE_HTTP_PORTS=8080
+RUN mkdir -p /home/app/.aspnet/DataProtection-Keys && chown -R app:app /home/app/.aspnet
 USER app
 ENTRYPOINT ["dotnet","Cortes.Api.dll"]

@@ -1,1 +1,24 @@
-{"name":"cortes-ia-web","version":"0.2.0","private":true,"scripts":{"dev":"next dev --hostname 0.0.0.0","build":"next build","start":"next start --hostname 0.0.0.0","typecheck":"tsc --noEmit"},"dependencies":{"next":"16.3.0","react":"19.2.0","react-dom":"19.2.0"},"devDependencies":{"typescript":"5.9.3","@types/node":"22.19.0","@types/react":"19.2.2","@types/react-dom":"19.2.2"}}
+{
+  "name": "cortes-ia-web",
+  "version": "0.2.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --hostname 0.0.0.0",
+    "build": "next build",
+    "start": "next start --hostname 0.0.0.0",
+    "typecheck": "tsc --noEmit",
+    "e2e": "playwright test"
+  },
+  "dependencies": {
+    "next": "16.3.0",
+    "react": "19.2.0",
+    "react-dom": "19.2.0"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3",
+    "@types/node": "22.19.0",
+    "@types/react": "19.2.2",
+    "@types/react-dom": "19.2.2",
+    "@playwright/test": "1.55.0"
+  }
+}
