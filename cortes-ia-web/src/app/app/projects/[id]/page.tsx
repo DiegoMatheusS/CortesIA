@@ -296,6 +296,37 @@ export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
     return Math.min(max, Math.max(min, value));
   }
 
+  function targetAspectRatio(aspect: string) {
+    const ratios: Record<string, number> = {'9:16': 9 / 16, '4:5': 4 / 5, '1:1': 1, '16:9': 16 / 9};
+    return ratios[aspect] ?? reframeAspect;
+  }
+
+  function cropForAspect(aspect: string): Crop {
+    if (aspect === 'original') return {x: 0, y: 0, width: 1, height: 1};
+    const target = targetAspectRatio(aspect);
+    const source = Math.max(.01, reframeAspect);
+    if (source > target) {
+      const width = clamp(target / source, .08, 1);
+      return {x: (1 - width) / 2, y: 0, width, height: 1};
+    }
+    const height = clamp(source / target, .08, 1);
+    return {x: 0, y: (1 - height) / 2, width: 1, height};
+  }
+
+  function centerCrop(clip: Clip) {
+    patchClip(clip.id, {
+      crop: {
+        ...clip.crop,
+        x: (1 - clip.crop.width) / 2,
+        y: (1 - clip.crop.height) / 2,
+      },
+    });
+  }
+
+  function fitCropToFormat(clip: Clip, aspect = clip.aspect) {
+    patchClip(clip.id, {aspect, crop: cropForAspect(aspect)});
+  }
+
   function beginCropGesture(event: React.PointerEvent, mode: 'move' | 'resize') {
     if (!editorClip || !reframeFrameRef.current) return;
     event.preventDefault();
@@ -321,7 +352,8 @@ export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
   function moveCropGesture(event: React.PointerEvent) {
     const gesture = cropGesture.current;
     const frame = reframeFrameRef.current;
-    if (!gesture || !frame) return;
+    const active = clips.find(clip => clip.id === gesture?.clipId);
+    if (!gesture || !frame || !active) return;
 
     const rect = frame.getBoundingClientRect();
     if (!rect.width || !rect.height) return;
@@ -334,9 +366,28 @@ export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
     if (gesture.mode === 'move') {
       crop.x = clamp(gesture.crop.x + dx, 0, 1 - gesture.crop.width);
       crop.y = clamp(gesture.crop.y + dy, 0, 1 - gesture.crop.height);
-    } else {
+    } else if (!cropAspectLocked || active.aspect === 'original') {
       crop.width = clamp(gesture.crop.width + dx, minSize, 1 - gesture.crop.x);
       crop.height = clamp(gesture.crop.height + dy, minSize, 1 - gesture.crop.y);
+    } else {
+      const normalizedRatio = targetAspectRatio(active.aspect) / Math.max(.01, reframeAspect);
+      const widthFromX = clamp(gesture.crop.width + dx, minSize, 1 - gesture.crop.x);
+      const heightFromY = clamp(gesture.crop.height + dy, minSize, 1 - gesture.crop.y);
+      const useWidth = Math.abs(dx) >= Math.abs(dy);
+      let width = useWidth ? widthFromX : heightFromY * normalizedRatio;
+      let height = width / normalizedRatio;
+      const maxWidth = 1 - gesture.crop.x;
+      const maxHeight = 1 - gesture.crop.y;
+      if (width > maxWidth) {
+        width = maxWidth;
+        height = width / normalizedRatio;
+      }
+      if (height > maxHeight) {
+        height = maxHeight;
+        width = height * normalizedRatio;
+      }
+      crop.width = clamp(width, minSize, maxWidth);
+      crop.height = clamp(height, minSize, maxHeight);
     }
 
     setClips(old => old.map(clip => clip.id === gesture.clipId ? {...clip, crop} : clip));
@@ -352,6 +403,12 @@ export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
 
   function resetCrop(clip: Clip) {
     patchClip(clip.id, {crop: {x: 0, y: 0, width: 1, height: 1}});
+  }
+
+  function nudgeCover(delta: number) {
+    const next = clamp(coverAt + delta, 0, maxSeconds);
+    setCoverAt(next);
+    if (coverVideoRef.current) coverVideoRef.current.currentTime = next;
   }
 
   async function calculate() {
