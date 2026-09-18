@@ -143,4 +143,39 @@ public static class ProjectEndpoints {
   g.MapPost("/tickets",async(TicketDto r,HttpContext h,Database d)=>{if(r.ProjectId.HasValue)await Api.Own(d,h,r.ProjectId.Value);if(r.Subject.Length>200||r.Message.Length>10000)throw new DomainError("INVALID_TICKET");var t=new Ticket{UserId=Api.User(h),ProjectId=r.ProjectId,Subject=r.Subject,Message=r.Message};d.Tickets.Add(t);await d.SaveChangesAsync();return Results.Ok(t);});
   g.MapGet("/tickets",async(HttpContext h,Database d)=>await d.Tickets.Where(x=>x.UserId==Api.User(h)).OrderByDescending(x=>x.CreatedAt).Take(100).ToListAsync());
  }
+
+ static readonly HashSet<string> Selections=new(StringComparer.Ordinal){"SELECTED","REJECTED","SUGGESTED"};
+ static readonly HashSet<string> CaptionPresets=new(StringComparer.OrdinalIgnoreCase){"Clean","Bold","Viral","Podcast","Karaoke","Pop","Minimal","Box","News","Dark","Neon","Impacto","Emoji","Subtitle Classic","Creator","Custom"};
+ static readonly HashSet<string> VisualStyles=new(StringComparer.OrdinalIgnoreCase){"Cinema","Divertido","Animado","Sombrio","Quente","Frio","Clean","Podcast","Impactante","Viral"};
+ static readonly HashSet<string> Aspects=new(StringComparer.OrdinalIgnoreCase){"9:16","4:5","1:1","16:9","original"};
+
+ static RevisionSegment[] ReadSegments(Clip clip){
+  var segments=Json.Read<RevisionSegment[]>(clip.Segments);
+  return segments.Length==0?new[]{new RevisionSegment(clip.StartMs,clip.EndMs)}:segments;
+ }
+ static RevisionSegment[] ValidateSegments(RevisionSegment[]? segments,long durationMs){
+  if(segments==null||segments.Length==0||segments.Length>64)throw new DomainError("INVALID_SEGMENTS");
+  long total=0,previous=-1;
+  foreach(var s in segments){
+   if(s.StartMs<0||s.EndMs<=s.StartMs||s.EndMs>durationMs||s.StartMs<previous)throw new DomainError("INVALID_SEGMENTS");
+   total+=s.EndMs-s.StartMs;previous=s.EndMs;
+  }
+  if(total<=0||total>180_000)throw new DomainError("INVALID_SEGMENTS");
+  return segments;
+ }
+ static void ValidateSubtitles(SubtitleDto[]? subtitles,long outputDurationMs){
+  if(subtitles==null||subtitles.Length>5000||subtitles.Any(x=>x.StartMs<0||x.EndMs<=x.StartMs||x.EndMs>outputDurationMs||x.Text.Length>1000))throw new DomainError("INVALID_SUBTITLE");
+ }
+ static void ValidateEditorStyle(string captionPreset,string visualStyle,string aspect,CropSpec crop){
+  if(!CaptionPresets.Contains(captionPreset)||!VisualStyles.Contains(visualStyle)||!Aspects.Contains(aspect))throw new DomainError("INVALID_EDITOR_PRESET");
+  if(crop.X<0||crop.Y<0||crop.Width<=0||crop.Height<=0||crop.X+crop.Width>1.000001||crop.Y+crop.Height>1.000001)throw new DomainError("INVALID_CROP");
+ }
+ static ClipRevision Snapshot(Clip clip)=>new(){
+  ClipId=clip.Id,ProjectId=clip.ProjectId,Number=clip.Revision,Title=clip.Title,Selection=clip.Selection,StartMs=clip.StartMs,EndMs=clip.EndMs,
+  Segments=clip.Segments,Subtitles=clip.Subtitles,Style=clip.Style,CaptionPreset=clip.CaptionPreset,CaptionOverrides=clip.CaptionOverrides,
+  VisualStyle=clip.VisualStyle,VisualOverrides=clip.VisualOverrides,Aspect=clip.Aspect,Crop=clip.Crop,CoverKey=clip.CoverKey
+ };
+ static async Task EnsureCurrentRevision(Database d,Clip clip){
+  if(!await d.ClipRevisions.AnyAsync(x=>x.ClipId==clip.Id&&x.Number==clip.Revision))d.ClipRevisions.Add(Snapshot(clip));
+ }
 }
