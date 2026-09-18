@@ -53,21 +53,45 @@ jobs:
         working-directory: cortes-ia-infra/terraform
 
   migration-baseline-generator:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/feat/ef-migrations-baseline'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
       - uses: actions/setup-dotnet@v4
         with: {dotnet-version: '10.0.x'}
       - run: dotnet tool restore
       - run: dotnet build cortes-ia-api/Cortes.Api.csproj --configuration Release
-      - run: dotnet ef migrations add SliceFlowBaseline --project cortes-ia-api/Cortes.Api.csproj --output-dir MigrationsGenerated --no-build --configuration Release
+      - name: Generate baseline once
+        shell: bash
+        run: |
+          if ls cortes-ia-api/Migrations/*_SliceFlowBaseline.cs >/dev/null 2>&1; then
+            echo "Baseline already exists."
+          else
+            dotnet ef migrations add SliceFlowBaseline \
+              --project cortes-ia-api/Cortes.Api.csproj \
+              --output-dir Migrations \
+              --no-build \
+              --configuration Release
+            python scripts/finalize_ef_baseline.py
+          fi
         env:
           ASPNETCORE_ENVIRONMENT: Development
           ConnectionStrings__Database: Host=localhost;Database=cortes_test;Username=test;Password=test
           CPF_HMAC_KEY: 0123456789012345678901234567890123456789
           WORKER_TOKEN: 0123456789012345678901234567890123456789
-      - uses: actions/upload-artifact@v4
-        with:
-          name: ef-migration-baseline
-          path: cortes-ia-api/MigrationsGenerated
-          if-no-files-found: error
+      - name: Commit generated baseline
+        shell: bash
+        run: |
+          if git status --porcelain -- cortes-ia-api/Migrations | grep -q .; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add cortes-ia-api/Migrations
+            git diff --cached --check
+            git commit -m "build(db): add generated SliceFlow EF baseline"
+            git push origin HEAD:feat/ef-migrations-baseline
+          else
+            echo "No migration changes to commit."
+          fi
