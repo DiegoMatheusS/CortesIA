@@ -84,7 +84,7 @@ services:
   worker:
     build:
       context: ./cortes-ia-workers
-      target: base
+      target: ${WORKER_TARGET:-base}
     environment:
       <<: *cloud
       APP_ENV: development
