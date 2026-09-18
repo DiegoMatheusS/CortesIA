@@ -1,34 +1,80 @@
-# Status real da implementação — v0.2
+# Status real da implementação — SliceFlow v0.5
 
-**Esta entrega é uma base de código inicial com fluxos conectados, não o MVP completo das nove fases.** Nenhuma fase está declarada homologada ponta a ponta sem build/integracão correspondente. Requisitos pendentes continuam obrigatórios para o MVP.
+Este documento descreve o que existe **no código atual**. Itens ainda não homologados para produção continuam pendentes mesmo quando a base técnica já existe.
 
-| Fase | Código incluído | O que falta para concluir |
+| Fase | Implementado atualmente | Principais pendências |
 |---|---|---|
-| 1 Fundação | API .NET 10/Identity/EF, cadastro, verificação por e-mail, login/logout/reset, MFA admin, CPF/HMAC, usuários, painel básico | Build .NET/Next, migrations EF versionadas, RBAC granular, verificação de telefone conforme decisão, sessões/step-up com testes E2E |
-| 2 Créditos | Carteira por lotes, trial único, preços base/extras, quote, reserve/capture/refund parcial, ledger/idempotência, ajuste admin | Executar testes de concorrência/replay, catálogo totalmente versionado, combos/descontos, promo expiráveis e reprocessamento pesado cotado completo |
-| 3 Upload | Multipart S3, 5 GB, validação ffprobe, histórico, jobs/outbox/SQS, link YouTube allowlisted | Teste integrado S3/SQS, teste real YouTube, retomar/cancelar upload na UI, limites de concorrência por conta, stage/status granulares |
-| 4 Agente | Interface provider, fixture explícita, transcrição em chunks, seleção e revisão Terra/Sol, validação temporal/redação básica | Homologar modelos e API/timestamps; benchmark ≥50 vídeos; métricas/custo; dados incidentais e D25; providers alternativos |
-| 5 Vídeo | Master completo, FFmpeg offline, cortes, proporções, legenda simples, zoom, blur, frame de capa, ZIP | Legenda dinâmica com alinhamento por palavra e tracking inteligente; corpus de qualidade/codecs/performance. São recusados na cotação, não cobrados como entregues. |
-| 6 Editor | Prévias, escolher/rejeitar, título, início/fim, texto da legenda, desligar legenda, exportações, buscar outros pelo master/transcrição | Reposição de legenda/crop visual, escolha/edição de capa, presets de estilo/efeitos completos, nova prévia automática de cada edição e cotação de render adicional |
-| 7 Pagamentos | Checkout Mercado Pago, assinatura webhook, consulta server-to-server, grant/bônus, modo local fictício | Sandbox real Pix/cartão; conciliação por busca de pagamento quando nenhum webhook chegar; estorno monetário completo e chargeback com saldo já gasto; contrato/valor comercial |
-| 8 Segurança | Controles básicos desde início; offline media, SSRF/DNS, HMAC, CSRF/MFA, rate limit local, audit, antivirus adapter, scans CI | Pentest, rate limit distribuído, mTLS/IAM, hardening de todas as rotas/quotas, ClamAV 5GB homologado (falha fechada), secret rotation, teste de retenção/restore e exclusão completa da conta |
-| 9 Produção | Dockerfiles/Compose, CI, Terraform de rede/RDS/S3/SQS/ECR/ECS/logs/alarme, runbooks | Deploy das aplicações/ECS services, domínio/TLS/WAF, roles de menor privilégio, SES, observabilidade completa, restore/RPO/RTO, rollback testado e aprovação comercial/jurídica |
+| 1 Fundação | API .NET 10/Identity/EF, cadastro, confirmação de e-mail, login/logout/reset, CPF/HMAC, trial único, MFA administrativo, ownership, UI responsiva e CI com build .NET/Next | Migrations EF versionadas para homologação/produção, RBAC granular, sessões/step-up E2E e política final de telefone |
+| 2 Créditos | Carteira por lotes, comprado/bônus separados, quote discriminada, reserve/capture/refund, ledger, idempotência, ajuste admin e estorno de extra não entregue | Testes ampliados de concorrência/replay, catálogo comercial versionado, combos/promoções e regras comerciais finais |
+| 3 Upload | Multipart S3, formatos/tamanho/duração validados, upload/link, jobs/outbox/SQS, master privado, status e progresso granular até a UI | Retomar/cancelar upload pela interface, limites de concorrência por conta, homologação real de YouTube/S3/SQS e políticas comerciais de importação |
+| 4 Agente / IA | Perfil local real Faster-Whisper → Ollama `qwen3:8b`, JSON estruturado, chunking, segunda revisão, validação temporal, redaction básica e fallback fixture de desenvolvimento. Integração cloud timestamped preparada com `whisper-1` | Benchmark ≥50 vídeos, avaliação de qualidade/custo/p95, homologação dos providers cloud, tratamento ampliado de dados incidentais e observabilidade de IA |
+| 5 Vídeo | Working master, FFmpeg offline, 9:16/4:5/1:1/16:9/original, segmentos concatenáveis, legenda simples, **legenda dinâmica por palavra**, zoom, blur, capa automática, moods visuais, crop manual, **reenquadramento inteligente com MediaPipe**, previews e ZIP | Golden corpus de codecs/qualidade/performance, empacotar/homologar modelo de visão para produção, melhorar tracking multi-pessoa/cortes complexos e edição avançada de capa |
+| 6 Editor | Editor short-form, corte manual, timeline por segmentos, dividir/remover trecho, revisão não destrutiva, desfazer/refazer local, edição de texto/sincronismo, presets de legenda, estilos visuais, crop, histórico de revisões, preview regenerável/versionado e export por revisão | Restaurar revisão antiga pela UI/API, edição/seleção de capa, reposicionamento visual direto sobre o canvas, quote para operações pesadas adicionais e testes E2E completos |
+| 7 Pagamentos | Estrutura de checkout Mercado Pago, webhook assinado, grants/bônus e modo local fictício | Homologação real Pix/cartão, conciliação sem webhook, estorno monetário/chargeback e aprovação de preços/contrato |
+| 8 Segurança | Ownership, CSRF/MFA, HMAC de CPF, SSRF/DNS, storage privado, audit, adapter antivírus, scans CI, worker token, fencing/leases e validações server-side | Pentest/ASVS, rate limit distribuído, IAM/mTLS, rotação de secrets, ClamAV para arquivos grandes, exclusão completa de conta e testes de retenção/restore |
+| 9 Produção | Dockerfiles/Compose, modo local leve, modo local IA real, Terraform base, CI com backend/web/workers/security/Terraform e runbooks iniciais | ECS/services finais, domínio/TLS/WAF, SES, IAM mínimo, observabilidade completa, migrations/rollback, restore/RPO/RTO e smoke de produção |
 
-Home: há visual escuro, água digital CSS, CTA e gaveta por scroll com pontas/um cartão destacado, sem mão. O vídeo da Home é ilustrativo, não amostra real de cliente. UI ainda exige revisão visual/browser e refinamento do design aprovado.
+## Produto e frontend
 
-Suporte inicial permite abrir/listar/responder chamados; categorias completas, anexos em quarentena e fluxo granular não estão concluídos. Analytics consentido não está instalado; nenhum tracker de marketing é enviado por esta base. Termos da rota `/legal` são aviso de desenvolvimento, não texto jurídico definitivo.
+O nome público do produto é **SliceFlow**. Os diretórios e namespaces internos ainda usam `cortes-ia-*` para evitar uma renomeação técnica desnecessária durante o desenvolvimento.
 
-## Verificado aqui
+A Home possui narrativa pinned controlada por scroll, fundo interativo, demonstração do fluxo IA + editor, tutorial, presets de legenda e estilos visuais. O CTA abre a criação antes do login; autenticação é solicitada quando o usuário inicia upload/importação.
 
-- 14 testes Python/FFmpeg passaram, incluindo processamento com provider fixture e storage em memória.
-- Vídeo sintético realmente codificado, master realmente gerado, preview 9:16 com legenda/zoom/blur e capa extraída.
-- Casos de timestamp inválido, arquivo falso/tamanho, URL/host/DNS privados, redaction e candidatos repetidos cobertos.
-- JSON, YAML, XML de projetos e sintaxe Python inspecionados por scripts locais.
+O dashboard separa créditos comprados, bônus, benefícios e reservados. A tela do projeto recebe progresso granular do worker e o editor salva revisões reais no backend.
 
-## Não executado aqui
+## IA local atual
 
-.NET SDK, Docker e Terraform não estavam disponíveis; registries externos não estavam acessíveis para restore. Por isso **não houve build .NET/Next, aplicação de migrations, Compose integrado ou terraform validate**. Não foi usado um build fictício como prova. Testes C# e pipeline CI estão incluídos para executar em ambiente compatível. Não há lockfiles transitivos gerados offline artificialmente.
+Configuração padrão aprovada:
 
-## Próximo gate concreto
+```env
+AI_RUNTIME_PROFILE=LOCAL
+OLLAMA_BASE_URL=http://127.0.0.1:11434
+OLLAMA_MODEL=qwen3:8b
+```
 
-Em máquina com Docker e acesso aos registries: executar bootstrap + build, corrigir qualquer incompatibilidade de pacote indicada pelo restore, rodar testes C#/PostgreSQL, testar cookie/CSRF/queue/manifestos/retention e o smoke completo. Depois completar os itens pendentes de cada fase. **Não abrir ao público apenas porque os containers iniciaram.**
+Não existe fallback automático para `qwen3:4b` ou `qwen3:1.7b`.
+
+No perfil local completo:
+- Faster-Whisper faz transcrição;
+- `qwen3:8b` faz seleção/revisão semântica;
+- MediaPipe pode gerar o plano de reenquadramento;
+- FFmpeg executa os renders determinísticos.
+
+## Legendas dinâmicas
+
+Quando o extra é usado, timestamps por palavra são preservados quando o transcritor os fornece. O render ASS usa sincronismo por palavra. Conteúdo legado, fixture ou texto alterado manualmente usa alinhamento proporcional como fallback explícito.
+
+A edição manual de uma legenda invalida os word timings anteriores daquele texto para impedir sincronismo enganoso.
+
+## Reenquadramento inteligente
+
+O tracking é habilitado somente quando o ambiente declara `TRACKING_ENABLED=true` e possui provider de visão. A visão retorna pontos normalizados ao longo do tempo; não gera shell nem comandos FFmpeg.
+
+Se nenhuma prévia da execução entregar o tracking, o extra é marcado como não entregue para o fluxo de estorno existente.
+
+## Verificado no CI
+
+O workflow atual valida, em conjunto:
+
+- testes .NET com PostgreSQL;
+- build e typecheck do Next.js;
+- testes Python/FFmpeg com vídeo sintético real;
+- render de múltiplos segmentos;
+- preview por revisão;
+- crop dinâmico de tracking;
+- legenda dinâmica por palavra;
+- segurança com Gitleaks/Trivy;
+- `terraform validate`.
+
+Os últimos PRs desses recursos passaram o workflow completo antes do merge.
+
+## Próximos gates recomendados
+
+1. Restaurar uma revisão histórica como **nova revisão**, sem sobrescrever histórico.
+2. Seleção/edição de capa a partir do master.
+3. Migrations EF versionadas e baseline de banco.
+4. Testes E2E navegador → API → worker → storage.
+5. Benchmark real de qualidade da IA e tracking.
+6. Homologação de pagamento e infraestrutura de produção.
+
+Não abrir o serviço ao público apenas porque os containers e o CI passam; pagamentos, migrations, políticas jurídicas e operação de produção ainda exigem homologação.
