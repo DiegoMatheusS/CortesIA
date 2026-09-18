@@ -85,7 +85,7 @@ export default function Dashboard() {
     setMessage('');
 
     try {
-      if (file.size > 5_000_000_000) throw new Error('O limite inicial é 5 GB.');
+      if (file.size > 30_000_000_000) throw new Error('O limite é 30 GB.');
 
       const session = await api<{projectId: string; uploadId: string; partSize: number}>(
         '/projects/uploads',
@@ -175,7 +175,7 @@ export default function Dashboard() {
           <div className="grid">
             <article className="upload">
               <h3>Envie seu vídeo</h3>
-              <p>MP4, MOV, MKV ou WebM · até 5 GB · até 7 horas</p>
+              <p>MP4, MOV, MKV ou WebM · até 30 GB · até 7 horas</p>
               <label className="button">
                 {busy ? `Enviando ${progress}%` : 'Selecionar arquivo'}
                 <input
