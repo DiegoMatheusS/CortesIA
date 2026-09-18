@@ -1147,7 +1147,66 @@ export default function ProjectPage({params}: {params: Promise<{id: string}>}) {
                         </button>
                       ))}
                     </div>
-                    <small>O preset escolhido é salvo na revisão e usado pelo render final.</small>
+
+                    <div className="caption-customizer">
+                      <label>
+                        Tamanho <span>{Math.round(editorClip.captionOverrides.scale * 100)}%</span>
+                        <input
+                          type="range"
+                          min=".65"
+                          max="1.6"
+                          step=".05"
+                          value={editorClip.captionOverrides.scale}
+                          onChange={event => patchClip(editorClip.id, {captionOverrides: {...editorClip.captionOverrides, scale: Number(event.target.value)}})}
+                        />
+                      </label>
+                      <label>
+                        Posição
+                        <select
+                          value={editorClip.captionOverrides.position}
+                          onChange={event => patchClip(editorClip.id, {captionOverrides: {...editorClip.captionOverrides, position: event.target.value as CaptionOverrides['position']}})}
+                        >
+                          <option value="top">Topo</option>
+                          <option value="center">Centro</option>
+                          <option value="bottom">Rodapé</option>
+                        </select>
+                      </label>
+                      <label>
+                        Palavras por bloco
+                        <input
+                          type="number"
+                          min={1}
+                          max={8}
+                          value={editorClip.captionOverrides.wordsPerLine}
+                          onChange={event => patchClip(editorClip.id, {captionOverrides: {...editorClip.captionOverrides, wordsPerLine: clamp(Number(event.target.value), 1, 8)}})}
+                        />
+                      </label>
+                      <label className="caption-color">
+                        Cor principal
+                        <input
+                          type="color"
+                          value={editorClip.captionOverrides.primaryColor}
+                          onChange={event => patchClip(editorClip.id, {captionOverrides: {...editorClip.captionOverrides, primaryColor: event.target.value}})}
+                        />
+                      </label>
+                      <label className="caption-color">
+                        Destaque
+                        <input
+                          type="color"
+                          value={editorClip.captionOverrides.highlightColor}
+                          onChange={event => patchClip(editorClip.id, {captionOverrides: {...editorClip.captionOverrides, highlightColor: event.target.value}})}
+                        />
+                      </label>
+                      <label className="check caption-uppercase">
+                        <input
+                          type="checkbox"
+                          checked={editorClip.captionOverrides.uppercase}
+                          onChange={event => patchClip(editorClip.id, {captionOverrides: {...editorClip.captionOverrides, uppercase: event.target.checked}})}
+                        />
+                        Caixa alta
+                      </label>
+                    </div>
+                    <small>Preset, tamanho, posição, cores e agrupamento ficam salvos na revisão e são usados no render final. Em legenda dinâmica, o destaque acompanha palavra por palavra.</small>
                   </section>
 
                   <section>
