@@ -11,7 +11,7 @@ from .models import ProcessingError
 def _limits():
     resource.setrlimit(resource.RLIMIT_NOFILE, (256, 256))
     resource.setrlimit(resource.RLIMIT_CORE, (0, 0))
-    resource.setrlimit(resource.RLIMIT_FSIZE, (12_000_000_000, 12_000_000_000))
+    resource.setrlimit(resource.RLIMIT_FSIZE, (40_000_000_000, 40_000_000_000))
 
 
 def command(args, timeout=7200):
@@ -32,7 +32,7 @@ def command(args, timeout=7200):
     return process.stdout
 
 
-def probe(source, max_bytes=5_000_000_000, max_duration_ms=25_200_000):
+def probe(source, max_bytes=30_000_000_000, max_duration_ms=25_200_000):
     source = pathlib.Path(source)
     if source.stat().st_size > max_bytes:
         raise ProcessingError("FILE_TOO_LARGE")
@@ -392,7 +392,7 @@ def render(
     crop=None,
     tracking_plan=None,
 ):
-    meta = probe(source, max_bytes=12_000_000_000)
+    meta = probe(source, max_bytes=40_000_000_000)
     source_ranges, output_duration_ms = _source_segments(
         source_segments, start_ms, end_ms, meta["duration_ms"]
     )
